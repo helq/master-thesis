@@ -1,0 +1,40 @@
+digraph "classes_Pytropos" {
+charset="utf-8"
+rankdir=BT
+"1" [label="{AbstractDomain|\l|is_top()\ljoin()\lnarrow_op()\ltop()\lwiden_op()\l}", shape="record"];
+"2" [label="{AbstractMutVal|children\lmut_id\l|convert_into_top()\lcopy_mut()\lget_attrs()\ljoin()\ljoin_mut()\lnew_vals_to_top()\l}", shape="record"];
+"3" [label="{AbstractValue|abstract_repr\lop_add\lop_floordiv\lop_ge\lop_gt\lop_le\lop_lshift\lop_lt\lop_mod\lop_mul\lop_rshift\lop_sub\lop_truediv\ltype_name\l|call_getitem()\lcall_setitem()\lfun_call()\lget_attrs()\lget_subscripts()\ljoin()\lop_OP()\lop_bool()\lwiden_op()\l}", shape="record"];
+"9" [label="{Bool|abstract_repr\ltype_name\lval\l|is_top()\ljoin()\lop_bool()\ltop()\l}", shape="record"];
+//"10" [label="{BuiltinClass|abstract_repr\largs\lkargs\lklass\lklass_name\ltype_name\l|class_top()\lcopy_mut()\lfun_call()\lget_attrs()\lis_top()\ljoin_mut()\ltop()\l}", shape="record"];
+"11" [label="{BuiltinFun|abstract_repr\largs\lfun\lis_method : bool\lkargs\lname\ltype_name\l|copy_mut()\lfun_call()\lget_attrs()\lis_top()\ljoin_mut()\ltop()\l}", shape="record"];
+"12" [label="{BuiltinModule|abstract_repr\lmod_name\lread_only : bool\ltype_name\l|copy_mut()\lis_top()\ljoin_mut()\ltop()\l}", shape="record"];
+//"13" [label="{BuiltinType|\l|get_absvalue()\l}", shape="record"];
+"15" [label="{Float|abstract_repr\ltype_name\lval\l|is_top()\ljoin()\lop_bool()\ltop()\l}", shape="record"];
+"17" [label="{Int|abstract_repr\ltype_name\lval\l|is_top()\ljoin()\lop_bool()\ltop()\l}", shape="record"];
+"20" [label="{List|abstract_repr\lsize : tuple\ltype_name\l|get_attrs()\lget_subscripts()\l}", shape="record"];
+"21" [label="{NdArray|abstract_repr\lchildren : dict\lshape\ltype_name\l|copy_mut()\lget_attrs()\lis_top()\ljoin_mut()\lop_OP()\lop_OP_Any()\ltop()\l}", shape="record"];
+"27" [label="{NoneType|abstract_repr\ltype_name\l|is_top()\ljoin()\lop_bool()\ltop()\l}", shape="record"];
+"29" [label="{PythonValue|attr\lmut_id\lval\l|bool()\lcall()\lconvert_into_top()\lcopy_mut()\lis_mut()\lis_top()\ljoin()\ljoin_mut()\lnew_vals_to_top()\loperate()\lsubs()\ltop()\ltype()\lwiden_op()\l}", shape="record"];
+//"31" [label="{PytroposTransformer|console : bool\lcursorline\lfilename\lscope_level : int\ltype_comment\l|add_stmt_print_store()\lisoncursor()\lvisit()\lvisit_AnnAssign()\lvisit_Assign()\lvisit_Attribute()\lvisit_AugAssign()\lvisit_BinOp()\lvisit_Call()\lvisit_Compare()\lvisit_Delete()\lvisit_Expr()\lvisit_If()\lvisit_Import()\lvisit_ImportFrom()\lvisit_Index()\lvisit_List()\lvisit_Module()\lvisit_Name()\lvisit_NameConstant()\lvisit_Num()\lvisit_Starred()\lvisit_Subscript()\lvisit_Tuple()\lvisit_While()\lvisit_keyword()\l}", shape="record"];
+"34" [label="{Store|\l|copy()\limportStar()\lis_top()\litems()\ljoin()\ltop()\lwiden_op()\l}", shape="record"];
+"40" [label="{Tuple|abstract_repr\lsize : tuple\ltype_name\l|fromList()\lget_attrs()\lget_subscripts()\l}", shape="record"];
+"41" [label="{TupleOrList|size, tuple\l|check_index()\lconvert_into_top()\lcopy_mut()\lis_size_determined()\lis_top()\ljoin_mut()\lsorted_indices()\lsorted_indices_ints()\ltop()\l}", shape="record"];
+"2" -> "3" [arrowhead="empty", arrowtail="none"];
+"3" -> "1" [arrowhead="empty", arrowtail="none"];
+"9" -> "3" [arrowhead="empty", arrowtail="none"];
+//"10" -> "2" [arrowhead="empty", arrowtail="none"];
+"11" -> "2" [arrowhead="empty", arrowtail="none"];
+"12" -> "2" [arrowhead="empty", arrowtail="none"];
+//"13" -> "2" [arrowhead="empty", arrowtail="none"];
+"15" -> "3" [arrowhead="empty", arrowtail="none"];
+"17" -> "3" [arrowhead="empty", arrowtail="none"];
+"20" -> "41" [arrowhead="empty", arrowtail="none"];
+"21" -> "2" [arrowhead="empty", arrowtail="none"];
+//"22" -> "13" [arrowhead="empty", arrowtail="none"];
+"27" -> "3" [arrowhead="empty", arrowtail="none"];
+"29" -> "1" [arrowhead="empty", arrowtail="none"];
+"34" -> "1" [arrowhead="empty", arrowtail="none"];
+"40" -> "41" [arrowhead="empty", arrowtail="none"];
+"41" -> "2" [arrowhead="empty", arrowtail="none"];
+//"43" -> "13" [arrowhead="empty", arrowtail="none"];
+}
