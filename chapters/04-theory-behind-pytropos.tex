@@ -1,0 +1,262 @@
+\chapter{Abstract Interpretation for Python}\label{ai-for-python}
+
+\ichange{Well, here I am again. Trying to write whatever comes to my mind, lets hope it is
+something understandable or nice}
+
+% So, I was talking with my advisors today. They told me that the theoretical part I was
+% writing was totally unfounded. Well, not precisely, what they told me is that I didn't
+% have clear what the heck was I doing, and they're right. I just tried to formalise
+% whatever I had done because I did notice that I just could. Now, the things they told me
+% to take into account were:
+% - explain a little what types of semantics there are, if you are going to use them
+%   better understand where are you sitting;
+% - explain why this kind of semantics especifically an not any other; what means
+%   semantics for you and what is the purpose of semantics (Expr -> State -> State);
+% - with a very small example show how the semantics of your small language work (how are
+%   the semantics of E[BinOp(+, 2, 4)](G, H)), it will probably need taking the definition
+%   from the appendix;
+% - now that the concrete semantics are clear, explain how are abstract semantics defined,
+%   what makes them different (spoiler, the main difference is that they work with
+%   abstract values and abstract states, and therefore are called abstract semantics)
+
+This chapter explains the formalisation of the proposed Abstract Interpreter. The chapter
+is divided into three: what are semantics, concrete semantics for Python, and
+abstract semantics for Value Analysis. This chapter is intended as a guide on why and how
+was the Abstract Interpreter built. For a deeper look on the details presented in this
+chapter, please refer to Appendix~\ref{appendix-ai-theory}.
+
+\section{Semantics}
+
+In Mathematics, the word \enquote{semantics} refers to the meaning of sentences in formal
+languages\todo{add ref from gunter's book}. The semantics of programming languages
+consist of what a piece of code means, how to interpret it, and how to analyse it.
+
+\todo{add ref to mitchell's book} classifies \enquote{semantics} into three categories:
+axiomatic semantics, denotational semantics, and operational semantics. Axiomatic
+semantics are all about describing the behaviour of code with mathematical logic.
+Denotational semantics goal is to find a mathematical "object" that represents what a
+program does. The program's meaning is given by the external object.
+Operational semantics are concerned with rules that tell how to interpret or execute a
+piece of code. No meaning is given to the parts of the program, but a meaning is given as
+the program is run.
+
+
+\begin{verbatim}
+  Semantics of Programming Languages
+  |-- Axiomatic Semantics -- Hoare Logic
+  |-- Denotational Semantics -- ???
+  |-- Operational Semantics -- Small-step semantics
+                           |-- Big-step semantics
+\end{verbatim}
+
+Notice that Denotational semantics must not provide a way to determine an implementation.
+On the other hand, an implementation can be easily build out Operational Semantics.
+From the many Operational semantics there are, small-step semantics are precisely those
+that give us the most direct route to see what a program, they are intuitive and every
+developer could just understand them directly, they define what the program does in a
+syntax oriented way, is all about applying rules, syntactic rules. It is not a surprise
+that all efforts into defining formal semantics for Python have been small-step semantics
+\todo{add ref to all papers on python semantics}.
+
+In this work, we are no exception. Our purpose is to define the small-step semantics of a
+portion of Python to show what is our Abstract Interpreter able to do and why.
+
+\section{Concrete Semantics of Python}
+
+Before we define the concrete semantics of Python we need to define how to write a piece
+of code in Python. Python is a mature and vast language, thus we will take just a portion
+of it into account. In the figure below, we present the subset of Python that we intend to
+study in this work.
+
+\begin{verbatim}
+mod = stmt*  -- A program. Starting point
+
+expr = Int(i) for i \in \N | Float(j) for j \in floats
+     | True | False | None
+
+     | identifier         -- variable name
+
+     | expr op expr       -- eg, a + 5
+     | expr cmpop expr    -- eg, a < 5
+     | expr(expr*)        -- Function calling
+
+     | expr.identifier    -- Attribute access
+     | expr[expr]         -- Not supported for Numpy Arrays :S
+     | [expr*]            -- list
+     | (expr*)            -- tuple
+
+stmt = del expr           -- delete expression
+      | expr = expr       -- assignment
+      | expr op= expr     -- augmented assignment
+      | expr: expr = expr -- type annotation
+      | while expr: stmt+
+      | if expr: stmt+
+      | import alias+
+      | from identifier import alias+
+      | expr              -- An expression can be an statement
+
+op = + | - | * | / | % | ** | << | >> | //
+cmpop = < | <= | > | >=
+
+alias = identifier | identifier as identifier
+
+identifier = string  -- with some restrictions
+\end{verbatim}
+
+The details on how to check for the correct number of spaces before expressions to
+indicate properly when a stament is inside a \texttt{while} or an \texttt{if} is left
+unexplained. We do not care about that here.
+
+Let's consider the simple program:
+
+\begin{verbatim}
+b = 2
+a = b < 3
+\end{verbatim}
+
+We can define the following rules:
+
+\inlinetodo{copy and modify rules from the appendix to make this part simpler, they will
+probably return}
+
+Notice that to define these rules we make use of two important things, a global scope and
+a heap. We store the stuff in the heap and point to them with the global scope function.
+The definition of the small-steps semantics of the language requires us to save the
+results of execution somewhere.
+
+We call these rules, the small-step semantics of our subset of Python. Actually, they are
+just a portion of the total rules defined. We don't present all the rules here because it
+takes too much space. Refer to the appendix to see them in more detail.
+
+With our rules we can "execute" our example:
+
+\inlinetodo{execution step by step of the program}
+
+\inlinetodo{recall the reader that in the parlance of abstract interpretation the
+semantics of the language in study are called Concrete semantics. And that is precisely
+what we are defining here, the semantics of the thing we want to study. What we want to
+study precisely? We want to study the value of variables as the program is executed}
+
+Defining the small-step semantics on the syntax presented before is a hazzle. Consider the
+statement delete, this stament is able to not only delete values from the global scope
+(\verb+del a+), but it can also delete elements from a list (\verb+del ls[2]+ deleting the
+third element of a list \verb+ls+).  Notice that it whatever is being deleted by
+\verb+del+ is an expression (in the examples, \verb+a+ and \verb+ls[2]+ are both
+expressions), what should the expression return? (expressions always return stuff). It is
+simply very hard to know what to return in a case like \verb+ls[2][0].val[1]+, so what we
+opted to do is exactly what CPython, the official implementation of Python does, that is,
+extend the syntax to add a little hint of what the purpose of the expression being
+evaluated will be.
+
+Our new syntax will be:
+
+\begin{verbatim}
+mod = Module(stmt* body)
+
+expr = Int(n)
+     | Float(n) | True | False | None
+     | Name(identifier, expr_context)
+     | BinOp(operator, expr, expr)
+     | Compare(expr, cmpop, expr)
+     | Call(expr, expr*)
+     | Attribute(expr, identifier)
+     -- No need for expr_context because no user made objects are allowed yet, thus
+     -- modifying attributes is not necessary
+     -- | Attribute(expr, identifier, expr_context)
+     | Subscript(expr, expr, expr_context)  -- No arbitrary slice allowed yet
+     | List(expr*)
+     | Tuple(expr*) -- No expr_context for Tuple as `(a, b) = 1, 2` is not supported
+
+stmt = Delete(expr+)
+      | Assign(expr, expr)                -- a = 3
+      | AugAssign(expr, operator, expr)   -- a += 3
+      | AnnAssign(expr, expr, expr)       -- a: int = 3
+
+      | While(expr, stmt+)
+      | If(expr, stmt+, stmt*)
+
+      | Import(alias+ names)
+      | ImportFrom(identifier, alias+)
+
+      | Expr(expr)
+
+-- Indicates why are we looking up a variable, attribute or subscript
+expr_context = Load | Store | Del
+
+operator = Add | Sub | Mult | Div | Mod | Pow | LShift
+             | RShift | FloorDiv
+
+cmpop = Lt | LtE | Gt | GtE
+
+-- import name with optional 'as' alias.
+alias = (identifier, identifier?)
+\end{verbatim}
+
+Notice that this syntax has been directly taken from the CPython implementation\todo{add
+ref}, they did in fact find this problem ages ago and it is coded in the language. This
+new syntax is the result of the parser. The parser takes code written in the first syntax
+and defines a proper context (Load, Store, or Del) to a couple of expressions. All other
+expressions are considered Load by default.
+
+Accordingly, our concrete semantics change. First the state of a program is:
+
+\inlinetodo{the state as defined in the appendix}
+
+and the semantics per se:
+
+\inlinetodo{show new semantics, same from above}
+\inlinetodo{notice that if our program arrives to a \texttt{Execution Halt} the program,
+  and these have increased in number in this new syntax}
+
+Notice the complexity of the type of the functions has increased. Now an expression can
+not only return a value but three other things, the semantics chose which want to return
+depending on the value.
+
+Same example as before with the new syntax and semantics:
+
+\inlinetodo{example again}
+
+\inlinetodo{add another example using a list that references itself and how that can be
+represented as a graph. Much easier to understand}
+
+\section{Abstract Semantics}
+
+In this sections we will intuitively build an abstract domain for the state of the
+language, and we will define the abstract semantics of the language.
+
+\subsection{State Abstract Domain}
+
+\inlinetodo{explain what is the proposed abstract domain for just primitive values in the
+language}
+
+Notice that it is not enough with the primitive values, we need a place where to put them.
+Whe define the abstract state as \inlinetodo{add definition of the State abstract domain}
+
+A throughout explanation of how was the whole AD can be seen in the appendix \todo{add
+  ref}.
+
+Remember the parts of an Abstract Domain, most importantly how to unite two different
+states of a program.
+
+\inlinetodo{explain with an example why is it important to unite two states of a program,
+  an ifelse works just fine}
+
+Now that we have defined our abstract state, we need to define the abstract semantics
+(just like we defined our concrete semantics based on the state).
+
+\subsection{The semantics}
+
+We present the abstract semantics here, for a little bit more rigourus treatment of them
+take a look at the appendix.
+
+Defining the abstract semantics is quite straightforward:
+
+\inlinetodo{show the new semantics}
+
+\inlinetodo{Show an example of running a faulty program with these semantics, the example
+  could be done using images as the last example in the previous section}
+
+To make the abstract interpreter useful, in the implementation we took care of adding
+checks at any needed place. For this, we log every time the program would die with the
+concrete semantics now where they do not die because the abstract interpreter returns the
+wild card value of Top.

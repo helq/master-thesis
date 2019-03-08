@@ -1,0 +1,180 @@
+\chapter{Related Work}\label{related-work}
+
+{\ichange{Revise, rewrite and extend this subsection}}
+
+A big, widely used, and mature language like Python has no lack of
+Static Analysis tools. A big, widely used, and mature area like Machine
+Learning has no lack of people trying to build tools to make writing
+code for it easier. In this chapter, a brief overview of the many Static
+Analysis tools developed for Python code and the several approaches
+taken to solve the problem of tensor shapes.
+
+\section{Static Analysis in Python}\label{static-analysis-in-python}
+
+{\inlinetodo{write down which are the possible classification categories
+for Analysis Tools in Python}}
+
+{\inlinetodo{add note in the difficulty of knowing what is the theory
+behind some of the most widely used linters}}
+
+The table below summarises the different tools and what they rely on:
+
+\begin{verbatim}
+Tool name/source |  Usage  | Analysis base  | Purpose                     |
+---------------------------------------------------------------------------
+@cannon.._2005   | Embeded | Type analysis  | Type checking               |
+Pyflakes[ref]    | Linter  | NA             | Various checks              |
+Pylint           | Linter  | NA             | Various checks              |
+Pychecker        | Linter  | NA             | Various checks              |
+MyPy             | Linter  | Type analysis  | Type checking               |
+Enforce*+(defun) |         | Type analysis  | Type checking               |
+Sagitta* (defun) |         | Type analysis  | Type checking               |
+StyPy            | Linter  | Novel          | Type checking               |
+Lyra             |         | AbstrInter     | Various analyses (including Value Analysis)   |
+Pytropos         | Linter  | AbstrInter     | Value Analysis (specialised on tensor shapes) |
+PyType           | Linter  |                | Type checking and inference |
+ICBD (defun)     | Linter  |                | Type checking and inference |
+Pyre             | Linter  | AbstrInter     | Type checking               |
+Nagini           | Linter  | SMT (Viper)    | Verifier                    |
+Typpete          | Linter  | SMT            | Type inference              |
+fromherz...2018  | ?       | AbstrInter     | Value Analysis | Verifier   |
+monat..2018      | ?       | AbstrInter     | Type Analysis               |
+PyAnnotate*+     | Library | Type analysis  | Type inference              |
+
+*: special cases, they are not an static analysis, but dynamic analysis!
+?: tool has not been made public
++: uses gradual types
+
+Pyflakes [@pyflakes2005]
+Pylint [@thenaultpylint]
+PyChecker [@norwitzpychecker]
+Pytype https://github.com/google/pytype
+ICBD https://github.com/kmod/icbd
+Pyrecheck https://github.com/facebook/pyre-check
+Sagitta https://github.com/peterhil/sagitta
+Nagini https://github.com/marcoeilers/nagini (has paper)
+Typpete https://github.com/caterinaurban/Typpete (two references, a thesis and a paper)
+monat..2018 paper: Static Analysis by Abstract Interpretation Collecting Types of Python Programs
+PyAnnotate https://github.com/dropbox/pyannotate
+\end{verbatim}
+
+{\inlinetodo{write a brief description of each one of the tools
+presented in the table}}
+
+{\inlinetodo{explain special case of the library \texttt{astroid} (part
+of pylint), which is able to perform some Static Value Analysis. It
+stops when it cannot determine the value of anything else. Pretty nice.
+\texttt{astroid.extract\_node(\textquotesingle{}a=1\textbackslash{}nb=2\textbackslash{}nc=a+b\textbackslash{}nc\textquotesingle{});\ next(\_.infer())}.
+https://astroid.readthedocs.io/en/latest/inference.html}}
+
+{\inlinetodo{explain differences between lyra, fromherz..2018 and
+Pytropos}}
+
+{\inlinetodo{lyra was not the first to try abstract interpretation for
+Python, mention pydrogen https://github.com/lapets/pydrogen}}
+
+\section{Tensor Shape Analysis}\label{tensor-shape-analysis}
+
+{\inlinetodo{add idea from http://nlp.seas.harvard.edu/NamedTensor
+Alexander, who suggests building the libraries in a different way so we
+do not have some of the problems of working with nameless shapes}}
+
+{\inlinetodo{extend solutions described below with the new libraries you
+found, comment below}}
+
+\subsection{Solutions in other languages}%
+\label{solutions-in-other-languages}
+
+We may think, If a type system is not expressive enough to capture the
+shape of tensors, then we should just start writing code in a language
+which does. We may write code in a language like Haskell or even C++,
+which have very strong and expressive type systems (it is possible in
+C++ to enforce the shape of the tensors with the use of templates and
+constraints (C++20)).
+
+In fact, solutions in other languages exists. For example,
+\textcite{chen_typesafe_2017} type checks the shape of tensors
+(operations) by restricting what can be constructed (via constraints in
+the types of objects and functions). Chen's solution uses the powerful
+type system of Scala (which runs over the JVM).
+\textcite{eaton_statically_2006} does the same, although in an old
+version of Haskell. Eaton's encoding of tensor shapes is awkward because
+Haskell did not have, at the time, support for natural numbers at the
+type level. Haskell also lacked on syntactic sugar for type functions.
+\textcite{abe_simple_2015} implement type checking for matrices (aka,
+tensors) in OCaml. The library detects the shape of the matrices at
+compile time. \textcite{rakic_statically_2012} type check tensor shapes
+(they call them matrices) with templates in C++. Templates are only
+accessible at compile time, thus the Rakić et al.~library type checks at
+compile.
+
+One recent effort to type check tensor shapes in Haskell is the library
+\texttt{tensorflow-haskell-deptyped} written by
+\textcite{elkin_haskell_2018}. The library is written as a wrapper
+around the library port of TensorFlow for Haskell.
+\texttt{tensorflow-haskell-deptyped} enforces at the type level how and
+which results a operation between compatible tensors is to be performed.
+
+A different path to take is to extend an existing type checking system,
+like MyPy, and extend it with dependent types. Dependent types allow us
+to carry information from the term level to the type level, i.e.~we can
+encode information of our data (available only at runtime) into the type
+system. Over this extended type system, we could implement some
+restrictions to the operations applied to different types (this is in
+fact the strategy taken in the library tensorflow-haskell-deptyped).
+
+\subsection{Theoretical Solutions}\label{theoretical-solutions}
+
+The problem of mismatched shapes is not new, in fact, it is so common
+that it has appeared several times with similar solutions
+\autocites{arnold_specifying_2010}{griffioen_type_2015}{rink_modeling_2018}{slepak_array-oriented_2014}{trojahner_dependently_2009}.
+All solutions, though, are theoretical, they propose type systems which,
+if were to be implemented, could warranty type safety, i.e.~no
+mismatching of tensor shapes could ever happen at runtime.
+
+The following is a small discussion about the different solutions
+proposed to type check tensors found in the literature\footnote{As a
+  side note, it is interesting to notice how difficult is to communicate
+  ideas in science. All the papers presented in this section hope to
+  solve the same (or similar) problem, but they do not reference each
+  other, which means that none of them knew what the others were doing.
+  The principal reason for this, I think, it is because they all called
+  the problem differently.}:
+
+\begin{itemize}
+\item
+  \textcite{trojahner_dependently_2009}: A paper on type checking of
+  arrays. They define all type restrictions using dependent types
+  (something that no other paper does). The special keyword of this work
+  is \enquote{array programming}.
+\item
+  \textcite{arnold_specifying_2010}: A paper focused on type checking of
+  sparse \enquote{matrix} operations. They define a functional language
+  that can be translated into a lower level language, or machine code.
+  They give a complete formalization of the algorithms and proofs of
+  correctness in Isabelle. The special keyword of this work is
+  \enquote{sparse matrix}.
+\item
+  \textcite{griffioen_type_2015}: A paper focused in type checking and
+  inference of arrays in array programming and vector spaces. They
+  define a special type system in which tensors are first class
+  citizens. The algorithm used for type checking is
+  \enquote{Unification} which allows them to infer the type shape of
+  arrays. The special keyword of this work is \enquote{array
+  programming}.
+\item
+  \textcite{slepak_array-oriented_2014}: A paper that tries to formalise
+  array-oriented programming languages and extend them with unit-aware
+  operations. Array-oriented programming languages are languages which
+  base all their computations in arrays (like matlab), but they usually
+  aren't formalised. The types of arrays not only carry information
+  about their shape but also of the unit they carry. The special
+  keywords of this work are \enquote{array-oriented programming} and
+  \enquote{unit-aware computation}.
+\item
+  \textcite{rink_modeling_2018}: In this paper, Rink formalises a type
+  system to type check the shape of tensors and defines a language to
+  use with the type system. It is a custom type system which does not
+  require of dependent types. The special keyword of this work is
+  \enquote{tensor manipulation language}.
+\end{itemize}

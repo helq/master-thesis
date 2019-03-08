@@ -1,0 +1,283 @@
+\chapter{Gotchas and Other ideas to Static Analysis in Python}%
+\label{gotchas-and-other-ideas-to-static-analysis-in-python}
+
+\ichange{This is just a DRAFT! REVISE!!}
+
+\emph{\large Note: This chapter is probably the most informal of the whole
+book. The principal idea of this chapter is to explain a little bit
+deeper the history of the whole thesis, some of the things I tried to
+solve the problem at hand, and what avenues I found could be explored
+and which are probably dead ends. This whole chapter is me rambling
+about various stuff}
+
+In here, I write on the multiple other ways I thought on how to
+Statically analyse the shape of tensors. I explored some of them but
+never really finish them, while others just proved to be bad ideas
+altogether.
+
+Some background. The principal, original, idea for my master thesis was
+to check the shape of tensors and check the validity of tensor
+operations. I did not consider Abstract Interpretation as my first
+option to statically analyse code. In fact my whole exposure to Static
+Analysis had been Type Inference, some Data Flow Analysis algorithms,
+and some exposure into SMT solvers theory and practice.
+
+I will mention each one of the approaches I tried in chronological
+order.
+
+{\nonsection{Tensor Shape Type Checking - Haskell}}
+
+Everything started in Haskell. I wrote a wrapper library around a
+Haskell wrapper library for TensorFlow \autocite{abadi_tensorflow_2016}.
+The library uses one of the lastest additions to the language, Dependent
+Types \autocite{eisenberg_dependent_2016}. Dependent Types allow me to
+define the shape of tensors at the type level, which allows the compiler
+to check for the correctness of tensor operations at compilation time.
+
+My main motivation to use Haskell is its very strict type system, and
+the tools that it incorporates to work with types. For example, in GHC,
+the standard Haskell implementation, one can ask for the inferred type
+of an expression by annotating the type with the type symbol
+\texttt{\_}\footnote{They are called holes. There are two types of
+  holes: (regular) holes and type holes. A hole is an unknown expression
+  and a type hole is an unknown type. You can put a whole at the type
+  level and the compiler will tell you what is the type that should be
+  at that position. I found this incredibly neat and useful!}, thus we
+can ask what shape of tensor should we use in the middle of an
+operation.
+
+Although, type checking tensor shapes in Haskell proved to be possible
+and not all too hard, albeit a very verbose at times, I yet have to know
+the first Deep Learning enthusiast who writes in Haskell. So, I decided
+to apply the same idea into Python, the \enquote{language} of Deep
+Learning.
+
+Some efforts have been made to add type inference and type checking into
+Python (See Related Work, Chapter \ref{related-work})), the most
+important one being MyPy.
+
+{\nonsection{Extending MyPy}}
+
+MyPy builds on the idea of Gradual Typing. MyPy is able to infer the
+type of primitive values and allows optional annotations to check the
+code. Sadly, MyPy does not consider literal numbers as valid types
+(\texttt{int}, \texttt{float}, \texttt{List{[}int{]}} are valid types
+but no \texttt{3} or \texttt{List{[}2,\ int{]}}), so it is currently
+impossible to type annotate a variable with the size of the variable,
+e.g.~something like \texttt{np.ndarray{[}2,\ 3,\ 4{]}}.
+
+But hope is still not lost! We can encode numbers in MyPy's Type System
+in a similar way to how was done in
+\autocites{chen_typesafe_2017}{eaton_statically_2006}. We can encode 1
+as \texttt{Tuple{[}None{]}}, 2 as \texttt{Tuple{[}None,\ None{]}}, and
+so on.
+
+Additionally, we can compare fields between two variables in an
+operation with the use of \texttt{TypeVar}s (variables at the type
+level). With these two ideas, we can rudimentary check the shapes of
+tensors. First we write a stub file \autocite{pep484} with type
+annotations to check for the shape of NumPy arrays:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# numpy.pyi}
+\ImportTok{from}\NormalTok{ typing }\ImportTok{import}\NormalTok{ Any, Generic, Optional, Tuple, TypeVar}
+
+\NormalTok{S }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'S'}\NormalTok{)  }\CommentTok{# Used for dtype}
+\NormalTok{Shape }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'Shape'}\NormalTok{)  }\CommentTok{# Used for the shape}
+\NormalTok{s1 }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'s1'}\NormalTok{)  }\CommentTok{# Another variable to use as reference to a shape}
+\NormalTok{s2 }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'s2'}\NormalTok{)}
+\NormalTok{s3 }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'s3'}\NormalTok{)}
+
+
+\KeywordTok{class}\NormalTok{ ndarray(Generic[S, Shape]):}
+    \KeywordTok{def} \FunctionTok{__init__}\NormalTok{(}\VariableTok{self}\NormalTok{, shape: Any) }\OperatorTok{->} \VariableTok{None}\NormalTok{: ...}
+
+    \KeywordTok{def}\NormalTok{ dot(}
+            \VariableTok{self}\NormalTok{: }\StringTok{'ndarray[S,Tuple[s1,s2]]'}\NormalTok{,}
+\NormalTok{            b: }\StringTok{'ndarray[S,Tuple[s2,s3]]'}
+\NormalTok{    ) }\OperatorTok{->} \StringTok{'ndarray[S,Tuple[s1,s3]]'}\NormalTok{: ...}
+
+    \KeywordTok{def} \FunctionTok{__add__}\NormalTok{(}
+            \VariableTok{self}\NormalTok{: }\StringTok{'ndarray[S,Shape]'}\NormalTok{,}
+\NormalTok{            value: }\StringTok{'ndarray[S,Shape]'}
+\NormalTok{    ) }\OperatorTok{->} \StringTok{'ndarray[S,Shape]'}\NormalTok{: ...}
+
+
+\KeywordTok{def}\NormalTok{ array(}\BuiltInTok{object}\NormalTok{: Any) }\OperatorTok{->}\NormalTok{ ndarray[Any, Shape]: ...}
+\end{Highlighting}
+\end{Shaded}
+
+And now we write the piece of code to type check:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
+\ImportTok{from}\NormalTok{ typing }\ImportTok{import}\NormalTok{ Tuple}
+
+\NormalTok{one   }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{]}
+\NormalTok{two   }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{]}
+\NormalTok{three }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{]}
+\NormalTok{four  }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{]}
+
+\CommentTok{# x has shape (2,3)}
+\NormalTok{x }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{], [}\DecValTok{4}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{]])  }\CommentTok{# type: np.ndarray[float, Tuple[two, three]]}
+
+\CommentTok{# y has shape (4,1)}
+\NormalTok{y }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{7}\NormalTok{], [}\DecValTok{0}\NormalTok{], [}\DecValTok{2}\NormalTok{], [}\DecValTok{1}\NormalTok{]])    }\CommentTok{# type: np.ndarray[float, Tuple[four, one]]}
+
+\NormalTok{w }\OperatorTok{=}\NormalTok{ x }\OperatorTok{+}\NormalTok{ y  }\CommentTok{# fails! And MyPy warns us!! :D}
+
+\CommentTok{# THIS SHOULD FAIL IN MYPY!! But it doesn't :(}
+\NormalTok{z }\OperatorTok{=}\NormalTok{ x.dot(y)  }\CommentTok{# type: np.ndarray[float, Tuple[two, one]]}
+\end{Highlighting}
+\end{Shaded}
+
+Everything seems to work perfectly, MyPy detects that the two numpy
+arrays cannot be added together because the have different shapes, but
+MyPy does not detect the error on multiplying two non-compatible
+matrices. We told MyPy in the stub that the shape of the last dimension
+in \texttt{self} (\texttt{s2}) should be the same as the first dimension
+in \texttt{b}, but MyPy does not verify this condition
+(\texttt{three\ !=\ four}).
+
+Unfortunatelly, MyPy's \texttt{TypeVar}s are not fully-fledged type
+variables. MyPy does not handle Dependent Types, so a solution as the
+one suggested for Haskell could not completely be coded.
+
+Two options came from this experiment, either look how to extend MyPy
+type variables handling to work in the general case or ignore type
+checking as a possible solution at the moment.
+
+{\nonsection{StyPy}}
+
+As I mentioned in Chapter \ref{pytropos-analysis-implementation}, before
+I encountered Abstract Interpretation as a way to Statically Analyse
+code\footnote{I know, it is a very old, well understood, and broadly
+  applied analysis technique but I didn't know much about the broad
+  world of Static Analysis before I delved deep into it.} I found
+\emph{StyPy} \autocite{ortin_towards_2015}.
+
+The idea behind StyPy is to reuse the infraestructure of the language to
+analyse to not write everything from scratch. The idea is to take the
+code to analyse and rewrite/transform it into a new piece of code that
+when run it performs Static Type Analysis. This approach presents to
+difficulties: first, it was planned as a technique for Static Type
+Analysis not Static Value Analysis, and second, it is a very naïve and
+novel idea, it is not very well formalised.
+
+When you require to know only the type of a variable, its value becomes
+irrelevant. If we do not consider any weird introspection Python
+capabilities, it does not matter how many times you run a loop a
+variable will always keep the same type after the first loop iteration,
+i.e.~there is no need to consider complex scenarios and joining
+operations for the type of a variable as we need to consider for the
+value of a variable inside a loop.
+
+There have not been any updates on the theory behind the project since
+the paper was published in 2015.
+
+All in all, the idea of reusing some of the infraestructure by rewriting
+the code and running it in the same platform where one wants to analyse
+the code is a very interesting idea. In fact, this idea has been applied
+in other static analyses, for example, \textcite{lauko_symbolic_2018}
+explain how they built a symbolic analyser for LLVM bytecode by reusing
+some of the infraestructure of LLVM and not rewriting a complete
+interpreter for LLVM from the ground up.
+
+Pytropos started from the same idea of StyPy, transform and run modified
+code. The idea would be that any variable in the (extended) interpreter
+could be any of Python's or \texttt{Any} (\texttt{?}, the special type
+introduced in Gradual Typing). An \texttt{Any} value would tell me that
+I have no idea of the value contained in the variable, just that the
+variable contains a variable. I discarded the idea of modifying StyPy as
+it would mean rewriting the whole program for my purpose. So I went on
+looking different projects that I could modify to implement the Static
+Value Analysis I was considering.
+
+{\nonsection{Modify PyPy}}
+
+Once I considered building a special purpose interpreter to analyse the
+shape of tensors (as an Abstract Interpreter is), I took a look in other
+projects that had implemented interpreters for python. a very
+interesting project is pypy. pypy \autocite{krekel_pypy_2007} is a
+project focused on providing an alternative implementation of python
+with added characteristics. most importantly, pypy is written in python
+(or a subset of python, called rpython) and pypy can be extended/its
+semantics can be modified. apparently, pypy offers a way to change the
+semantics of the interpreter\footnote{the object space can be modified
+  as explained in \url{http://doc.pypy.org/en/latest/objspace.html}}.
+
+both characteristics; pypy being written in python, allowing for an easy
+introspection and modification of its internals, and the ease of
+modifing some of its semantics; made me think of using pypy as a
+\enquote{base} for the custom made interpreter. i did not follow this
+route because the work to be done to allow having different states of a
+program and joining them (used in \texttt{if} branching when choice can
+be made between two branches) seemed to require rewritting a big chunk
+of the core of pypy. starting from zero seemed a better idea.
+
+{\nonsection{abstract interpretation}}
+
+in the end, i decided to build my own interpreter from scratch. it took
+me a couple of months to arrive to something relatively usable but i
+found out in the process that branching, loops, exceptions, and breaking
+control statements made the implementation of a interpreter that used
+\texttt{any} values very challenging (how are the semantics of a
+non-deterministic \texttt{if}, of a loop, an exception, etc).
+
+it became clear that trying to build an (extended) interpreter from
+scratch would be very hard if no clear formal framework was used to put
+everything into perspective. enter abstract interpretation. i cannot say
+that i found abstract interpretation as the solution for the many
+problems that an extended value \enquote{system} presented, because i
+had no idea such thing existed.
+
+as you may have noticed, i just arrived a the \enquote{proposed}
+solution of my problem (static value analysis) by \enquote{mere} chance.
+i was looking at the literature of static analysis, but i thought there
+was little i could use from it. how wrong was i! always so
+smartass{\todo{change wording}}.
+
+anyway, once i studied together with my advisors the theory of abstract
+interpretation, i knew that ai was the solution for my problem. it was a
+long path nontheless, as it required to formalise a couple of things
+about the language and define an abstract domain for the state of the
+language, which proved to be challenging but rewarding.
+
+now, i must mention here that i did came across a project that was doing
+pretty much what i wanted to do, namely an abstract interpreter for
+python. {\todo{add ref to lyra}} lyra is a project led by {\todo{fill
+me}} which purpose is to build an abstract interpreter for python. there
+are two reasons why i chosed not to use lyra for this thesis: the first
+is purely egothistical and not practical at all, i wanted to build
+something from my own, something from \enquote{scratch}\footnote{please,
+  dear advisors, do not kill me for writing this!}; the second reason
+was that i had found the idea of reusing some of the python
+infraestructure too fascinating to let it into oblivion, rewriting
+python code to run it into with python seems just a nice metaidea.
+
+{\nonsection{Other Ideas}}
+
+Other routes, I did considered to follow but did not because of time
+restrictions where:
+
+\begin{itemize}
+\tightlist
+\item
+  If all we wanted was to check the shape of tensors and tensor
+  operations for a couple of scenarios, we could build a Static Analysis
+  out of various Data Flow Algorithms. Data flow analyses are simple,
+  well studied, and already implemented in a couple of Static Analysis
+  frameworks {\todo{add reference to an Overview of Program Analysis
+  framework that the mention (I think it was for Netbeans or some other
+  IDE)}}. The only work would be combining them adecuately to know the
+  shape of tensors and consequently check for the correctness of a
+  couple of cases.
+\item
+  Another option may have been encoding the shapes as constraints. The
+  constraints could be checked using an out of the shelve equation
+  solver (SMTs). In fact, a big chunk of the work for this has already
+  been done, an implementation for Python for example {\todo{Add
+  reference on ETH people doing this}}.
+\end{itemize}

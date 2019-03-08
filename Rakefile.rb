@@ -5,27 +5,32 @@ PDF = "#{MAIN}.pdf"
 TEX = "#{MAIN}.tex"
 AUX = "#{MAIN}.aux"
 
-CLEAN.include(['aux', 'bbl', 'bcf', 'blg', 'log', 'out', 'run.xml', 'tdo', 'toc'].collect {|ext| "#{MAIN}.#{ext}"})
+TEX_FILES = FileList.new('chapters/??-*.tex')
+
+CLEAN.include(['chapters/*.aux'] +
+              ['aux', 'bbl', 'bcf', 'blg', 'log',
+               'out', 'run.xml', 'tdo', 'toc'].collect {|ext| "#{MAIN}.#{ext}"})
 CLOBBER.include PDF
 
-task :default => [:compile]
+task :default => [:compile] do
+  sh "xelatex -shell-escape '#{TEX}'"
+  sh "xelatex -shell-escape '#{TEX}'"
+  puts "DONE"
+end
 
 file AUX => ['bibliography.bib'] do
-  sh "xelatex '#{TEX}'"
+  sh "xelatex -shell-escape '#{TEX}'"
   sh "biber '#{MAIN}'"
 end
 
-file PDF => ['MastersDoctoralThesis.cls', AUX, TEX] do
-  sh "xelatex '#{TEX}'"
-  sh "xelatex '#{TEX}'"
+file PDF => (['MastersDoctoralThesis.cls', AUX, TEX] + TEX_FILES) do
+  sh "xelatex -shell-escape '#{TEX}'"
+  sh "xelatex -shell-escape '#{TEX}'"
   puts "DONE"
 end
 
 desc "Creates pdf file"
 task :compile => [PDF]
-
-#desc "runs `xelatex` once"
-#task :once => [PDF]
 
 desc "Runs 'compile' every second, if no change have been made nothing is done"
 task :cicle do

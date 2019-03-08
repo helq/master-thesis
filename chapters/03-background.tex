@@ -1,0 +1,851 @@
+\chapter{Background}\label{background}
+
+In this chapter, we explore a couple of motivational topics and ideas
+necessary on the development of the Static Value Analysis proposed in
+Chapter \ref{appendix-ai-theory}.
+
+\section{Dynamic and Static Analysis}%
+\label{dynamic-and-static-analysis}
+
+Static Analysis and Dynamic Analysis are two
+disciplines{\todo{really??}} whose ideal is to ensure some property
+holds on a piece of code. Static Analysis checks the code without the
+need to run the code, while Dynamic Analysis checks the code as it is
+executed.
+
+Static Analysis is often associated with compiled Programming Languages.
+Compiled Programming Languages require to know how to precisely
+translate the operations of the language into machine instructions.
+Compiled Programming Languages make use of a variety of Static Analyses
+to find out the suitable machine instructions for a piece of code.
+
+Interpreted Programming Languages, on the other hand, find out which
+machine instructions to use for a given operation as they encounter the
+operations, thus they make heavy use of Dynamic Analyses. Notice that
+the distinction between Compiled Programming Languages and Interpreted
+Programming Languages does not stem from their use of Static and Dynamic
+Analyses but how they process the input files. Compiled Programming
+Languages read the totality of the input files and translate the
+operations into machine instructions, while Interpreted Programming
+Languages do not need to read the whole file before starting to execute
+the instructions in them.
+
+Static and Dynamic Typing are two categories of the same kind of
+Analysis, Type Analysis \autocite{pierce_types_2002}. Type Analysis
+tells compilers and interpreters the type of a variable. Both Static and
+Dynamic Typing based Programming Languages have strong and weak points:
+Compiled Languages hold stronger warranties for the resulting binary as
+they restrict the set of valid programs to those that \enquote{type
+check}, and Interpreted Languages allow the programmer to forgo the
+usually expensive step of compiling code.
+
+Dynamically Typed, Interpreted Programming Languages (Dynamically Typed
+Languages) are excellent tools for prototyping as they let the developer
+test their code without waiting for it to compile. However, writing big
+pieces of software in a Dynamically Typed Language is often a
+challenging task as the type warranties are not as strong as in compiled
+programming languages.
+
+Developers are more prone to make a mistake that will only appear once
+the code is executed in a Dynamically Typed Languages opposed to
+Statically Typed (Compiled) Languages. Dynamic Typing is not ideal for
+code that needs to warranty a high degree of reliability. Reliability
+defined as the certainty that the code will never fail due to type
+mismatches.
+
+Traditional Static Typing can be applied to Dynamically Typed Languages
+to acquire the same level of confidence of Statically Typed Languages.
+Unfortunately, the restrictions Static Typing induces in the code often
+make them to much of a hassle for developers of Dynamic Typed Languages.
+
+Several proposals to make Dynamic Type Systems more robust have appeared
+in recent years. Some notable proposals and implementations include:
+
+\begin{itemize}
+\tightlist
+\item
+  Gradual types for python, Mypy \autocite{lehtosalo2016mypy},
+\item
+  Gradual types for Javascript, Typescript
+  \autocites{bierman2014understanding}{hejlsberg2012introducing} and
+  Flow \autocite{chaudhuri2016flow},
+\item
+  Gradual types for ruby, using the library rubydust
+  \autocite{an_dynamic_2011}, and
+\item
+  Refinement types for Ruby \autocite{kazerounian_refinement_2017}.
+\end{itemize}
+
+Gradual Typing \autocite{siek_gradual_2006} was proposed as a way to
+bridge the gap between Static and Dynamic Typing. The main idea of
+Gradual Typing is to enforce Static Typing only to those parts of the
+code that the developer cares about.
+
+Gradual Typing adds a new type value to the Type System, \texttt{?}
+(named \emph{Any}). In Gradual Typing all variables are of type
+\texttt{?} unless the user annotates them with a more precise type like
+\texttt{int} or \texttt{float}. Type annotations are optional in Gradual
+Typing, as opposed to Static Typing where the type of all variables must
+be known (either by annotations or inference). Strictly speaking,
+Gradual Typing is a Static Typing Algorithm that simulates Dynamic
+Typing by extending the typing rules with the type \texttt{?}. Operating
+with \texttt{?} means that we have no idea of the type of the variable
+we are working with, exactly what happens on Dynamic Typing.
+
+Refinement Types \autocite{rushby_subtypes_1998} are mainly used for
+verification. The idea of Refinement Types is to make sure a piece of
+code follows a formal specification. Formal specifications are written
+in logic and are translated, usually, into propositional formulae to be
+checked by SAT or SMT Solvers.
+
+\section{Python Type Annotations}\label{python-type-annotations}
+
+Since Python 3.5 \autocite{pep484} functions inputs and output can be
+annotated with types. Since Python 3.6 \autocite{pep526} variables can
+be type annotated too. Type annotations do no modify the type of the
+variable they are attached to. Their purpose is only to provide a way to
+annotate the type the user believes the variable has. Type annotations
+are used by external libraries as MyPy \autocite{lehtosalo2016mypy} and
+Enforce \footnote{GitHub project accessible on
+  \url{https://github.com/RussBaz/enforce}} to check for correctness of
+the code. The Python \texttt{typing} library offers a builtin arange of
+variables to type annotate variables. For an in-depth explanation on the
+goal of Type Annotations and how are they used in Python refer to
+\autocite{pep483}.
+
+\section{Machine Learning and Python}%
+\label{machine-learning-and-python}
+
+Machine Learning has been on the rise for the last couple of years since
+Deep Learning (DL) exploded in popularity. DL has been able to
+outperform the state of the art in many areas in computer science. DL
+research consists of finding new models that perform a certain task as
+well as possible (sometimes even better than humans).
+
+A trained DL model represents the work of many hundreds of hours (often
+thousand or more) of computing and coding time. Hundreds of DL models
+have been released to the public by research institutes, the academia,
+and the industry alike. Given the high amount of competition, it is
+fundamental for DL practitioners to be able to test many DL models as
+fast as possible. Trying to find a better model before than others is a
+fierce fight that drains many hours of laborious thinking, coding and
+debugging.
+
+Nowadays, most papers on Machine Learning (ML) and Deep Learning (DL)
+use Python to define their models. In fact, most DL libraries have an
+interface to Python. Some of the many Python libraries at disposition
+for programmers are: TensorFlow \autocite{abadi_tensorflow_2016},
+PyTorch \autocite{paszke2017pytorch}, (the now defunct) Theano
+\autocite{bergstra2011theano}, and pycaffe \autocite[as part of the
+Caffe framework]{jia2014caffe}.
+
+Python has become just the right tool for prototyping models, and
+therefore, Python (and other Dynamic Typed Languages like Lua) has been
+the primordial playground for DL enthusiasts in the last couple of
+years.
+
+\section{Tensors}\label{tensors}
+
+Array computation is a convenient abstraction to write code that
+requires the manipulation blocks of variables. The NumPy library
+presents an example of what can be done with it. Notice how the two
+pieces of code below perform the same operation (\enquote{normalization}
+of the values in the matrix) but NumPy does it in just fewer lines:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
+\NormalTok{A }\OperatorTok{=}\NormalTok{ np.array([}
+\NormalTok{  [}\FloatTok{1.}\NormalTok{, }\FloatTok{2.}\NormalTok{, }\FloatTok{4.}\NormalTok{],}
+\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{3.}\NormalTok{, }\FloatTok{2.}\NormalTok{],}
+\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{9.}\NormalTok{, }\FloatTok{5.}\NormalTok{],}
+\NormalTok{])}
+
+\NormalTok{A }\OperatorTok{/=}\NormalTok{ np.}\BuiltInTok{max}\NormalTok{(A)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{A }\OperatorTok{=}\NormalTok{ [}
+\NormalTok{  [}\FloatTok{1.}\NormalTok{, }\FloatTok{2.}\NormalTok{, }\FloatTok{4.}\NormalTok{],}
+\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{3.}\NormalTok{, }\FloatTok{2.}\NormalTok{],}
+\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{9.}\NormalTok{, }\FloatTok{5.}\NormalTok{],}
+\NormalTok{]}
+
+\NormalTok{m }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(}\BuiltInTok{map}\NormalTok{(}\BuiltInTok{max}\NormalTok{, A))}
+\ControlFlowTok{for}\NormalTok{ i }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{3}\NormalTok{):}
+  \ControlFlowTok{for}\NormalTok{ j }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{3}\NormalTok{):}
+\NormalTok{    A[i][j] }\OperatorTok{/=}\NormalTok{ m}
+\end{Highlighting}
+\end{Shaded}
+
+Multidimensional arrays, arrays which are indexed by not one but two
+integers, are often called tensors. We take in this work the same
+approach of calling all--arrays, matrices and tensors--the same way,
+tensors. If a tensor has one dimension it is equivalent to an array, and
+if it has two dimensions it is equivalent to a matrix.
+
+Operating with tensors is often syntactically simpler than using looping
+structures to operate with blocks of memory, i.e.~writing \texttt{a+b},
+where \texttt{a} and \texttt{b} are tensors is simpler than
+\texttt{{[}a{[}i{]}+b{[}i{]}\ for\ i\ in\ range(len(a)){]}}. Besides,
+\texttt{a+b} even works for tensors with different (but compatible)
+shapes.
+
+\section{NumPy: Library for tensor computation}
+\label{numpy-library-for-tensor-computation}
+
+The primary purpose of this work is to build a Static Value Analysis to
+check for tensors and tensors operations. NumPy
+\autocite{oliphant2006guide} is a very widely used library to operate
+with tensors and arrays, in fact, many other libraries are built on top
+of NumPy.
+
+NumPy tensors are called arrays. An array can be created out of almost
+anything, almost any type of value can be interpreted into an array by
+NumPy\footnote{Notice that this represents a challenge for Static Type
+  Analysis as it requeries the type of a variable to depend on the
+  contents of the variable. Fortunately calculating the contents of a
+  variable is what Abstract Interpretation does. An Abstract Interpreter
+  allows us to implement/replicate the whole semantics of a library in a
+  similar way at how it is defined in the original library}. For
+example, all of the following variables hold a valid NumPy array:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a }\OperatorTok{=}\NormalTok{ np.array(}\StringTok{"some text"}\NormalTok{)       }\CommentTok{# array of chars (8-bit numbers)}
+\NormalTok{b }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{], [}\DecValTok{2}\NormalTok{, }\DecValTok{4}\NormalTok{]])  }\CommentTok{# array of ints of shape (2, 2)}
+\NormalTok{c }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{], [}\DecValTok{2}\NormalTok{]])     }\CommentTok{# array of objects of shape (2,)}
+\NormalTok{d }\OperatorTok{=}\NormalTok{ np.array([(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{), [}\DecValTok{2}\NormalTok{, }\DecValTok{5}\NormalTok{]])  }\CommentTok{# array of ints of shape (2, 2)}
+\NormalTok{e }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{], \{}\DecValTok{2}\NormalTok{, }\DecValTok{5}\NormalTok{\}])     }\CommentTok{# array of objects of shape (2,)}
+\end{Highlighting}
+\end{Shaded}
+
+The shape of a NumPy array can be changed without changing its contents:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a }\OperatorTok{=}\NormalTok{ np.arange(}\DecValTok{50}\NormalTok{)}
+\NormalTok{a }\OperatorTok{=}\NormalTok{ a.reshape((}\DecValTok{1}\NormalTok{,}\OperatorTok{-}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{))}
+\end{Highlighting}
+\end{Shaded}
+
+Reshaping preserves the number of elements in an array. If an
+\texttt{-1} is found, it will be taken as a wild card and the missing
+dimension will be calculated to keep the original shape.
+
+Numpy has this little, nice trick to handle operations that would
+require reshaping or copying an array when operating with two arrays
+with different, but similar, shapes. The trick is called broadcasting,
+and can be better understood with an example:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a }\OperatorTok{=}\NormalTok{ np.zeros((}\DecValTok{10}\NormalTok{, }\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{)) }\OperatorTok{+} \DecValTok{2}
+\NormalTok{b }\OperatorTok{=}\NormalTok{ np.arange(}\DecValTok{3}\NormalTok{).reshape((}\DecValTok{3}\NormalTok{, }\DecValTok{1}\NormalTok{))}
+\NormalTok{c }\OperatorTok{=}\NormalTok{ a }\OperatorTok{*}\NormalTok{ b}
+\end{Highlighting}
+\end{Shaded}
+
+Notice that the code is valid and evaluates in Python. The shape of
+\texttt{a} is \texttt{(10,\ 3,\ 4)} because adding an array of any shape
+to an \texttt{int} gives us back an array with the same shape, i.e.~we
+have added a scalar to every element of a tensor. \texttt{b} has a shape
+of \texttt{(3,\ 1)} and the shape of \texttt{c} is
+\texttt{(10,\ 3,\ 4)}. Broadcasting \enquote{generalises} the rule of
+operating with a scalar (as it is done in the first line). The rule
+works by extending with \texttt{1}'s the left side of the smaller shape
+until both are equal, and then checking if the dimensions of both shapes
+are compatible. Two dimensions are compatible if are the same or one of
+them is \texttt{1}. For a deeper explanation on broadcasting take a look
+at \url{https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html}.
+
+\section{Abstract Interpretation}\label{abstract-interpretation}
+
+In this section, a rather informal description of Abstract
+Interpretation is given. For an in-depth explanation of Abstract
+Interpretation refer to \autocites[Chapters 1 and
+4]{nielson2015principles}{cousot_abstract_1977}{nipkow_abstract_2014}.
+
+\subsection{Informal Introduction}\label{informal-introduction}
+
+Static Analysis includes a broad assortment of techniques with the
+purpose of verifying some property in the code. It may be trying to
+prove some invariant in the code, like there is never a segmentation
+fault, the code does what it says it does even when ran in concurrently,
+or the codes terminates (given some restrictions
+\autocite{urban_static_2015}).
+
+Abstract Interpretation was conceived \autocite{cousot_abstract_1977} as
+a way to approximate the result of all possible executions of a
+computation. Specifically, Abstract Interpretation computes an
+\textbf{over}approximation of some property of the program. To explain
+what an overapproximation is consider the following piece of code:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(}\BuiltInTok{input}\NormalTok{())}
+\NormalTok{a }\OperatorTok{=} \BuiltInTok{abs}\NormalTok{(a)}
+\NormalTok{b }\OperatorTok{=} \DecValTok{2} \OperatorTok{*}\NormalTok{ a}
+\end{Highlighting}
+\end{Shaded}
+
+Assuming the user inputs a valid number and the code runs as intended,
+we know at the end of the computation that: \texttt{a} holds a
+non-negative integer, and \texttt{b} holds a non-negative integer
+multiple of 2. An overapproximation of this computation is saying that
+\texttt{a} and \texttt{b} are both non-negative integers (notice that we
+do not say that \texttt{b} is even).
+
+There is an inherent tradeoff between the precision of an
+overapproximation, and the amount of storage and processing the
+overapproximation requires. The most precise method is to store in a set
+all the possible values a computation may take but it is often
+impossible to do. The example above asks us to store an infinite set of
+numbers, which is impossible.
+
+What is very interesting about Abstract Interpretation is that it is
+based on solid theory. If one applies it correctly, a Static Analysis
+based on Abstract Interpretation is warrantied to be sound, i.e.~it can
+warranty there will never be a miss or false negatives. Although given
+the nature of overapproximating, the Static Analysis may produce a load
+of false positives. The amount of false positives depends on the
+specific overapproximation used.
+
+How is the overapproximation calculated and which tools do we have at
+our disposal to compute it? The following subsections present briefly
+the important concepts behind Abstract Interpretation. For an in-depth
+explanation of Abstract Interpretation refer to \autocites[Chapters 1
+and
+4]{nielson2015principles}{cousot_abstract_1977}{nipkow_abstract_2014}.
+
+\subsection{Ingredients for an Abstract Interpreter}
+\label{ingredients-for-an-abstract-interpreter}
+
+Before we start we need some groundwork. First of all, as always in
+Programming Languages, we need a language to analyse together with its
+formal semantics. We also need a property we want to analyse.
+
+Specific for this work, the property to analyse will be the value of
+variables throughout the execution of the program. i.e.~Value Analysis.
+Abstract Interpretation can be used to analyse any other property of
+programs, some examples include: memory consumption, functional
+properties, thread safety, computation traces, and termination.
+
+Before we can analyse a piece of code, we require to know the language
+to analyse. For Value Analysis we require the following description of
+the language:
+
+\begin{itemize}
+\tightlist
+\item
+  The syntax of the language (how to write things),
+\item
+  The values the language handles (for example, integers, booleans and
+  floats),
+\item
+  The state of a program (how to group the values and their names), and
+\item
+  The concrete semantics of the language (the rules that tell us how to
+  evaluate the code)
+\end{itemize}
+
+Given these we can define:
+
+\begin{itemize}
+\tightlist
+\item
+  An Abstract Domain for the values in the language (the
+  overapproximation used to represent values),
+\item
+  An Abstract Domain for the state of the program (overapproximates the
+  state of the program), and
+\item
+  The abstract semantics induced from the Abstract Domain and the
+  concrete semantics.
+\end{itemize}
+
+\subsection{Value Abstract Domain}\label{value-abstract-domain}
+
+Our goal with Abstract Interpretation is to overapproximate the result
+of running a program on all possible inputs. Remember that a variable
+holds a single value at the time, so a naïve approach to run over all
+possible inputs is to extend what a variable can hold.
+
+Suppose a variable can hold a set of values, not a single value, and we
+extend the semantics of a language to operate over all combinations of
+values any time an operation is made between two variables. If we do
+this, we will be able to calculate all possible states a program may
+arrive. For example, consider:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{cond1 }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(}\BuiltInTok{input}\NormalTok{())  }\CommentTok{# Stdin input}
+\NormalTok{cond2 }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(}\BuiltInTok{input}\NormalTok{())}
+
+\ControlFlowTok{if}\NormalTok{ cond1:}
+\NormalTok{  a }\OperatorTok{=} \DecValTok{0}
+\NormalTok{  b }\OperatorTok{=} \DecValTok{20}
+\ControlFlowTok{elif}\NormalTok{ cond2:}
+\NormalTok{  a }\OperatorTok{=} \DecValTok{2}
+\NormalTok{  b }\OperatorTok{=} \DecValTok{6}
+\ControlFlowTok{else}\NormalTok{:}
+\NormalTok{  a }\OperatorTok{=} \DecValTok{1}
+\NormalTok{  b }\OperatorTok{=} \DecValTok{9}
+\end{Highlighting}
+\end{Shaded}
+
+After running the code, we know that \texttt{a} \(\in \{0, 1, 2\}\) and
+\texttt{b} \(\in \{6, 9, 20\}\). Now, if we want to compute \texttt{a+b}
+we must compute all possible results of computing with the values from
+\texttt{a} and \texttt{b}, which results in \texttt{a+b}
+\(\in \{6, 9, 20, 7, 10, 21, 8, 11, 22\}\). Notice how the result of
+calculating \texttt{a+b} overapproximates the real values \texttt{a+b}
+can take, i.e. \texttt{a} and \texttt{b} are assumed to be independent
+of each other so we get way more possible values for \texttt{a+b} than
+can actually be computed (we overapproximate).
+
+It is clear that computing with sets of values is expensive, even
+impossible at times, e.g.~the set \(\{a \in \mathbb{N} | a \leq 0\}\)
+cannot be stored in memory.
+
+What we can do to not compute all possible computations is to use an
+abstraction that lets us overapproximate the values contained in the
+sets. For example, if we use interval arithmetic to approximate the sets
+we get:
+
+\texttt{a} \(\in \left[0, 2\right]\), \texttt{b}
+\(\in \left[6, 20\right]\), and \texttt{a+b} \(\in \left[6, 22\right]\)
+
+Which can be easily stored and manipulated (we only require two numbers
+to encode an interval). Notice how any abstraction will make us lose
+some precision. This is the inherent tradeoff of computing using
+Abstract Interpretation, we lose precision.
+
+Notice that overapproximating the value of variables can lead us often
+to think that a piece of code may be erroneous even if it does not.
+Consider:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{b }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(}\BuiltInTok{input}\NormalTok{())}
+
+\ControlFlowTok{if}\NormalTok{ b:}
+\NormalTok{  a }\OperatorTok{=} \DecValTok{2}
+\NormalTok{  b }\OperatorTok{=} \DecValTok{-1}
+\ControlFlowTok{else}\NormalTok{:}
+\NormalTok{  a }\OperatorTok{=} \DecValTok{6}
+\NormalTok{  b }\OperatorTok{=} \DecValTok{3}
+
+\NormalTok{c }\OperatorTok{=}\NormalTok{ a }\OperatorTok{/}\NormalTok{ b  }\CommentTok{# c is either -2 or 2}
+\end{Highlighting}
+\end{Shaded}
+
+It is simple for us to run this example in all possible inputs, as there
+are only two, an notice that the code never fails. If \texttt{b} is
+\texttt{True}, then we know that \texttt{c} is \texttt{-2}, and if
+\texttt{b} is \texttt{False}, then we know that \texttt{c} is
+\texttt{2}. We know that no matter the input, the code will never fail!
+But when we abstractly interpret the code using intervals as an
+overapproximation, we get that \texttt{a} \(\in [2,6]\) and \texttt{b}
+\(\in [-1,3]\), so when we try to run \texttt{a\ /\ b} we are alerted
+that we may be dividing by zero\footnote{dividing by zero throws an
+  Exception in Python}.
+
+When we abstractly interpret a piece of code and get an error, the error
+may not exist.
+
+On the other hand, if we abstractly interpret a piece of code and find
+no error in it, we can be sure that the code will never fail because we
+have tested the code on an \textbf{over}approximation of all possible
+values\footnote{assuming no builtin value has been changed prior to the
+  execution of the code}. This property is called \emph{soundness} and
+it is central to verification and other areas of Static Analysis.
+
+Notice that we do not care about soundness in this work. Our goal is to
+build a tool that does not overwhelm the common developer but helps them
+to find \emph{true} bugs! i.e.~we do not want false positives just as
+many true positives as possible.
+
+Fortunately, if the overapproximation we are using allows us to
+distinguish between single values, e.g.~the overapproximation can tell
+us that \texttt{a} has been set to the value \texttt{5} after the
+assignation \texttt{a\ =\ 5}\footnote{The sign overapproximation (or
+  Sign Interval Abstract Domain) has only three posible values:
+  \texttt{-}, \texttt{0} and \texttt{+}, while the interval
+  overapproximation (or Interval Abstract Domain) contains any interval
+  \([a,b]\) with \(a,b \in \mathbb{R}\). Therefore, if we use the
+  Interval Abstract Domain we are able to tell when we know a variable
+  has a specific value rather than many. On the other hand it is
+  imposible for use to determine a unique value using Sign Interval
+  Domain other than the case \texttt{0}.}, then it is possible for us to
+check if two single values are equal or different. If we are able to
+assert with certainty that two values are equal or different, then we
+are able to find true positive comparisons (oppossed to maybe
+\texttt{True} comparisons)\footnote{Consider the result of
+  \texttt{{[}4,4{]}\ ==\ {[}3,3{]}} (\texttt{False}) and the result of
+  \texttt{{[}3,8{]}\ ==\ {[}2,3{]}} (it may be \texttt{True} or
+  \texttt{False})}.
+
+The formal definition of an overapproximation is an Abstract Domain. An
+Abstract Domain is composed of a lattice, a Galois connection between a
+set of values and the lattice, and widening and narrowing operators.
+
+A lattice is a partially ordered set \((L, \le)\) with the following
+properties:
+
+\begin{itemize}
+\tightlist
+\item
+  Every two elements \(a, b \in L\) have a lower bound (\(u \in L\) such
+  that \(u \le a\) and \(u \le b\)). The operation of finding the lower
+  bound between two elements is called \textbf{merge} and is denoted by
+  \(a \sqcap b\).
+\item
+  Every two elements \(a, b \in L\) have an upper bound (\(u \in L\)
+  such that \(a \le u\) and \(b \le u\)). The operation of finding the
+  upper bound between two elements is called \textbf{join} and is
+  denoted by \(a \sqcup b\).
+\item
+  There is an element bigger than any other (\(u \in L\) such that
+  \(\forall x \in L . x \le u\)), and it is denoted by \(\top\).
+\item
+  There is an element smaller than any other (\(u \in L\) such that
+  \(\forall x \in L . u \le x\)), and it is denoted by \(\bot\).
+\end{itemize}
+
+Given two lattices,
+\((L_1, \le{}_{L_1}, \sqcap{}_{L_1}, \sqcup{}_{L_1}, \top{}_{L_1}, \bot{}_{L_1})\)
+and
+\((L{}_2, \le{}_{L_2}, \sqcap{}_{L_2}, \sqcup{}_{L_2}, \top{}_{L_2}, \bot{}_{L_2})\),
+a Galois connection is a pair of functions \((\alpha, \gamma)\) such
+that:
+
+\begin{itemize}
+\tightlist
+\item
+  \(\alpha : L_1 \rightarrow L_2\). \(\alpha\) is called the abstraction
+  function.
+\item
+  \(\gamma : L_2 \rightarrow L_1\). \(\gamma\) is called the
+  concretisation function.
+\item
+  \(\forall a \in L_1, b \in L_2 : \alpha(a) \le{}_{L_2} b \iff a \le{}_{L_1} \gamma{b}\).
+\end{itemize}
+
+\(L_1\) is often called the Concrete Domain and \(L_2\) is called the
+Abstract Domain. Because the Concrete Domain is always the same, the set
+of possible values a variable can have with \(\in\) as an order
+operator, we concentrate our efforts in the Abstract Domains.
+
+\emph{Notation}: It is customary to use the symbol \(\#\) to refer to
+the functions and semantics associated with the Abstract Domain, and the
+lack of it as the functions and semantics of the Concrete Domain. For
+example, if \(Int\) is the set of all integers then \(Int^{\#}\) is an
+Abstract Domain for \(Int\), e.g.~given the Concrete Domain
+\((\mathcal{P}(Int), \subseteq, \cap, \cup, Int, \emptyset)\) we define
+the Abstract Domain
+\((Int^{\#}, \le^{\#}, \sqcap^{\#}, \sqcup^{\#}, \top^{\#}, \bot^{\#}, \alpha, \gamma)\),
+where \(\alpha : Int \rightarrow Int^{\#}\) and
+\(\gamma : Int^{\#} \rightarrow Int\).
+
+Coming back to the intervals example from before. Given the Concrete
+Domain of integers
+\((\mathcal{P}(Int), \subseteq, \cap, \cup, Int, \emptyset)\), we can
+define the Intervals Abstract Domain \(\text{Int}^{\#}\) as
+\((\text{Int}^{\#}, \le^{\#}, \sqcap^{\#}, \sqcup^{\#}, [-\infty,\infty], \emptyset, \alpha, \gamma)\)
+where:
+
+\begin{itemize}
+\tightlist
+\item
+  Every element of \(\text{Int}^{\#}\) is an interval \([a, b]\) with
+  \(a, b \in Int \cup \{-\infty,\infty\}\).
+\item
+  \([a, b] \le^{\#} [c, d] \iff c \le a \wedge b \le d\).
+\item
+  \([a, b] \sqcap^{\#} [c, d] = [max(a,c), min(b, d)]\).
+\item
+  \([a, b] \sqcup^{\#} [c, d] = [min(a,c), max(b, d)]\).
+\item
+  \(\alpha(I) = [min(I), max(I)]\) (Remember that \(I\) is a set of
+  integers).
+\item
+  \(\gamma([a, b]) = \{i \in Int : a \le i \le b\}\).
+\end{itemize}
+
+The goal of an Abstract Domain is to give us a very powerful tool, the
+Galois Connection. The abstraction function allows us to take any value
+in our language and transport it to an overapproximation of our
+choosing, and the concretisation function allows us to take abstract
+values (overapproximations) and operate with them back in the semantics
+of our language.
+
+Given, for example, the Intervals Abstract Domain, we can now calculate
+the result of computing the following piece of code:
+
+\begin{verbatim}
+if _:
+  a = 2
+else:
+  a = 4
+a -= 6
+\end{verbatim}
+
+We know that the value of \texttt{a} in the \emph{then} branch of the of
+the \emph{if} statement is equal to \texttt{{[}2,2{]}} and
+\texttt{{[}4,4{]}} in the \emph{else} branch. The value of \texttt{a}
+after the execution of the \emph{if} statement will be
+\texttt{{[}2,2{]}} \(\cup{}\) \texttt{{[}4,4{]}} \(=\)
+\texttt{{[}2,4{]}}. At the end of the execution the value of \texttt{a}
+lie inside the interval \texttt{{[}-4,-2{]}}.
+
+Notice that with a (Value) Abstract Domain, we can overapproximate the
+value of a single variable but we cannot warranty \textbf{termination}
+of the evaluation of the code. Take for example:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a }\OperatorTok{=} \DecValTok{4}
+\ControlFlowTok{while} \KeywordTok{not}\NormalTok{ condition(a):}
+\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}
+\end{Highlighting}
+\end{Shaded}
+
+Unrolling the loop, we get:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{a }\OperatorTok{=} \DecValTok{4}     \CommentTok{# a \textbackslash{}in [4,4]}
+
+\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,7]}
+\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,10]}
+\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,13]}
+\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,16]}
+\NormalTok{  ...}
+  \CommentTok{# a \textbackslash{}in [4, inf]}
+\end{Highlighting}
+\end{Shaded}
+
+Because we do not know when \texttt{condition(a)} will be met, it is
+impossible for us to know how many times will the \texttt{while}'s body
+be executed, an so we know that \texttt{a} may be either 4, 7, 11, or
+any other integer. An Abstract Interpreter is an interpreter and
+therefore will run the body of the while loop forever if we do not do
+something to terminate it.
+
+Applying a series of operations (the body of the while loop) over and
+over may never terminate. Thus we have the need a mechanism that allows
+us to ensure the evaluation of a loop will eventually terminate.
+Introduce the \emph{widening} operator.
+
+The idea of a widening operator is to make a series of ascending values
+reach a fixed point in a finite amount of time.
+
+Consider the (increasing) sequence from before\footnote{Notice that:
+  \texttt{{[}4,4{]}} \(\le\) \texttt{{[}4,7{]}} \(\le\)
+  \texttt{{[}4,11{]}}}:
+
+\begin{verbatim}
+[4,4] [4,7] [4,10] [4,13] [4,16] [4,19] [4,22] [4,25] ...
+\end{verbatim}
+
+A widening operator is an operator, \(\phi{}\), that takes two
+intervals, \(a\) and \(b\), and outputs a new interval,
+\(c = a \phi b\), such that the new interval contains the old intervals
+\(a, b \le c\). The widening operator must warranty that when applied
+over and over an increasing sequence gives us a sequence that will,
+after a finite amount of steps, find a fixed point (stabilizes). Take
+for example the following widening operator:
+
+\[[a, b] \phi [c, d] =
+     \begin{cases}
+       [min(a,c), \infty]\text{, } & \text{if } b > 15 \\
+       [min(a,c), max(b,d)]\text{, } & \text{otherwise}
+     \end{cases}\]
+
+Applying the operator over our sequence over an over we will get:
+
+\begin{verbatim}
+[4,7] [4,10] [4,13] [4,16] [4,inf] [4,inf] [4,inf] ...
+\end{verbatim}
+
+And we found a fixed point, namely, \texttt{{[}4,inf{]}}. We have
+arrived now at the top of the latter.
+
+Notice how the cutoff of the sequence must be defined beforehand (in our
+case any interval with a value bigger than \texttt{15} defaults to
+\(\infty{}\)). This is a little bit annoying as one would like for the
+Abstract Interpreter to work under any condition, but this is the price
+to pay for termination, we need to set some parameters by hand.
+
+There is another operator called the narrowing operator. Its purpose is
+to climb down the latter and get a more precise approximation. Notice
+that not all Abstract Domains require the definition of widening and
+narrowing operators as not all of them have infinite increasing or
+decreasing sequences. And it is the case in this work that none of them
+applies, there are no infinite increasing or decreasing sequences in the
+Abstract Interpreter defined in this work.
+
+For a deeper discussion on all numerical Abstract Domains available see
+\textcite{mine_weakly_2004}.
+
+\subsection{State Abstract Domain}\label{state-abstract-domain}
+
+The Abstract Domains presented before lets us analyse one variable at
+the time. To analyse the state of the program we define an Abstract
+Domain for the state of the program. How to do this? Well, if we assume
+that the language allows no aliasing, then we can build the State
+Abstract Domain as:
+
+\begin{verbatim}
+State: Var -> Val
+State#: Var -> Val#
+\end{verbatim}
+
+If the \texttt{State} of the program is defined as a function from
+\texttt{Var}s into their values (\texttt{Var\ -\textgreater{}\ Val}),
+and \texttt{Val\#} is the Abstract Domain for values in the languages,
+then the function \texttt{Var\ -\textgreater{}\ Val\#} is an Abstract
+Domain\footnote{For a deeper look and a proof on this statement see
+  \textcite{nielson2015principles}, subchapter 4.4.} for the state of
+the program.
+
+As an example consider:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\DataTypeTok{int}\NormalTok{ main() \{}
+  \DataTypeTok{int}\NormalTok{ cond1, cond2, a, b, c;}
+  \BuiltInTok{std::}\NormalTok{cin >> cond1 >> cond2;}
+
+  \ControlFlowTok{if}\NormalTok{ (cond1) \{}
+\NormalTok{    a = }\DecValTok{0}
+\NormalTok{    b = }\DecValTok{20}
+\NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (cond2) \{}
+\NormalTok{    a = }\DecValTok{2}
+\NormalTok{    b = }\DecValTok{6}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{    a = }\DecValTok{1}
+\NormalTok{    b = }\DecValTok{9}
+\NormalTok{  \}}
+\NormalTok{  c = a + b;}
+  \ControlFlowTok{return} \DecValTok{0}\NormalTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Note: This example is written in C++ because we can assume all variables
+to have a set type, a unique type. In C++, a variable always has a value
+even if none is given to it. In Python, a variable can have no value, or
+it can be undefined (as it happens when a variable is deleted).
+
+Suppose that the State Abstract Domain for this piece of code is a
+function from the set \(\{cond1, cond2, a, b, c\}\) to the Interval
+Abstract Domain. If we evaluate the code line by line we will get:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{// T: means Top}
+\DataTypeTok{int}\NormalTok{ main() \{}
+  \DataTypeTok{int}\NormalTok{ cond1, cond2, a, b, c;}
+  \CommentTok{// \{'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T\}}
+  \BuiltInTok{std::}\NormalTok{cin >> cond1 >> cond2;}
+  \CommentTok{// \{'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T\}}
+
+  \ControlFlowTok{if}\NormalTok{ (cond1) \{}
+\NormalTok{    a = }\DecValTok{0}
+    \CommentTok{// \{'cond': T, 'cond2': T, 'a': 0, 'b': T, 'c': T\}}
+\NormalTok{    b = }\DecValTok{20}
+    \CommentTok{// \{'cond': T, 'cond2': T, 'a': 0, 'b': 20, 'c': T\}}
+\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
+    \ControlFlowTok{if}\NormalTok{ (cond2) \{}
+\NormalTok{      a = }\DecValTok{2}
+      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 2, 'b': T, 'c': T\}}
+\NormalTok{      b = }\DecValTok{6}
+      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 2, 'b': 6, 'c': T\}}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      a = }\DecValTok{1}
+      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 1, 'b': T, 'c': T\}}
+\NormalTok{      b = }\DecValTok{9}
+      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 1, 'b': 9, 'c': T\}}
+\NormalTok{    \}}
+    \CommentTok{// \{'cond': T, 'cond2': T, 'a': [1,2], 'b': [6,9], 'c': T\}}
+\NormalTok{  \}}
+  \CommentTok{// \{'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': T\}}
+\NormalTok{  c = a + b;}
+  \CommentTok{// \{'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': [6,22]\}}
+  \ControlFlowTok{return} \DecValTok{0}\NormalTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+Excellent! We have done it! We have the idea of how to build an Abstract
+Interpreter for a language with only one type of variable, a global
+scope, and no aliasing.
+
+\subsection{Abstract Semantics}\label{abstract-semantics}
+
+Now we have our ingredients all ready: We have a language with its
+concrete semantics and State Abstract Domain. What we have left to do is
+to define the abstract semantics of the language. The abstract semantics
+work on the State Abstract Domain, where as the concrete semantics work
+on the state of the program.
+
+For this, we need the Galois connections defined in the State Abstract
+Domain, the abstraction \(\alpha\) and concretisation \(\gamma\)
+functions. We can infer the abstract semantics with the following little
+formula:
+
+\[f^\# = \alpha \cdot f \cdot \gamma\]
+
+where \(f\) is a function (a rule) in the semantics of the language.
+
+The idea is simple, if \(f\) is defined properly defined then we can
+compose it with the abstraction and concretisation functions and we will
+get a function \(f^\#\) which operates over the State Abstract Domain.
+
+This step is important if we want to prove the Abstract Interpreter to
+be sound and work as expected. For a deeper discussion on how to infer
+the abstract semantics see \textcite{nielson2015principles}, chapter 4.
+
+\subsection{Missing Bits}\label{missing-bits}
+
+A robust Abstract Interpreter should be able to do more than just what
+has been said here.
+
+\textcite{mine_weakly_2004} extends an Abstract Interpreter with the
+backward assignment. The backward assignment is meant to restrict the
+possible values a variable may have when it enters an \emph{if}
+statement. Consider the following piece of C++ (\texttt{a} and
+\texttt{b} are integers):
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{// \{'a': [2,4], 'b': Top\}}
+\ControlFlowTok{if}\NormalTok{ (a < }\DecValTok{3}\NormalTok{) \{}
+  \CommentTok{// Appling backward assignment. `a<3 and a in [2,4]`}
+  \CommentTok{// \{'a': 2, 'b': Top\}}
+\NormalTok{  b = a;}
+  \CommentTok{// \{'a': 2, 'b': 2\}}
+\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
+  \CommentTok{// Appling backward assignment. `a>=3 and a in [2,4]`}
+  \CommentTok{// \{'a': [3,4], 'b': Top\}}
+\NormalTok{  b = a - }\DecValTok{2}\NormalTok{;}
+  \CommentTok{// \{'a': [3,4], 'b': [1,2]\}}
+\NormalTok{\}}
+\CommentTok{// \{'a': [2,4], 'b': [1,2]\}}
+\end{Highlighting}
+\end{Shaded}
+
+Notice that if we ignore backward assignment the interval for \texttt{b}
+is \texttt{{[}0,4{]}}. Backward assignment lets us narrow down the
+overapproximation, which means that we can have a tighter
+overapproximation and consequently less false positives.
+
+In this work, we make use of only non-relational Abstract Domains. A
+relational Abstract Domain keeps some of the relationships between
+variables, they are more expensive than non-relational Abstract Domains
+but they allow even tighter overapproximations. See more
+\textcite{mine_weakly_2004}.

@@ -1,0 +1,413 @@
+\chapter{Introduction}\label{introduction}
+
+\section{Motivation}\label{motivation}
+
+Dynamically typed programming languages (Dynamically typed languages for short) like
+Python and Ruby have risen in popularity over the last two decades. Their simple syntax,
+ease of use, out-of-the-box REPLs\footnote{Read-eval-print loop}, dynamic type systems,
+and their great number of libraries have been the main factors to this rise. Indeed,
+developers can to write, execute and see results immediately in fast development cycles,
+especially at the initial stages. However, their simple syntax and dynamic typing makes
+them particularly difficult to analyse as the more rigid the language, the easier to
+analyse it is. Most efforts on Static Analysis for Python have focused on assuming some
+restrictions on the language. For example, MyPy \autocite{lehtosalo2016mypy} assumes the
+type of variables as static.
+
+Dynamically typed languages only check type mismatches at runtime, i.e.~errors between
+variable types only get detected when the code is run. For example,
+consider the following piece of Python code:
+
+\begin{pythoncode*}{gobble=2}
+  myvar = "Some text in a string"
+  other = 4.1
+  result = "oh my" + 2  # This will fail
+  print(result + other, myvar)
+\end{pythoncode*}
+
+The code is syntactically correct, but it fails to execute. Python will interpret the first
+two lines and will stop in the third, where it will throw an exception because strings
+and numbers cannot be added.
+
+A Static Type Analysis tool, such as MyPy \autocite{lehtosalo2016mypy}, is able to detect
+type mismatches without ever executing the code.  MyPy has the ability to infer the type
+of variables, e.g.~from the previous example, it detects that \pycode/other/ is of type
+\pycode/float/ and \pycode/myvar/ of type \pycode/str/.
+
+Python dynamic nature makes Python extraordinarily hard to statically analyse. In fact,
+due to Python introspection capabilities, it is impossible to warranty the behaviour of a
+piece of Python code without assuming some fixed basic semantics in the interpreter.  MyPy
+tackles the undecidability problem of Python dynamic nature by restricting the number
+of valid Python programs to those that conform to a static type system\footnotemark.
+
+\footnotetext{I would like to express my inmense gratitude to the MyPy team for writing
+  such an amazing tool. I do not know how many hours they saved me from endless
+  frustration at debugging. What I like more about MyPy is that writing code with it feels
+  just remarkably similar to writing code in language with a stronger static type system
+  (e.g.~Haskell).}
+
+Even with some assumptions in place, the inference ability of MyPy infers the type of
+variables, but not the type of functions. MyPy allows optionally to add type annotations
+to the code, to either variables or functions. Type annotations allow more restrictive and
+precise types, and help MyPy to catch more potential bugs.
+
+Although MyPy is capable of checking the correctness of code, its assumptions limit it from a whole class of valid and correct
+Python code\footnotemark. There are many scenarios where even with type annotations, MyPy
+cannot detect a bug in the code. For example, consider the following piece of python
+code:%\footnotemark:
+
+\footnotetext{For example, there is no way (currently) to make MyPy happy about the
+  function \pycode/def addtwice(x, y): return x + y + y; addtwice(3,2); addtwice('a','b')/.
+  If no type annotations is given, MyPy alerts the user on the usage of non-typed
+  functions. But no type can satisfy the assertion because of the \enquote{polymorphisity}
+  of the \pycode/+/ operation.}
+
+%\footnotetext{Notice the lack of type annotations in this example. MyPy is able to infer the
+%  type of the variables in this example.}
+
+\begin{pythoncode*}{gobble=2}
+  import numpy as np
+  x = np.array( [[1,2,3], [4,5,6]] ) # shape (2,3)
+  y = np.array( [[7], [0], [2], [1]] ) # shape (4,1)
+  z = np.dot( x, y ) # trying to apply dot product
+\end{pythoncode*}
+
+In this example, we are using NumPy \autocite{oliphant2006guide}, which is a well known
+Python library, but it could also have been TensorFlow \autocite{abadi_tensorflow_2016} or
+any other library with support for tensors and tensor operators. Tensors are a
+generalisation of vectors and arrays.  An array of size \texttt{n}, or a tensor with shape
+\texttt{(n,)}, contains exactly \(n\) elements. A matrix of size \(n \times m\),
+alternatively, a tensor with shape \texttt{(n,\ m)}, is a structure that holds
+\(n \cdot m\) elements. Notice that a shape is any tuple of natural number and a tensor is
+a structure with a shape. For example, the shape \texttt{(2,\ 5,\ 6)} indicates us a
+tensor with \(2 \cdot 5 \cdot 6 = 60\) elements.
+
+The example above will fail to run as it hits an erroneous condition at the last line. Two
+arrays/tensors are created, \texttt{x} and \texttt{y} with shapes \texttt{(2,\ 3)} and
+\texttt{(4,\ 1)}, respectively. Then, a matrix multiplication with both tensors tries to
+be performed, but it fails because the shapes of the two matrices are incompatible
+(\(3\ne4\)). The call to \texttt{np.dot} fails, but the developer will not be warned about
+it and will only notice it when executing the code. To summarise, the aforementioned piece
+of code type checks in MyPy even though it fails to run.
+
+If it were possible to add the shape of the tensors as part of the type definitions, we
+could potentially type check for mismatches of tensor shapes. Unfortunately, there does
+not seem to be a straightforward way to add the shape of tensors to their types and check
+them in MyPy.
+
+Tensors allow writing computations more concisely. Tensor operations are also highly
+optimisable and can be run in parallel. With the advent of Deep Learning, tensors have
+become a central figure in developers toolkit.  Tensor operations fail if the tensors are
+not of the right shape. To statically analyse if operations between tensors are valid, the
+shape of tensors must be computed. To compute the shape of tensors, we require to compute
+also the value of every other variable in the language. The type of static analysis that
+is focused on finding out the value of variables is called Static Value Analysis.
+
+\section{Problem Definition}\label{problem-definition}
+
+Tensors are becoming an essential abstraction in the toolkit of
+developers. Tools tailored to work with or based on tensors have been
+popping out in recent years. It is therefore imperative to develop
+analysis tools to verify and flag potential bugs. A Static Value
+Analysis tool focused on tensor shape analysis could aid developers in
+their work, as it could be able to flag potential bugs related to the
+shapes of tensors as the developer writes code.
+
+All of the theoretical approaches that tackle the problem focus on type
+checking tensors and tensor operations. \textcite{griffioen_type_2015},
+\textcite{slepak_array-oriented_2014}, and \textcite{rink_modeling_2018}
+define a type system extended with tensors and tensor operations. The
+principal idea of these type systems is to encode the restrictions that
+the operations on tensors require, a tensor operation is valid if the
+restriction checks with the tensors.
+
+Practical attempts have been mainly focused on languages with strong
+type systems, and recently some in Python
+\autocites{fromherz_static_2018}{monat_static_2018}.
+\textcite{chen_typesafe_2017} (in Scala) and
+\textcite{eaton_statically_2006} (in Haskell) have tried to annotate
+tensors' types with their shapes, leaving the compiler's type check
+inference system to check the shapes. At the time
+\textcite{eaton_statically_2006} proposed his methodology to extend
+types with additional data, GHC (Glasgow Haskell Compiler), the by
+default Haskell compiler, didn't have many capabilities to work with
+data at the type level, resulting in some rather complicated code to
+read and write. A recent approach to type check tensors in Haskell has
+been shown in a library written by \textcite{elkin_haskell_2018}, which
+uses the updated Dependent Type System of Haskell to code and enforce
+type shapes.
+
+Abstract Interpretation is a framework for static analysis. The main
+idea of Abstract Interpretation is to overapproximate the result of
+computing a piece of code. Any piece of code can be run in an Abstract
+Interpreter, an interpreter build from the semantics defined by Abstract
+Interpretation, in a finite amount of time. To warranty that the
+Abstract Interpreter runs in a finite amount of time, Abstract
+Interpretation defines a series of rules that force to overapproximate
+the result of executing operations by the program. Abstract
+Interpretation is especially useful for Static Value Analysis as the
+rules to derive the semantics of an Abstract Interpreter from the formal
+semantics of the language are very well studied, formalised and explicit
+\autocite{cousot_abstract_1977}.
+
+Writing an Abstract Interpreter for Python requires the formal semantics
+of Python as a starting point. Unfortunately, Python does not have any
+official formal semantics defined. Some attempts to define a formal
+semantics for Python have been done
+\autocites{politz_python_2013}{fromherz_static_2018}{guth_formal_2013}{ranson_semantics_2008}
+but none of them take into account type annotations.
+
+\textbf{Problem:} Building an Abstract Interpreter for Python to
+Statically Value-Analyse tensor operations.
+
+{\inlinetodo{Should I add some research questions?}}
+
+\subsubsection{Assumptions and Scope}\label{assumptions-and-scope}
+
+Very little can be asserted from a piece of code in a programming
+language like Python without making any assumptions about the
+environment. For example, consider the following piece of code:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{# runme.py}
+\NormalTok{a }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(}\StringTok{'6'}\NormalTok{) }\OperatorTok{+} \DecValTok{2}
+\BuiltInTok{print}\NormalTok{(}\DecValTok{7}\NormalTok{)}
+\ControlFlowTok{assert}\NormalTok{ a }\OperatorTok{==} \DecValTok{8}
+\end{Highlighting}
+\end{Shaded}
+
+One may be tempted to say that the code above never fails, but it would
+be mistaken. Thanks to Python's introspection capabilities, the code
+above could do just about anything. A piece of Python code can be run
+directly in the interpreter or executed by an \VERB|\BuiltInTok{exec}|
+or \VERB|\BuiltInTok{eval}| statement. The functions \texttt{int} and
+\texttt{print} can be redefined to compute anything we want. For
+example, consider the following piece of code in that calls
+\texttt{runme.py}:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{runme }\OperatorTok{=} \BuiltInTok{open}\NormalTok{(}\StringTok{'runme.py'}\NormalTok{).read()}
+\NormalTok{fakeinit }\OperatorTok{=} \StringTok{"""}
+\StringTok{def int(val):}
+\StringTok{  return 3.0}
+\StringTok{def print(val):}
+\StringTok{  global a}
+\StringTok{  a = val}
+\StringTok{"""}
+\BuiltInTok{exec}\NormalTok{(fakeinit }\OperatorTok{+}\NormalTok{ runme, \{\})  }\CommentTok{# Throws an exception}
+\end{Highlighting}
+\end{Shaded}
+
+From now on, we will assume that any piece of code written in Python
+will be called from the interpreter directly without changing the
+behaviour of any builtin function or variable (this includes the
+behaviour of variables and functions from non-builtin libraries as
+NumPy), i.e.~we assume that the code will never be run by an
+\VERB|\BuiltInTok{exec}| call but always \texttt{import}ed or
+interpreted directly by \texttt{python\ file-code.py}.
+
+As a developer, I can say that I like when I see a piece of code flag
+wrong and IT IS really WRONG, but I despise when the opposite happens.
+It is very annoying to have a tool flag every sentence you write as
+wrong even though the code works just fine. We will assume from here
+onwards that we want the Tensor Analysis to flag only errors that are
+going to happen if the code is run, i.e.~we want only true positives not
+maybe positives (as a lack of a better word).
+
+Although, TensorFlow \autocite{abadi_tensorflow_2016}, PyTorch
+\autocite{paszke2017pytorch} and other libraries would benefit from the
+development of a tool targeted to check them, I chose to check NumPy's
+tensor operations. NumPy is the standard library for computing with
+tensors and it is used as backend on most projects.
+
+Implementing an Abstract Interpreter, or any Static Analysis, for a
+language like Python is a considerable undertaking, mainly because of
+the breadth of characteristics a mature Programming Language like Python
+has. Thus, we will centre on just a couple of Python core
+characteristics and will leave others for future work. The
+characteristics explored in the current document are:
+
+\begin{itemize}
+\tightlist
+\item
+  Builtin primitive variables: \texttt{int}, \texttt{float},
+  \texttt{bool}, \texttt{None}, \texttt{list}, \texttt{tuple}
+\item
+  Primitive functions: \texttt{int}, \texttt{print}, \texttt{input},
+  \ldots{}
+\item
+  Boolean and numeric operations: \texttt{+}, \texttt{-}, \texttt{*},
+  \texttt{/}, \texttt{\%}, \texttt{**}, \texttt{\textless{}\textless{}},
+  \texttt{\textgreater{}\textgreater{}}, \texttt{//},
+  \texttt{\textless{}}, \texttt{\textless{}=}, \texttt{\textgreater{}}
+  and \texttt{\textgreater{}=}
+\item
+  \texttt{if} and \texttt{while} staments
+\item
+  Import statement (limited only to the \texttt{numpy} library)
+\item
+  NumPy arrays and some of its methods/functions to work with NumPy
+  arrays (including \texttt{dot}, \texttt{zeros}, \texttt{shape}, and
+  numeric operations with broadcasting)
+\end{itemize}
+
+Consider the following piece of code:
+
+\begin{verbatim}
+if someval:
+  i = 3
+else:
+  i = "ntr"
+print(i)
+\end{verbatim}
+
+The variable \texttt{i} can be either an \texttt{int} or a \texttt{str},
+thus the type of \texttt{i} should be \texttt{Union{[}int,str{]}}. If
+the type of a variable is an \texttt{Union} type then we need to build
+an Abstract Interpreter (actually, an Abstract Domain) aware of unions.
+Building an Abstract Interpreter aware of \texttt{Union} types is not
+considered part of this work, therefore if a variable holds more than
+one value, e.g.~it is either a \texttt{5} or \texttt{2.3}, then the
+variable's type will be \texttt{Any} and not \texttt{Union}.
+\texttt{Any} and \texttt{Union} types are defined in the \texttt{typing}
+library \autocite{pep484}, an implementation of Gradual Typing\footnote{Gradual
+  Typing is a kind of Static Type Analysis targeted to Dynamically Typed
+  Languages like Python}.
+
+Gradual Typing restricts the number of valid programs to those that type
+check. A variable in Gradual Typing is of a specific type and it never
+changes, i.e.~if a variable's type is set to be \texttt{int} then it can
+only contain \texttt{int}s. \texttt{Union} types are meant to indicate
+that a variable may take more than one value at any point in time, which
+would mean that any variable with a \texttt{Union} type would
+automatically become an \texttt{Any} in this work, but that is not the
+truth. Consider the following piece of code:
+
+\begin{verbatim}
+i = 3
+i = "ntr"
+i += "ueor"
+print(i)  # the type of `i` is `str`
+\end{verbatim}
+
+Under Gradual Typing, the type of \texttt{i} is
+\texttt{Union{[}int,str{]}}, but we know that the variable \texttt{i}
+holds only one type at \textbf{all} times, i.e. \texttt{i} never holds
+two or more values as in the previous example. An Abstract Interpreter
+would run each line sequentially, and it would never find a that the
+value of \texttt{i} is both \texttt{int} and \texttt{str} at the same
+time, i.e.~the variable is never considered to be of type \texttt{Any}
+but it will have type \texttt{int} and then type \texttt{str} as the
+code is run. In this regard, an Abstract Interpreter can give a better
+approximation of what the types of a variable are at any point in time,
+while Gradual Typing considers all possible types a variable may have at
+any point in time.
+
+To recapitulate, the assumptions and scope of the thesis are:
+
+\begin{itemize}
+\tightlist
+\item
+  The behaviour of builtins and imported variables and functions is
+  always the same and is determined by the Python reference manual or
+  the library's author, e.g.~\texttt{input} is a function that returns
+  a \texttt{str}.
+\item
+  The user will only be reported errors that will happen but no errors
+  that \emph{may} happen (This means, the resulting tool is not a
+  verification tool).
+\item
+  The Static Value Analysis centres around checking operations from the
+  NumPy library.
+\item
+  Only a selected subset of Python characteristics and functions are
+  explored.
+\item
+  A variable can hold only one type of value at the time. If a variable
+  is set to hold values of different types at the same time, then its
+  value will be \texttt{Any}.
+\end{itemize}
+
+\section{Objectives}\label{objectives}
+
+\subsection{General objective}\label{general-objective}
+
+To design and implement a strategy for statically analyse tensor shapes
+in Python to support early detection of potential bugs before execution.
+
+\subsection{Specific objectives}\label{specific-objectives}
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  To design and implement an abstract interpreter for Python.
+\item
+  To design and implement a strategy that uses the abstract interpreter
+  to analyse the shapes of tensors for Python code.
+\item
+  To implement a tool that flags the bugs inferred by the abstract
+  interprete.
+\item
+  To empirically evaluate the developed static analysis in a set of
+  representative test cases.
+\end{enumerate}
+
+\section{Contributions}\label{contributions}
+
+The contributions of this work are the following:
+
+\begin{itemize}
+\tightlist
+\item
+  Formalised a subset of Python using a methodology similar to
+  \autocite{fromherz_static_2018}. The formalisation includes a subset
+  of the Python syntax, an AST representation of the syntax more
+  malleable to work with, and the semantics of the subset of the Python
+  Language.
+\item
+  Defined an Abstract Domain for Variables in Python.
+\item
+  Defined an aliasing-aware Abstract Domain for the state of a Python
+  program.
+\item
+  Derived semantics from the Abstract Domain, i.e.~an Abstract
+  Interpreter for Python.
+\item
+  A working open source implementation of the Abstract Interpreter
+  nicknamed Pytropos.
+\end{itemize}
+
+\section{Thesis Structure}\label{thesis-structure}
+
+The following parts of this document are as follows:
+
+\begin{itemize}
+\tightlist
+\item
+  Chapter~\ref{background} explores some background material on
+  Dynamically typed and Statically typed languages, Tensors and why are
+  they important, the Numpy library, and Abstract Interpretation,
+\item
+  Chapter~\ref{pytropos-analysis-implementation} presents some of the
+  gory details of the implementation of the Abstract Interpreter,
+\item
+  Chapter~\ref{validation-and-discussion} focuses on the tests made to
+  ensure that the implementation follows the Abstract Interpreter, to
+  showcase the utility of Pytropos to detect errors when using NumPy
+  arrays, and to point some of the areas of improvement of the tool,
+\item
+  Chapter~\ref{related-work} presents some related work on Abstract
+  Interpretation for Python, Static Analysis of Tensor shapes and
+  related libraries Static Analysis tools, and finally,
+\item
+  Chapter~\ref{conclusions} sums up the work done and future directions
+  to it.
+\item
+  Appendix~\ref{appendix-ai-theory}
+  is divided into three parts: the definition of the syntax and
+  semantics of a subset of Python, the definition of an Abstract
+  Interpreter for Python, and finally some other ways in which
+  Statically Analyse the shape of tensors for Python,
+\end{itemize}
