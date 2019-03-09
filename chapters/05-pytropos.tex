@@ -201,7 +201,7 @@ Abstract Domain should have, namely \pycode|is_top()|, \pycode|join()|,
 The figure below presents a class diagram showing the relationships
 between the different components in Pytropos.
 
-\includegraphics[width=0.9\textwidth,height=\textheight]{figures/classes_Pytropos-small.pdf}
+\includegraphics[width=0.8\textwidth]{figures/classes_Pytropos-small.pdf}
 {\todo{add types to each attribute, and add hidden attributes like
 \pycode+__getitem__+}}
 
@@ -211,6 +211,9 @@ between the different components in Pytropos.
 by \pycode|BuiltinFun|, \texttt{Module} objects by
 \pycode|BuiltinModule|, \pycode|list|s by \texttt{List}, and
 \pycode|tuple| by \texttt{Tuple}.
+
+The implementation of the Abstract Interpreter also includes a class log that stores all
+warnings generated in the abstract interpretation of the code.
 
 {\inlinetodo{mention that \texttt{children} is the function
 \texttt{Key\ -\textgreater{}\ Addr\ +\ Undefined}}} {\inlinetodo{mention

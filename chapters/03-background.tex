@@ -598,7 +598,7 @@ while not condition(a):
 
 Unrolling the loop, we get:
 
-\begin{pythoncode}
+\begin{pythoncode*}{mathescape}
 a = 4     # a $\in [4,4]$
 
   a += 3  # a $\in [4,7]$
@@ -607,7 +607,7 @@ a = 4     # a $\in [4,4]$
   a += 3  # a $\in [4,16]$
   ...
   # a $\in [4, inf]$
-\end{pythoncode}
+\end{pythoncode*}
 
 Because we do not know when \pycode|condition(a)| will be met, it is
 impossible for us to know how many times will the \pycode|while|'s body

@@ -1,6 +1,8 @@
 \chapter{Python Static Analysis based on Abstract Interpretation}%
 \label{appendix-ai-theory}
 
+\ichange{I need to re-read the chapter and adapt it to work as an appendix}
+
 This chapter is divided into two parts: first, I present a reduced set
 of Python syntax together with a (partial) formal definition of Python
 semantics, and later, I show the use of the formal semantic definition
@@ -371,10 +373,10 @@ and the result of executing an expression is:
 {\inlinetodo{check all equations, especially E{[}Call(\ldots{}){]}}}
 
 \begin{verbatim}
-E[expr] :: Global x Heap
+E[expr] : Global x Heap
         -> Global
          x Heap
-         x (Val + Addr + (Object x (string x Val)) + Iden)
+         x (Val + (Object x (string x Val)) + Iden)
 
 E[Name(id, ctx)](G, H) :=
   match ctx in
@@ -383,7 +385,7 @@ E[Name(id, ctx)](G, H) :=
                   then if isbuiltin(id)
                        then (G, H, <builtin-val>(id))
                        else <Execution Halt>
-                  else (G, H, G[id])
+                  else (G, H, H(G(id)))
     case Store -> (G, H, id)  -- Something will be stored in id S[Assign(...)] or variation will take care of it
     case Del   -> (G, H, id)  -- The id will be deleted, S[Delete(...)] will take care of it
 
@@ -391,15 +393,13 @@ E[BinOp(op, a, b)](G, H) :=
   let (G1, H1, v1) := E[a](G, H)
       (G2, H2, v2) := E[b](G1, H1)
    in if kind(v1) /= Val  or  kind(v1) /= Val
-      -- Bad parsing! `E[a](G, H)` is supposed to return Val
-      then <Execution Halt>
-      else
-        let prim_op := get_prim_op(op, type(v1), type(v2))
-         in prim_op(v1, v2, G2, H2)
+      then <Execution Halt> -- error at parsing
+      else let prim_op := get_prim_op(op, v1, v2)
+            in prim_op(G2, H2)
 
 E[Attribute(e, attr)](G, H) :=
  let  (G1, H1, ad) := E[e](G, H)
-      -- `e` must compute to a Val, we don't need Addr's or an Iden to delete
+      -- `e` must compute to a Val
       v  := if not is_value(ad) then <Execution Halt> else ad
  in match v in
       case v: PrimVal ->
@@ -496,31 +496,30 @@ extend Python with NumPy arrays will extend \pycode|get_prim_op| to
 work with them.
 
 \begin{verbatim}
-TypeVals = Type U {Int, Float, Bool, NoneType}
-get_prim_op :: Op x TypeVals x TypeVals -> <prim-callable>
+get_prim_op :: Op x Val x Val -> Global x Heap -> Global x Heap x Val
 -- Type can be Int, Float, List, ...
 
 get_prim_op(Add, t1, t2) :=
   match (type(v1), type(v2)) in
-    case (Int, Int) -> <prim-+-int>
-    case (Float, Float) -> <prim-+-float>
-    case (Int, Bool) -> \(i, j, G, H)-> <prim-+-int>(i, Int(j), G, H)
-    case (Bool, Int) -> \(i, j, G, H)-> <prim-+-int>(Int(i), j, G, H)
+    case (Int, Int) -> <prim-+-int>(v1, v2, G, H)
+    case (Float, Float) -> <prim-+-float>(v1, v2, G, H)
+    case (Int, Bool) -> \(G, H)-> <prim-+-int>(v1, to_int(v2), G, H)
+    case (Bool, Int) -> \(G, H)-> <prim-+-int>(to_int(v1), v2, G, H)
     case (Float, a) -> if a = Bool or a = Int
-                       then \(i, j, G, H)-> <prim-+-float>(i, Float(j), G, H)
+                       then \(G, H)-> <prim-+-float>(v1, to_float(v2), G, H)
                        else <Execution Halt>
     case (a, Float) -> if a = Bool or a = Int
-                       then \(i, j, G, H)-> <prim-+-float>(Float(i), j, G, H)
+                       then \(G, H)-> <prim-+-float>(to_float(v1), v2, G, H)
                        else <Execution Halt>
     -- This function is to be extended once we add NdArrays to the mix
     case otherwise -> <Execution Halt>
 \end{verbatim}
 
-As an example, \pycode|<prim-+-int>| is defined
-as the function:
+As an example, \pycode|<prim-+-int>| is defined as the function:
 
 \begin{pythoncode}
-<prim-+-int>(i, j, G, H) := (G, H, i+j)|
+<prim-+-int> : Val x Val x Global x Heap -> Global x Heap x Val
+<prim-+-int>(i, j, G, H) := (G, H, i+j)
 \end{pythoncode}
 
 {\nonsection{Statements Semantics}}
@@ -531,6 +530,8 @@ the semantics of statements do not return any kind of value, they just
 modify the state of the program.
 
 \begin{verbatim}
+S[stmt] :: Global x Heap -> Global x Heap
+
 S[Assign(var, val)](G, H) :=
   let (G1, H1, ass) := E[var](G, H)
       (G2, H2, rightval) := E[val](G1, H1)
@@ -636,148 +637,148 @@ object. This limitation comes from the fact that, the formalisation
 lacks the capacity to define user-defined classes. Future work will
 focus on extending the state model to include function variable scope,
 and the ability to define functions and classes.
-
-\subsection{NdArrays}\label{ndarrays}
-
-The purpose of the formalisation is to be able to construct from it an
-Abstract Interpreter. To test the Abstract Interpreter abilities to find
-bugs it should be able to handle NumPy array (tensors). In this
-subchapter, I extend the formalisation with NumPy array and discuss some
-of their semantics.
-
-The following are all the things to take into account when extending our
-formalisation to handle a new type of \enquote{builtin} \pycode|Object|
-type:
-
-\begin{enumerate}
-\def\labelenumi{\arabic{enumi}.}
-\item
-  Extend the types of \pycode|Object|s to handle NumPy arrays.
-
-\begin{verbatim}
-Type = List | Tuple | Module | NdArray
-\end{verbatim}
-
-  As an example, consider the numpy array \pycode|np.zeros((4, 3))|, it
-  can be expressed as:
-
-\begin{verbatim}
-Object(NdArray,
- 0xanumber,
- -- The shape of a NdArray is a tuple of integers
- { 'shape' -> Object(Tuple,
-               0xothernum,
-               { 'size' -> 2,
-                 ('index', 0) -> 4,
-                 ('index', 1) -> 3,
-               }
-              )
-   ('index', 0) -> 0,
-   ... -- all other indices, each one identified by an integer
- }
-)
-\end{verbatim}
-
-  Note: Remember that an \pycode|Object| is a triple of the form
-  \pycode|Type x Addr x (Key -> Addr + Undefined)|.
-  Also remember that example above is faulty as the codomain of the
-  function defined above is \pycode|Val| not \pycode|Addr| as it should
-  be.
-\item
-  Extend primitive functions with NumPy's primitive functions. The
-  NumPy's primitive functions implemented in the Abstract Interpreter
-  are: \pycode|array|, \pycode|zeros|, \pycode|dot|, \pycode|ones|,
-  \pycode|abs| (and all other functions that don't alter the shape of
-  the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
-  \pycode|astype|, and \pycode|T|.
-
-\begin{verbatim}
-<prim-callable> = ... (old operations) |
-                  <prim-np-zeros> | <prim-np-dot> | <prim-np-abs> | ...
-\end{verbatim}
-
-  Note: The values stored inside a NumPy array are consider irrelevant
-  in this work. The Value Analysis built in this work considers only the
-  shape of tensors, as tensors can be huge and their contents do not
-  often influence their shape. Therefore, it would be wasteful to give a
-  detailed formalisation of the NumPy library primitives.
-
-  Nonetheless, defining formaly each one of the NumPy functions above is
-  fairly straightforward. Although, the hardest part of a formal
-  defitinion of Numpy arrays is detailing how \pycode|array| works. To
-  define the function \pycode|<np-array>| one
-  must consider the many input cases it can handle, and it can handle
-  almost any Python object\footnote{The NumPy function \pycode|array|
-    takes almost anything as an input. \pycode|arrays| tries to
-    interpret its input as an array in any way it can. There is no
-    formal definition of how the values are interpreted althought its
-    semantics can be extracted by looking at its C implementation:
-    https://stackoverflow.com/a/40380014}.
-
-  Once the \pycode|<np-array>| function is
-  implemented all other functions are much simpler to define. As an
-  example, the implementation of the function \pycode|size| is:
-
-\begin{verbatim}
-<prim-np-size>(val)(G, H) :=
-   -- We know that `<prim-array>` always returns an NdArray
-   let (G, H, (NdArray, addr, arr)) := <prim-array>(val)(G, H)
-   -- We know that a NdArray has a special value called `shape`
-       (Tuple, addrtup, tup) := arr('shape')
-   in  tup('size')
-\end{verbatim}
-\item
-  Extend the cases that \pycode|get_prim_op| handles to cover NumPy
-  arrays. All operations defined in NumPy handle broadcasting.
-  {\todo{Explain what broadcasting is}} For example:
-
-\begin{verbatim}
-get_prim_op(Add, t1, t2) :=
-  match (type(v1), type(v2)) in
-    ... -- old cases
-    case (NdArray, t1) ->
-      \(i, j, G, H)->
-        let (G2, H2, ndarr) := <prim-array>(j)(G, H)
-        in  <prim-+-ndarray>(i, ndarr, G2, H2)
-    case (t1, NdArray) ->
-      \(i, j, G, H)->
-        let (G2, H2, ndarr) := <prim-array>(i)(G, H)
-        in  <prim-+-ndarray>(ndarr, j, G2, H2)
-    case otherwise -> <Execution Halt>
-\end{verbatim}
-\item
-  The NumPy module holding all operations is defined:
-
-\begin{verbatim}
-<numpy-mod> := Object(Module,
- -1,  -- This value will be changed once it is imported
- { ('attr', 'array') -> <prim-array>,
-   ('attr', 'dot')   -> <prim-dot>,
-   ('attr', 'zeros') -> <prim-zeros>,
-   ('attr', 'ones')  -> <prim-ones>,
-   ...
- }
-)
-\end{verbatim}
-\item
-  And finally, \pycode|S[Import(name)]| is extended (now it handles
-  a single library):
-
-\begin{verbatim}
-S[Import(name)](G, H) :=
-  match name in
-    ("numpy",) ->
-      let (Module, arr, mod) := <numpy-mod>
-          freeaddr := get_free_addr(H)
-      in  (G['numpy'->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
-    ("numpy", alias) ->
-      let (Module, arr, mod) := <numpy-mod>
-          freeaddr := get_free_addr(H)
-      in  (G[alias->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
-
-    otherwise -> <Execution Halt>
-\end{verbatim}
-\end{enumerate}
+%
+% \subsection{NdArrays}\label{ndarrays}
+%
+% The purpose of the formalisation is to be able to construct from it an
+% Abstract Interpreter. To test the Abstract Interpreter abilities to find
+% bugs it should be able to handle NumPy array (tensors). In this
+% subchapter, I extend the formalisation with NumPy array and discuss some
+% of their semantics.
+%
+% The following are all the things to take into account when extending our
+% formalisation to handle a new type of \enquote{builtin} \pycode|Object|
+% type:
+%
+% \begin{enumerate}
+% \def\labelenumi{\arabic{enumi}.}
+% \item
+%   Extend the types of \pycode|Object|s to handle NumPy arrays.
+%
+% \begin{verbatim}
+% Type = List | Tuple | Module | NdArray
+% \end{verbatim}
+%
+%   As an example, consider the numpy array \pycode|np.zeros((4, 3))|, it
+%   can be expressed as:
+%
+% \begin{verbatim}
+% Object(NdArray,
+%  0xanumber,
+%  -- The shape of a NdArray is a tuple of integers
+%  { 'shape' -> Object(Tuple,
+%                0xothernum,
+%                { 'size' -> 2,
+%                  ('index', 0) -> 4,
+%                  ('index', 1) -> 3,
+%                }
+%               )
+%    ('index', 0) -> 0,
+%    ... -- all other indices, each one identified by an integer
+%  }
+% )
+% \end{verbatim}
+%
+%   Note: Remember that an \pycode|Object| is a triple of the form
+%   \pycode|Type x Addr x (Key -> Addr + Undefined)|.
+%   Also remember that example above is faulty as the codomain of the
+%   function defined above is \pycode|Val| not \pycode|Addr| as it should
+%   be.
+% \item
+%   Extend primitive functions with NumPy's primitive functions. The
+%   NumPy's primitive functions implemented in the Abstract Interpreter
+%   are: \pycode|array|, \pycode|zeros|, \pycode|dot|, \pycode|ones|,
+%   \pycode|abs| (and all other functions that don't alter the shape of
+%   the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
+%   \pycode|astype|, and \pycode|T|.
+%
+% \begin{verbatim}
+% <prim-callable> = ... (old operations) |
+%                   <prim-np-zeros> | <prim-np-dot> | <prim-np-abs> | ...
+% \end{verbatim}
+%
+%   Note: The values stored inside a NumPy array are consider irrelevant
+%   in this work. The Value Analysis built in this work considers only the
+%   shape of tensors, as tensors can be huge and their contents do not
+%   often influence their shape. Therefore, it would be wasteful to give a
+%   detailed formalisation of the NumPy library primitives.
+%
+%   Nonetheless, defining formaly each one of the NumPy functions above is
+%   fairly straightforward. Although, the hardest part of a formal
+%   defitinion of Numpy arrays is detailing how \pycode|array| works. To
+%   define the function \pycode|<np-array>| one
+%   must consider the many input cases it can handle, and it can handle
+%   almost any Python object\footnote{The NumPy function \pycode|array|
+%     takes almost anything as an input. \pycode|arrays| tries to
+%     interpret its input as an array in any way it can. There is no
+%     formal definition of how the values are interpreted althought its
+%     semantics can be extracted by looking at its C implementation:
+%     https://stackoverflow.com/a/40380014}.
+%
+%   Once the \pycode|<np-array>| function is
+%   implemented all other functions are much simpler to define. As an
+%   example, the implementation of the function \pycode|size| is:
+%
+% \begin{verbatim}
+% <prim-np-size>(val)(G, H) :=
+%    -- We know that `<prim-array>` always returns an NdArray
+%    let (G, H, (NdArray, addr, arr)) := <prim-array>(val)(G, H)
+%    -- We know that a NdArray has a special value called `shape`
+%        (Tuple, addrtup, tup) := arr('shape')
+%    in  tup('size')
+% \end{verbatim}
+% \item
+%   Extend the cases that \pycode|get_prim_op| handles to cover NumPy
+%   arrays. All operations defined in NumPy handle broadcasting.
+%   {\todo{Explain what broadcasting is}} For example:
+%
+% \begin{verbatim}
+% get_prim_op(Add, v1, v2) :=
+%   match (type(v1), type(v2)) in
+%     ... -- old cases
+%     case (NdArray, t1) ->
+%       \(G, H)->
+%         let (G1, H1, ndarr) := <prim-array>(v2)(G, H)
+%         in  <prim-+-ndarray>(v1, ndarr, G1, H1)
+%     case (t1, NdArray) ->
+%       \(G, H)->
+%         let (G1, H1, ndarr) := <prim-array>(v1)(G, H)
+%         in  <prim-+-ndarray>(ndarr, v2, G1, H1)
+%     case otherwise -> <Execution Halt>
+% \end{verbatim}
+% \item
+%   The NumPy module holding all operations is defined:
+%
+% \begin{verbatim}
+% <numpy-mod> := Object(Module,
+%  -1,  -- This value will be changed once it is imported
+%  { ('attr', 'array') -> <prim-array>,
+%    ('attr', 'dot')   -> <prim-dot>,
+%    ('attr', 'zeros') -> <prim-zeros>,
+%    ('attr', 'ones')  -> <prim-ones>,
+%    ...
+%  }
+% )
+% \end{verbatim}
+% \item
+%   And finally, \pycode|S[Import(name)]| is extended (now it handles
+%   a single library):
+%
+% \begin{verbatim}
+% S[Import(name)](G, H) :=
+%   match name in
+%     ("numpy",) ->
+%       let (Module, arr, mod) := <numpy-mod>
+%           freeaddr := get_free_addr(H)
+%       in  (G['numpy'->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+%     ("numpy", alias) ->
+%       let (Module, arr, mod) := <numpy-mod>
+%           freeaddr := get_free_addr(H)
+%       in  (G[alias->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+%
+%     otherwise -> <Execution Halt>
+% \end{verbatim}
+% \end{enumerate}
 
 \section{Abstract Interpreter}\label{abstract-interpreter}
 
@@ -1423,10 +1424,10 @@ in fact derived from the Galois connection.
 As examples, consider the semantics of expressions:
 
 \begin{verbatim}
-E#[expr] :: Global# x Heap#
+E#[expr] : Global# x Heap#
          -> Global#
           x Heap#
-          x (Val# + Addr + (Object# x (string x Val#)) + Iden)
+          x (Val# + (Object# x (string x Val#)) + Iden)
 
 E#[Name(id, ctx)](G#, H#) :=
   match ctx in
@@ -1449,29 +1450,27 @@ E#[BinOp(op, a, b)](G#, H#) :=
       -- Parsing errors halt the execution of the Abstract Interpreter
       then <Execution Halt>
       else
-        let prim_op# := get_prim_op#(op, type(v1), type(v2))
-         in prim_op#(v1, v2, G2#, H2#)
+        let prim_op# := get_prim_op#(op, v1, v2)
+         in prim_op#(G2#, H2#)
 
-TypeVals = Type U {Int, Float, Bool, NoneType}
-get_prim_op# :: Op x TypeVals x TypeVals -> <prim-callable>#
+get_prim_op : Op x Val# x Val# -> Global x Heap -> Global x Heap x Val#
 
-get_prim_op#(Add, t1, t2) :=
+get_prim_op#(Add, v1, v2) :=
   match (type(v1), type(v2)) in
-    case (Int, Int) -> <prim-+-int>#
-    case (Float, Float) -> <prim-+-float>#
-    case (Int, Bool) -> \(i, j, G#, H#)-> <prim-+-int>#(i, Int(j), G#, H#)
-    case (Bool, Int) -> \(i, j, G#, H#)-> <prim-+-int>#(Int(i), j, G#, H#)
+    case (Int, Int) -> \(G#, H#) -> <prim-+-int>#(v1, v2, G#, H#)
+    case (Float, Float) -> \(G#, H#) -> <prim-+-float>#(v1, v2, G#, H#)
+    case (Int, Bool) -> \(G#, H#)-> <prim-+-int>#(v1, Int(v2), G#, H#)
+    case (Bool, Int) -> \(G#, H#)-> <prim-+-int>#(Int(v1), v2, G#, H#)
     case (Float, a) -> if a = Bool or a = Int
-                       then \(i, j, G#, H#)-> <prim-+-float>#(i, Float(j), G#, H#)
+                       then \(G#, H#)-> <prim-+-float>#(v1, Float(v2), G#, H#)
                        else <prim-ret-top>#
     case (a, Float) -> if a = Bool or a = Int
-                       then \(i, j, G#, H#)-> <prim-+-float>#(Float(i), j, G#, H#)
+                       then \(G#, H#)-> <prim-+-float>#(Float(v1), v2, G#, H#)
                        else <prim-ret-top>#
-    -- This function is to be extended once we add NdArrays to the mix
     case otherwise -> <prim-op-top>#
 
-<prim-op-top># : Val# x Val# x Global# x Heap#
-<prim-op-top>#(a, b, G#, H#) := (G#, H#, Top_Val)
+<prim-op-top># : Global# x Heap#
+<prim-op-top>#(G#, H#) := (G#, H#, Top_Val)
 \end{verbatim}
 
 Notice that parsing errors still halt the execution of the Abstract
@@ -1481,10 +1480,9 @@ to an external problem. We assume that a piece of code is parsed
 properly before starting the execution of the code (just as Python
 does).
 
-Every function defined in the formal semantics of Python must be
-rewritten as function that operates in the Abstract Domain. For example,
-consider the function \texttt{\textless{}prim-+-int\textgreater{}}, it
-is defined as:
+Every function defined in the concrete semantics must be rewritten as function that
+operates in the Abstract Domain. For example, consider the function \verb|<prim-+-int>|,
+it is defined as:
 
 \texttt{\textless{}prim-+-int\textgreater{}(i,\ j,\ G,\ H)\ :=\ (G,\ H,\ i+j)}
 
@@ -1539,35 +1537,7 @@ S#[Import(name)](G#, H#) :=
 
        (nm,alias) ->
           (G#[alias->freeaddr], H#[freeaddr->(Module, freeaddr, ImTop)])
-\end{verbatim}
 
-\subsection{Type Annotations}\label{type-annotations}
-
-I left out, purposefully, the abstract semantics of \pycode|AnnAssign|.
-The idea of type annotations is that they let us refine the value/type
-of a variable when the Abstract Interpreter is unable to define a
-precise value.
-
-An example of what annotations should be able to do is:
-
-\begin{pythoncode}
-from mypreciouslib import amatrix
-from pytropos.hints.numpy import NdArray
-
-mat: NdArray[1,12,6,7] = np.array(amatrix)
-newmat = (mat + 12).reshape((12*6, -1))  # newmat has shape (12*6,7)
-newmat = newmat.dot(np.ones((8, 21)))  # Error! Matrix multiplication, 7!=8
-\end{pythoncode}
-
-When one imports an arbitrary library like \texttt{mypreciouslib} it is
-impossible to know what we may have imported so every variable imported
-is a \texttt{Top\_Val}, i.e.~anything. By adding an annotation to
-\texttt{mat}, we are telling the abstract interpreter that we know, and
-are sure, of the shape of the NumPy array.
-
-The semantics for \texttt{AnnAssign} are:
-
-\begin{verbatim}
 S[AnnAssign(var, hint, val)](G, H) :=
   let (G1, H1, evaluatedhint) := E[hint](G, H)
       (G2, H2, evaluatedhint) := E[hint](G1, H1)
@@ -1587,6 +1557,3 @@ S[AnnAssign(var, hint, val)](G, H) :=
       ... -- Continue as in S[Assign(...)]
 \end{verbatim}
 
-Notice that we determine the \enquote{precision} of a hint with respect
-to the variable with the comparision between values, the order
-\texttt{\textless{}Val\#}!
