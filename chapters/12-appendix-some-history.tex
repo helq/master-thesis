@@ -38,7 +38,7 @@ My main motivation to use Haskell is its very strict type system, and
 the tools that it incorporates to work with types. For example, in GHC,
 the standard Haskell implementation, one can ask for the inferred type
 of an expression by annotating the type with the type symbol
-\texttt{\_}\footnote{They are called holes. There are two types of
+\verb+_+\footnote{They are called holes. There are two types of
   holes: (regular) holes and type holes. A hole is an unknown expression
   and a type hole is an unknown type. You can put a whole at the type
   level and the compiler will tell you what is the type that should be
@@ -61,77 +61,73 @@ important one being MyPy.
 MyPy builds on the idea of Gradual Typing. MyPy is able to infer the
 type of primitive values and allows optional annotations to check the
 code. Sadly, MyPy does not consider literal numbers as valid types
-(\texttt{int}, \texttt{float}, \texttt{List{[}int{]}} are valid types
-but no \texttt{3} or \texttt{List{[}2,\ int{]}}), so it is currently
+(\pycode|int|, \pycode|float|, \pycode|List[int]| are valid types
+but no \pycode|3| or \pycode|List[2, int]|), so it is currently
 impossible to type annotate a variable with the size of the variable,
-e.g.~something like \texttt{np.ndarray{[}2,\ 3,\ 4{]}}.
+e.g.~something like \pycode|np.ndarray[2, 3, 4]|.
 
 But hope is still not lost! We can encode numbers in MyPy's Type System
 in a similar way to how was done in
 \autocites{chen_typesafe_2017}{eaton_statically_2006}. We can encode 1
-as \texttt{Tuple{[}None{]}}, 2 as \texttt{Tuple{[}None,\ None{]}}, and
+as \pycode|Tuple[None]|, 2 as \pycode|Tuple[None, None]|, and
 so on.
 
 Additionally, we can compare fields between two variables in an
-operation with the use of \texttt{TypeVar}s (variables at the type
+operation with the use of \pycode|TypeVar|s (variables at the type
 level). With these two ideas, we can rudimentary check the shapes of
 tensors. First we write a stub file \autocite{pep484} with type
 annotations to check for the shape of NumPy arrays:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# numpy.pyi}
-\ImportTok{from}\NormalTok{ typing }\ImportTok{import}\NormalTok{ Any, Generic, Optional, Tuple, TypeVar}
+\begin{pythoncode}
+# numpy.pyi
+from typing import Any, Generic, Optional, Tuple, TypeVar
 
-\NormalTok{S }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'S'}\NormalTok{)  }\CommentTok{# Used for dtype}
-\NormalTok{Shape }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'Shape'}\NormalTok{)  }\CommentTok{# Used for the shape}
-\NormalTok{s1 }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'s1'}\NormalTok{)  }\CommentTok{# Another variable to use as reference to a shape}
-\NormalTok{s2 }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'s2'}\NormalTok{)}
-\NormalTok{s3 }\OperatorTok{=}\NormalTok{ TypeVar(}\StringTok{'s3'}\NormalTok{)}
-
-
-\KeywordTok{class}\NormalTok{ ndarray(Generic[S, Shape]):}
-    \KeywordTok{def} \FunctionTok{__init__}\NormalTok{(}\VariableTok{self}\NormalTok{, shape: Any) }\OperatorTok{->} \VariableTok{None}\NormalTok{: ...}
-
-    \KeywordTok{def}\NormalTok{ dot(}
-            \VariableTok{self}\NormalTok{: }\StringTok{'ndarray[S,Tuple[s1,s2]]'}\NormalTok{,}
-\NormalTok{            b: }\StringTok{'ndarray[S,Tuple[s2,s3]]'}
-\NormalTok{    ) }\OperatorTok{->} \StringTok{'ndarray[S,Tuple[s1,s3]]'}\NormalTok{: ...}
-
-    \KeywordTok{def} \FunctionTok{__add__}\NormalTok{(}
-            \VariableTok{self}\NormalTok{: }\StringTok{'ndarray[S,Shape]'}\NormalTok{,}
-\NormalTok{            value: }\StringTok{'ndarray[S,Shape]'}
-\NormalTok{    ) }\OperatorTok{->} \StringTok{'ndarray[S,Shape]'}\NormalTok{: ...}
+S = TypeVar('S')  # Used for dtype
+Shape = TypeVar('Shape')  # Used for the shape
+s1 = TypeVar('s1')  # Another variable to use as reference to a shape
+s2 = TypeVar('s2')
+s3 = TypeVar('s3')
 
 
-\KeywordTok{def}\NormalTok{ array(}\BuiltInTok{object}\NormalTok{: Any) }\OperatorTok{->}\NormalTok{ ndarray[Any, Shape]: ...}
-\end{Highlighting}
-\end{Shaded}
+class ndarray(Generic[S, Shape]):
+    def __init__(self, shape: Any) -> None: ...
+
+    def dot(
+            self: 'ndarray[S,Tuple[s1,s2]]',
+            b: 'ndarray[S,Tuple[s2,s3]]'
+    ) -> 'ndarray[S,Tuple[s1,s3]]': ...
+
+    def __add__(
+            self: 'ndarray[S,Shape]',
+            value: 'ndarray[S,Shape]'
+    ) -> 'ndarray[S,Shape]': ...
+
+
+def array(object: Any) -> ndarray[Any, Shape]: ...
+\end{pythoncode}
 
 And now we write the piece of code to type check:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
-\ImportTok{from}\NormalTok{ typing }\ImportTok{import}\NormalTok{ Tuple}
+\begin{pythoncode}
+import numpy as np
+from typing import Tuple
 
-\NormalTok{one   }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{]}
-\NormalTok{two   }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{]}
-\NormalTok{three }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{]}
-\NormalTok{four  }\OperatorTok{=}\NormalTok{ Tuple[}\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{, }\VariableTok{None}\NormalTok{]}
+one   = Tuple[None]
+two   = Tuple[None, None]
+three = Tuple[None, None, None]
+four  = Tuple[None, None, None, None]
 
-\CommentTok{# x has shape (2,3)}
-\NormalTok{x }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{3}\NormalTok{], [}\DecValTok{4}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{]])  }\CommentTok{# type: np.ndarray[float, Tuple[two, three]]}
+# x has shape (2,3)
+x = np.array([[1, 2, 3], [4, 5, 6]])  # type: np.ndarray[float, Tuple[two, three]]
 
-\CommentTok{# y has shape (4,1)}
-\NormalTok{y }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{7}\NormalTok{], [}\DecValTok{0}\NormalTok{], [}\DecValTok{2}\NormalTok{], [}\DecValTok{1}\NormalTok{]])    }\CommentTok{# type: np.ndarray[float, Tuple[four, one]]}
+# y has shape (4,1)
+y = np.array([[7], [0], [2], [1]])    # type: np.ndarray[float, Tuple[four, one]]
 
-\NormalTok{w }\OperatorTok{=}\NormalTok{ x }\OperatorTok{+}\NormalTok{ y  }\CommentTok{# fails! And MyPy warns us!! :D}
+w = x + y  # fails! And MyPy warns us!! :D
 
-\CommentTok{# THIS SHOULD FAIL IN MYPY!! But it doesn't :(}
-\NormalTok{z }\OperatorTok{=}\NormalTok{ x.dot(y)  }\CommentTok{# type: np.ndarray[float, Tuple[two, one]]}
-\end{Highlighting}
-\end{Shaded}
+# THIS SHOULD FAIL IN MYPY!! But it doesn't :(
+z = x.dot(y)  # type: np.ndarray[float, Tuple[two, one]]
+\end{pythoncode}
 
 Everything seems to work perfectly, MyPy detects that the two numpy
 arrays cannot be added together because the have different shapes, but

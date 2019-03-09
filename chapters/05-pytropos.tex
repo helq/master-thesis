@@ -42,36 +42,32 @@ by rewriting code to operate with the types of values rather than with
 the values, i.e.~the result of executing the code is not some values but
 some types. For example, consider the following small piece of code:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=} \DecValTok{2} \OperatorTok{+} \DecValTok{4}
-\NormalTok{b }\OperatorTok{=}\NormalTok{ a }\OperatorTok{+} \StringTok{"yep"}  \CommentTok{# this will fail}
-\NormalTok{c }\OperatorTok{=}\NormalTok{ a }\OperatorTok{/} \DecValTok{2}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = 2 + 4
+b = a + "yep"  # this will fail
+c = a / 2
+\end{pythoncode}
 
 Notice that how even though the piece of code fails to run successfully,
-we can determine the types of all variables. \texttt{a} has type
-\VERB|\BuiltInTok{int}|, \texttt{b} has no type as it cannot be
-computed, and \texttt{c} has type \VERB|\BuiltInTok{float}| because the
-division of \texttt{int}s in Python 3 gives us back a \texttt{float}.
+we can determine the types of all variables. \pycode|a| has type
+\pycode|int|, \pycode|b| has no type as it cannot be
+computed, and \pycode|c| has type \pycode|float| because the
+division of \pycode|int|s in Python 3 gives us back a \pycode|float|.
 
 We can build a library that operates on types (rather than values) and
 then we can rewrite the piece of code above into:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\ImportTok{import}\NormalTok{ typeops }\ImportTok{as}\NormalTok{ to}
-\NormalTok{a }\OperatorTok{=}\NormalTok{ to.add(}\BuiltInTok{int}\NormalTok{, }\BuiltInTok{int}\NormalTok{)}
-\NormalTok{b }\OperatorTok{=}\NormalTok{ to.add(a, }\BuiltInTok{str}\NormalTok{)}
-\NormalTok{c }\OperatorTok{=}\NormalTok{ to.div(a, }\BuiltInTok{int}\NormalTok{)}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+import typeops as to
+a = to.add(int, int)
+b = to.add(a, str)
+c = to.div(a, int)
+\end{pythoncode}
 
-If the library has properly defined the methods \texttt{add} and
-\texttt{div}, we can be sure that the code will run without any error.
+If the library has properly defined the methods \pycode|add| and
+\pycode|div|, we can be sure that the code will run without any error.
 Notice that the library is able to find type mismatches by embedding
-checks in the functions \texttt{add} and \texttt{div}. The library can,
+checks in the functions \pycode|add| and \pycode|div|. The library can,
 effectively, perform Static Analysis on a piece of code.
 
 Pytropos is implemented following the same strategy: a library that
@@ -100,17 +96,15 @@ Consequently, the transformation does not produce a simple,
 human-readable output. We can run Pytropos with the small code above as
 input and will get:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\ImportTok{import}\NormalTok{ pytropos.internals }\ImportTok{as}\NormalTok{ pt}
-\NormalTok{st }\OperatorTok{=}\NormalTok{ pt.Store()}
-\NormalTok{pt.loadBuiltinFuncs(st)}
-\NormalTok{fn }\OperatorTok{=} \StringTok{'test.py'}
-\NormalTok{st[(}\StringTok{'a'}\NormalTok{, ((}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{), fn))] }\OperatorTok{=}\NormalTok{ pt.}\BuiltInTok{int}\NormalTok{(}\DecValTok{2}\NormalTok{).add(pt.}\BuiltInTok{int}\NormalTok{(}\DecValTok{4}\NormalTok{), pos}\OperatorTok{=}\NormalTok{((}\DecValTok{1}\NormalTok{, }\DecValTok{4}\NormalTok{), fn))}
-\NormalTok{st[(}\StringTok{'b'}\NormalTok{, ((}\DecValTok{2}\NormalTok{, }\DecValTok{0}\NormalTok{), fn))] }\OperatorTok{=}\NormalTok{ st[(}\StringTok{'a'}\NormalTok{, ((}\DecValTok{2}\NormalTok{, }\DecValTok{4}\NormalTok{), fn))].add(pt.}\BuiltInTok{str}\NormalTok{(}\StringTok{'yep'}\NormalTok{), pos}\OperatorTok{=}\NormalTok{((}\DecValTok{2}\NormalTok{, }\DecValTok{4}\NormalTok{), fn))}
-\NormalTok{st[(}\StringTok{'c'}\NormalTok{, ((}\DecValTok{3}\NormalTok{, }\DecValTok{0}\NormalTok{), fn))] }\OperatorTok{=}\NormalTok{ st[(}\StringTok{'a'}\NormalTok{, ((}\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{), fn))].truediv(pt.}\BuiltInTok{int}\NormalTok{(}\DecValTok{2}\NormalTok{), pos}\OperatorTok{=}\NormalTok{((}\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{), fn))}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+import pytropos.internals as pt
+st = pt.Store()
+pt.loadBuiltinFuncs(st)
+fn = 'test.py'
+st[('a', ((1, 0), fn))] = pt.int(2).add(pt.int(4), pos=((1, 4), fn))
+st[('b', ((2, 0), fn))] = st[('a', ((2, 4), fn))].add(pt.str('yep'), pos=((2, 4), fn))
+st[('c', ((3, 0), fn))] = st[('a', ((3, 4), fn))].truediv(pt.int(2), pos=((3, 4), fn))
+\end{pythoncode}
 
 Not as nice as the first example.
 
@@ -196,12 +190,12 @@ implement \texttt{Int\#}, \texttt{Float\#}, \texttt{None\#} and
 \texttt{AbstractValue}.
 
 \texttt{AbstractValue} is an abstract class that defines all the
-operations supported (\texttt{+}, \texttt{*}, \ldots{}) by Pytropos, and
+operations supported (\pycode|+|, \pycode|*|, \ldots{}) by Pytropos, and
 what it is required for a function call, subscript access and attribute
 access. \texttt{AbstractValue}, in its turn, subclasses
 \texttt{AbstractDomain} a abstract class that defines the methods every
-Abstract Domain should have, namely \texttt{is\_top()}, \texttt{join()},
-\texttt{top()} and \texttt{widen\_op()}. \texttt{PythonValue} and
+Abstract Domain should have, namely \pycode|is_top()|, \pycode|join()|,
+\pycode|top()| and \pycode|widen_op()|. \pycode|PythonValue| and
 \texttt{Store}, unsurprisingly, also subclass \texttt{AbstractDomain}.
 
 The figure below presents a class diagram showing the relationships
@@ -209,14 +203,14 @@ between the different components in Pytropos.
 
 \includegraphics[width=0.9\textwidth,height=\textheight]{figures/classes_Pytropos-small.pdf}
 {\todo{add types to each attribute, and add hidden attributes like
-\texttt{\_\_getitem\_\_}}}
+\pycode+__getitem__+}}
 
-\texttt{\textless{}prim-callable\textgreater{}} and all other
+\verb+<prim-callable>+ and all other
 \texttt{Objects\#} are implemented by a subclass of
-\texttt{AbstractMutVal}: \texttt{\textless{}prim-callable\textgreater{}}
-by \texttt{BuiltinFun}, \texttt{Module} objects by
-\texttt{BuiltinModule}, \texttt{list}s by \texttt{List}, and
-\texttt{tuple} by \texttt{Tuple}.
+\pycode|AbstractMutVal|: \verb+<prim-callable>+
+by \pycode|BuiltinFun|, \texttt{Module} objects by
+\pycode|BuiltinModule|, \pycode|list|s by \texttt{List}, and
+\pycode|tuple| by \texttt{Tuple}.
 
 {\inlinetodo{mention that \texttt{children} is the function
 \texttt{Key\ -\textgreater{}\ Addr\ +\ Undefined}}} {\inlinetodo{mention

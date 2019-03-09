@@ -19,26 +19,26 @@ something understandable or nice}
 %   what makes them different (spoiler, the main difference is that they work with
 %   abstract values and abstract states, and therefore are called abstract semantics)
 
-This chapter explains the formalisation of the proposed Abstract Interpreter. The chapter
-is divided into three: what are semantics, concrete semantics for Python, and
-abstract semantics for Value Analysis. This chapter is intended as a guide on why and how
-was the Abstract Interpreter built. For a deeper look on the details presented in this
-chapter, please refer to Appendix~\ref{appendix-ai-theory}.
+In this chapter, an Abstract Interpreter for Python is proposed. The chapter is divided
+into three: what are semantics, concrete semantics for Value Analysis of Python code, and
+abstract semantics. This chapter is intended as a guide on how was the Abstract
+Interpreter built and why was it built the way it is. A deeper look on the gory details
+of the concrete and abstract semantics is given in the Appendix~\ref{appendix-ai-theory}.
 
 \section{Semantics}
 
 In Mathematics, the word \enquote{semantics} refers to the meaning of sentences in formal
-languages\todo{add ref from gunter's book}. The semantics of programming languages
+languages \autocite{gunter_semantics_1992}. The semantics of programming languages
 consist of what a piece of code means, how to interpret it, and how to analyse it.
 
-\todo{add ref to mitchell's book} classifies \enquote{semantics} into three categories:
-axiomatic semantics, denotational semantics, and operational semantics. Axiomatic
-semantics are all about describing the behaviour of code with mathematical logic.
-Denotational semantics goal is to find a mathematical "object" that represents what a
-program does. The program's meaning is given by the external object.
-Operational semantics are concerned with rules that tell how to interpret or execute a
-piece of code. No meaning is given to the parts of the program, but a meaning is given as
-the program is run.
+\textcite{mitchell1996foundations}\todo{find a better reference} classifies programming
+languages semantics into three categories: axiomatic semantics, denotational semantics,
+and operational semantics. Axiomatic semantics are all about describing the behaviour of
+code with mathematical logic. Denotational semantics goal is to find a mathematical
+"object" that represents what a program does. The program's meaning is given by the
+object properties or lack of thereof. Operational semantics are concerned with rules that
+tell how to interpret or execute a piece of code. No meaning is given to the parts of the
+program, but a meaning is given as the program is run.
 
 
 \begin{verbatim}
@@ -50,27 +50,28 @@ the program is run.
 \end{verbatim}
 
 Notice that Denotational semantics must not provide a way to determine an implementation.
-On the other hand, an implementation can be easily build out Operational Semantics.
-From the many Operational semantics there are, small-step semantics are precisely those
-that give us the most direct route to see what a program, they are intuitive and every
-developer could just understand them directly, they define what the program does in a
-syntax oriented way, is all about applying rules, syntactic rules. It is not a surprise
-that all efforts into defining formal semantics for Python have been small-step semantics
-\todo{add ref to all papers on python semantics}.
+On the other hand, an implementation can be easily build from Operational Semantics.
+Small-step semantics are define what the program does by describing a set of rules over
+the syntax of the language. The meaning of the program is given by the application of the
+rules. It is not a surprise that all efforts into defining formal semantics for Python
+have been small-step semantics
+\autocites{ranson_semantics_2008}{guth_formal_2013}{politz_python_2013}{fromherz_static_2018}.
 
-In this work, we are no exception. Our purpose is to define the small-step semantics of a
-portion of Python to show what is our Abstract Interpreter able to do and why.
+Small-step semantics are also the closest in our work. Our purpose is to approximate the
+value of variables on execution. For this, we will like to follow as closely as possible
+the execution model of CPython, the official implementation of the Python language. First,
+we will define the small-step semantics of a portion of Python, our concrete semantics
+for the problem. Next, based on the concrete semantics, we will define one abstract
+semantics for Python.
 
 \section{Concrete Semantics of Python}
 
-Before we define the concrete semantics of Python we need to define how to write a piece
-of code in Python. Python is a mature and vast language, thus we will take just a portion
+Before we define the concrete semantics of Python, we need to define how to write a piece
+of code in Python. Python is a mature and large language, thus we will take just a portion
 of it into account. In the figure below, we present the subset of Python that we intend to
 study in this work.
 
 \begin{verbatim}
-mod = stmt*  -- A program. Starting point
-
 expr = Int(i) for i \in \N | Float(j) for j \in floats
      | True | False | None
 
@@ -103,50 +104,48 @@ alias = identifier | identifier as identifier
 identifier = string  -- with some restrictions
 \end{verbatim}
 
-The details on how to check for the correct number of spaces before expressions to
-indicate properly when a stament is inside a \texttt{while} or an \texttt{if} is left
-unexplained. We do not care about that here.
+We intentionally leave out any details related on the spacing of Python, as our main focus
+is the meaning of Python values and not how are blocks of statements defined in the
+language.
 
-Let's consider the simple program:
-
-\begin{verbatim}
-b = 2
-a = b < 3
-\end{verbatim}
-
-We can define the following rules:
+For the syntax above we can define the following rules, the small-semantics of the
+language:
 
 \inlinetodo{copy and modify rules from the appendix to make this part simpler, they will
 probably return}
 
-Notice that to define these rules we make use of two important things, a global scope and
-a heap. We store the stuff in the heap and point to them with the global scope function.
-The definition of the small-steps semantics of the language requires us to save the
-results of execution somewhere.
+Notice that to define these rules we need to define two values: a global scope and a heap.
+We store values in the heap and point to them with the global scope function.
 
-We call these rules, the small-step semantics of our subset of Python. Actually, they are
-just a portion of the total rules defined. We don't present all the rules here because it
-takes too much space. Refer to the appendix to see them in more detail.
+The meaning of our program is the function \verb+S[prog]+ of type \verb+State -> State+.
+In this work we are interested on the values that result on the application of the fuction
+\verb+S[prog]+ on a clean state, which is a state that has only builtin variables defined.
+Statements modify the state of the program. Expressions also modify the state of the
+program but they additionaly return a value, e.g. the expression \pycode+ls.pop()+ removes
+the last element in the list \pycode+ls+ and returns it. Thus the type of the function
+\verb+E[expr]+ is \verb+State -> State x Val+
+
+Time to see the semantics in action. Let's consider the simple program:
+
+\begin{pythoncode}
+b = 2
+a = b < 3
+\end{pythoncode}
 
 With our rules we can "execute" our example:
 
 \inlinetodo{execution step by step of the program}
 
-\inlinetodo{recall the reader that in the parlance of abstract interpretation the
-semantics of the language in study are called Concrete semantics. And that is precisely
-what we are defining here, the semantics of the thing we want to study. What we want to
-study precisely? We want to study the value of variables as the program is executed}
-
-Defining the small-step semantics on the syntax presented before is a hazzle. Consider the
-statement delete, this stament is able to not only delete values from the global scope
-(\verb+del a+), but it can also delete elements from a list (\verb+del ls[2]+ deleting the
-third element of a list \verb+ls+).  Notice that it whatever is being deleted by
-\verb+del+ is an expression (in the examples, \verb+a+ and \verb+ls[2]+ are both
-expressions), what should the expression return? (expressions always return stuff). It is
-simply very hard to know what to return in a case like \verb+ls[2][0].val[1]+, so what we
-opted to do is exactly what CPython, the official implementation of Python does, that is,
-extend the syntax to add a little hint of what the purpose of the expression being
-evaluated will be.
+Defining the small-step semantics on the syntax presented before is inconvinient. To see
+why it is inconvinient to work with the defined syntax, consider the statement delete. The
+statement delete is able to not only remove values from the global scope, e.g \pycode+del
+a+, but it can also delete elements from a list, e.g. \pycode+del ls[2]+ delets the third
+element of a list \pycode+ls+. Notice that whatever is being deleted by \pycode+del+ is an
+expression. In the examples, \pycode+a+ and \pycode+ls[2]+ are both expressions. Then,
+what should the expression return to indicate a value and a position on an object?. It is
+hard to know what to return in a case like \pycode+ls[2][0].val[1]+. We opted to follow
+what CPython does. CPython extends the syntax to make expresions return a position in memory
+or a value depending on how will they be used by the statements.
 
 Our new syntax will be:
 
@@ -192,11 +191,11 @@ cmpop = Lt | LtE | Gt | GtE
 alias = (identifier, identifier?)
 \end{verbatim}
 
-Notice that this syntax has been directly taken from the CPython implementation\todo{add
-ref}, they did in fact find this problem ages ago and it is coded in the language. This
-new syntax is the result of the parser. The parser takes code written in the first syntax
-and defines a proper context (Load, Store, or Del) to a couple of expressions. All other
-expressions are considered Load by default.
+Notice that this syntax has been directly taken from the CPython implementation
+\autocite{van2007python}. The developer is not supposed to write in this new syntax, but
+code written in this syntax is the result of the parser. The parser takes code written in
+the first syntax and defines a proper context (Load, Store, or Del) for the expressions
+\pycode+Name+ and \pycode+Subscript+. All other expressions are considered Load by default.
 
 Accordingly, our concrete semantics change. First the state of a program is:
 
@@ -209,8 +208,8 @@ and the semantics per se:
   and these have increased in number in this new syntax}
 
 Notice the complexity of the type of the functions has increased. Now an expression can
-not only return a value but three other things, the semantics chose which want to return
-depending on the value.
+not only return a value but three other things. The value returned by the application of
+an expression to the state is selected depending on the context it is called.
 
 Same example as before with the new syntax and semantics:
 

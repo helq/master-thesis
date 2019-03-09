@@ -61,7 +61,7 @@ Binary ops   120            10        500ms            8        2             80
 
 Property-based tests that try to disprove a property. For example, a
 property of lists is that anytime you add a new element to a list of
-size \texttt{n} you will get a list with size \texttt{n+1}. I use
+size \pycode|n| you will get a list with size \pycode|n+1|. I use
 property-based tests to check for correcness of Pytropos against Python
 on builtin operations for builtin values.
 
@@ -78,15 +78,15 @@ the most honorable mentions are:
 \begin{itemize}
 \tightlist
 \item
-  Zero-division error on expressions like \texttt{5\ \%\ 0} or
-  \texttt{5\ \%\ False}
+  Zero-division error on expressions like \pycode|5 \% 0| or
+  \pycode|5 \% False|
 \item
-  Value error on expressions like \texttt{5\ \textless{}\textless{}\ -2}
+  Value error on expressions like \pycode|5 << -2|
 \item
   Excesive High-memory consumption on expressions like
-  \texttt{5\ \textless{}\textless{}\ 10**10}
+  \pycode|5 << 10**10|
 \item
-  Overflow error on expressions like \texttt{10**209\ +\ 2.0}
+  Overflow error on expressions like \pycode|10**209 + 2.0|
 \end{itemize}
 
 \section{Discussion}\label{discussion}
@@ -100,16 +100,16 @@ based on the errors above}
 
 Pytropos is still in a very young age. It is not able to check many,
 many characteristics present in Python code (some of the biggest
-culprits are \texttt{for} statement, custom classes and objects,
+culprits are \pycode|for| statement, custom classes and objects,
 exception handling and the lack of builtin definitions), but when code
 is given to it that it can actually check.
 
 Pytropos is able to check for the many common cases and mistakes that
 can be made when working with tensors. It is able to calculate the shape
-of tensors in a variety of circumstances (NumPy's \texttt{array} can
+of tensors in a variety of circumstances (NumPy's \pycode|array| can
 evaluate almost anything as an array, therefore detecting the shape of
-any value passed to \texttt{array} is an accomplishment in itself. An
+any value passed to \pycode|array| is an accomplishment in itself. An
 example of why this is important can be seen in the library{\todo{add
 ref to numpy mypy lib}}, where they define a stub for mypy to check of
-the library numpy, and what they do in the case of \texttt{array} is
+the library numpy, and what they do in the case of \pycode|array| is
 basically give up).

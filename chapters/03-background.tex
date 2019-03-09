@@ -84,7 +84,7 @@ code that the developer cares about.
 Gradual Typing adds a new type value to the Type System, \texttt{?}
 (named \emph{Any}). In Gradual Typing all variables are of type
 \texttt{?} unless the user annotates them with a more precise type like
-\texttt{int} or \texttt{float}. Type annotations are optional in Gradual
+\pycode+int+ or \pycode+float+. Type annotations are optional in Gradual
 Typing, as opposed to Static Typing where the type of all variables must
 be known (either by annotations or inference). Strictly speaking,
 Gradual Typing is a Static Typing Algorithm that simulates Dynamic
@@ -108,7 +108,7 @@ annotate the type the user believes the variable has. Type annotations
 are used by external libraries as MyPy \autocite{lehtosalo2016mypy} and
 Enforce \footnote{GitHub project accessible on
   \url{https://github.com/RussBaz/enforce}} to check for correctness of
-the code. The Python \texttt{typing} library offers a builtin arange of
+the code. The Python \pycode+typing+ library offers a builtin arange of
 variables to type annotate variables. For an in-depth explanation on the
 goal of Type Annotations and how are they used in Python refer to
 \autocite{pep483}.
@@ -152,33 +152,29 @@ presents an example of what can be done with it. Notice how the two
 pieces of code below perform the same operation (\enquote{normalization}
 of the values in the matrix) but NumPy does it in just fewer lines:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\ImportTok{import}\NormalTok{ numpy }\ImportTok{as}\NormalTok{ np}
-\NormalTok{A }\OperatorTok{=}\NormalTok{ np.array([}
-\NormalTok{  [}\FloatTok{1.}\NormalTok{, }\FloatTok{2.}\NormalTok{, }\FloatTok{4.}\NormalTok{],}
-\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{3.}\NormalTok{, }\FloatTok{2.}\NormalTok{],}
-\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{9.}\NormalTok{, }\FloatTok{5.}\NormalTok{],}
-\NormalTok{])}
+\begin{pythoncode}
+import numpy as np
+A = np.array([
+  [1., 2., 4.],
+  [6., 3., 2.],
+  [6., 9., 5.],
+])
 
-\NormalTok{A }\OperatorTok{/=}\NormalTok{ np.}\BuiltInTok{max}\NormalTok{(A)}
-\end{Highlighting}
-\end{Shaded}
+A /= np.max(A)
+\end{pythoncode}
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{A }\OperatorTok{=}\NormalTok{ [}
-\NormalTok{  [}\FloatTok{1.}\NormalTok{, }\FloatTok{2.}\NormalTok{, }\FloatTok{4.}\NormalTok{],}
-\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{3.}\NormalTok{, }\FloatTok{2.}\NormalTok{],}
-\NormalTok{  [}\FloatTok{6.}\NormalTok{, }\FloatTok{9.}\NormalTok{, }\FloatTok{5.}\NormalTok{],}
-\NormalTok{]}
+\begin{pythoncode}
+A = [
+  [1., 2., 4.],
+  [6., 3., 2.],
+  [6., 9., 5.],
+]
 
-\NormalTok{m }\OperatorTok{=} \BuiltInTok{max}\NormalTok{(}\BuiltInTok{map}\NormalTok{(}\BuiltInTok{max}\NormalTok{, A))}
-\ControlFlowTok{for}\NormalTok{ i }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{3}\NormalTok{):}
-  \ControlFlowTok{for}\NormalTok{ j }\KeywordTok{in} \BuiltInTok{range}\NormalTok{(}\DecValTok{3}\NormalTok{):}
-\NormalTok{    A[i][j] }\OperatorTok{/=}\NormalTok{ m}
-\end{Highlighting}
-\end{Shaded}
+m = max(map(max, A))
+for i in range(3):
+  for j in range(3):
+    A[i][j] /= m
+\end{pythoncode}
 
 Multidimensional arrays, arrays which are indexed by not one but two
 integers, are often called tensors. We take in this work the same
@@ -187,10 +183,10 @@ tensors. If a tensor has one dimension it is equivalent to an array, and
 if it has two dimensions it is equivalent to a matrix.
 
 Operating with tensors is often syntactically simpler than using looping
-structures to operate with blocks of memory, i.e.~writing \texttt{a+b},
-where \texttt{a} and \texttt{b} are tensors is simpler than
-\texttt{{[}a{[}i{]}+b{[}i{]}\ for\ i\ in\ range(len(a)){]}}. Besides,
-\texttt{a+b} even works for tensors with different (but compatible)
+structures to operate with blocks of memory, i.e.~writing \pycode|a+b|,
+where \pycode|a| and \pycode|b| are tensors is simpler than
+\pycode|[a[i]+b[i] for i in range(len(a))]|. Besides,
+\pycode|a+b| even works for tensors with different (but compatible)
 shapes.
 
 \section{NumPy: Library for tensor computation}
@@ -212,27 +208,23 @@ NumPy\footnote{Notice that this represents a challenge for Static Type
   similar way at how it is defined in the original library}. For
 example, all of the following variables hold a valid NumPy array:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=}\NormalTok{ np.array(}\StringTok{"some text"}\NormalTok{)       }\CommentTok{# array of chars (8-bit numbers)}
-\NormalTok{b }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{], [}\DecValTok{2}\NormalTok{, }\DecValTok{4}\NormalTok{]])  }\CommentTok{# array of ints of shape (2, 2)}
-\NormalTok{c }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{], [}\DecValTok{2}\NormalTok{]])     }\CommentTok{# array of objects of shape (2,)}
-\NormalTok{d }\OperatorTok{=}\NormalTok{ np.array([(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{), [}\DecValTok{2}\NormalTok{, }\DecValTok{5}\NormalTok{]])  }\CommentTok{# array of ints of shape (2, 2)}
-\NormalTok{e }\OperatorTok{=}\NormalTok{ np.array([[}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{], \{}\DecValTok{2}\NormalTok{, }\DecValTok{5}\NormalTok{\}])     }\CommentTok{# array of objects of shape (2,)}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = np.array("some text")       # array of chars (8-bit numbers)
+b = np.array([[1, 2], [2, 4]])  # array of ints of shape (2, 2)
+c = np.array([[1, 2], [2]])     # array of objects of shape (2,)
+d = np.array([(1, 2), [2, 5]])  # array of ints of shape (2, 2)
+e = np.array([[1, 2], {2, 5}])     # array of objects of shape (2,)
+\end{pythoncode}
 
 The shape of a NumPy array can be changed without changing its contents:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=}\NormalTok{ np.arange(}\DecValTok{50}\NormalTok{)}
-\NormalTok{a }\OperatorTok{=}\NormalTok{ a.reshape((}\DecValTok{1}\NormalTok{,}\OperatorTok{-}\DecValTok{1}\NormalTok{,}\DecValTok{2}\NormalTok{,}\DecValTok{5}\NormalTok{))}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = np.arange(50)
+a = a.reshape((1,-1,2,5))
+\end{pythoncode}
 
 Reshaping preserves the number of elements in an array. If an
-\texttt{-1} is found, it will be taken as a wild card and the missing
+\pycode|-1| is found, it will be taken as a wild card and the missing
 dimension will be calculated to keep the original shape.
 
 Numpy has this little, nice trick to handle operations that would
@@ -240,25 +232,23 @@ require reshaping or copying an array when operating with two arrays
 with different, but similar, shapes. The trick is called broadcasting,
 and can be better understood with an example:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=}\NormalTok{ np.zeros((}\DecValTok{10}\NormalTok{, }\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{)) }\OperatorTok{+} \DecValTok{2}
-\NormalTok{b }\OperatorTok{=}\NormalTok{ np.arange(}\DecValTok{3}\NormalTok{).reshape((}\DecValTok{3}\NormalTok{, }\DecValTok{1}\NormalTok{))}
-\NormalTok{c }\OperatorTok{=}\NormalTok{ a }\OperatorTok{*}\NormalTok{ b}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = np.zeros((10, 3, 4)) + 2
+b = np.arange(3).reshape((3, 1))
+c = a * b
+\end{pythoncode}
 
 Notice that the code is valid and evaluates in Python. The shape of
-\texttt{a} is \texttt{(10,\ 3,\ 4)} because adding an array of any shape
-to an \texttt{int} gives us back an array with the same shape, i.e.~we
-have added a scalar to every element of a tensor. \texttt{b} has a shape
-of \texttt{(3,\ 1)} and the shape of \texttt{c} is
-\texttt{(10,\ 3,\ 4)}. Broadcasting \enquote{generalises} the rule of
+\pycode|a| is \pycode|(10, 3, 4)| because adding an array of any shape
+to an \pycode|int| gives us back an array with the same shape, i.e.~we
+have added a scalar to every element of a tensor. \pycode|b| has a shape
+of \pycode|(3,\ 1)| and the shape of \pycode|c| is
+\pycode|(10,\ 3,\ 4)|. Broadcasting \enquote{generalises} the rule of
 operating with a scalar (as it is done in the first line). The rule
-works by extending with \texttt{1}'s the left side of the smaller shape
+works by extending with \pycode|1|'s the left side of the smaller shape
 until both are equal, and then checking if the dimensions of both shapes
 are compatible. Two dimensions are compatible if are the same or one of
-them is \texttt{1}. For a deeper explanation on broadcasting take a look
+them is \pycode|1|. For a deeper explanation on broadcasting take a look
 at \url{https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html}.
 
 \section{Abstract Interpretation}\label{abstract-interpretation}
@@ -283,20 +273,18 @@ computation. Specifically, Abstract Interpretation computes an
 \textbf{over}approximation of some property of the program. To explain
 what an overapproximation is consider the following piece of code:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(}\BuiltInTok{input}\NormalTok{())}
-\NormalTok{a }\OperatorTok{=} \BuiltInTok{abs}\NormalTok{(a)}
-\NormalTok{b }\OperatorTok{=} \DecValTok{2} \OperatorTok{*}\NormalTok{ a}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = int(input())
+a = abs(a)
+b = 2 * a
+\end{pythoncode}
 
 Assuming the user inputs a valid number and the code runs as intended,
-we know at the end of the computation that: \texttt{a} holds a
-non-negative integer, and \texttt{b} holds a non-negative integer
+we know at the end of the computation that: \pycode|a| holds a
+non-negative integer, and \pycode|b| holds a non-negative integer
 multiple of 2. An overapproximation of this computation is saying that
-\texttt{a} and \texttt{b} are both non-negative integers (notice that we
-do not say that \texttt{b} is even).
+\pycode|a| and \pycode|b| are both non-negative integers (notice that we
+do not say that \pycode|b| is even).
 
 There is an inherent tradeoff between the precision of an
 overapproximation, and the amount of storage and processing the
@@ -316,9 +304,10 @@ specific overapproximation used.
 How is the overapproximation calculated and which tools do we have at
 our disposal to compute it? The following subsections present briefly
 the important concepts behind Abstract Interpretation. For an in-depth
-explanation of Abstract Interpretation refer to \autocites[Chapters 1
-and
-4]{nielson2015principles}{cousot_abstract_1977}{nipkow_abstract_2014}.
+explanation of Abstract Interpretation refer to
+\autocites[Chapters 1 and 4]{nielson2015principles}%
+{cousot_abstract_1977}%
+{nipkow_abstract_2014}.
 
 \subsection{Ingredients for an Abstract Interpreter}
 \label{ingredients-for-an-abstract-interpreter}
@@ -379,31 +368,29 @@ values any time an operation is made between two variables. If we do
 this, we will be able to calculate all possible states a program may
 arrive. For example, consider:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{cond1 }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(}\BuiltInTok{input}\NormalTok{())  }\CommentTok{# Stdin input}
-\NormalTok{cond2 }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(}\BuiltInTok{input}\NormalTok{())}
+\begin{pythoncode}
+cond1 = bool(input())  # Stdin input
+cond2 = bool(input())
 
-\ControlFlowTok{if}\NormalTok{ cond1:}
-\NormalTok{  a }\OperatorTok{=} \DecValTok{0}
-\NormalTok{  b }\OperatorTok{=} \DecValTok{20}
-\ControlFlowTok{elif}\NormalTok{ cond2:}
-\NormalTok{  a }\OperatorTok{=} \DecValTok{2}
-\NormalTok{  b }\OperatorTok{=} \DecValTok{6}
-\ControlFlowTok{else}\NormalTok{:}
-\NormalTok{  a }\OperatorTok{=} \DecValTok{1}
-\NormalTok{  b }\OperatorTok{=} \DecValTok{9}
-\end{Highlighting}
-\end{Shaded}
+if cond1:
+  a = 0
+  b = 20
+elif cond2:
+  a = 2
+  b = 6
+else:
+  a = 1
+  b = 9
+\end{pythoncode}
 
-After running the code, we know that \texttt{a} \(\in \{0, 1, 2\}\) and
-\texttt{b} \(\in \{6, 9, 20\}\). Now, if we want to compute \texttt{a+b}
+After running the code, we know that \pycode|a| \(\in \{0, 1, 2\}\) and
+\pycode|b| \(\in \{6, 9, 20\}\). Now, if we want to compute \pycode|a+b|
 we must compute all possible results of computing with the values from
-\texttt{a} and \texttt{b}, which results in \texttt{a+b}
+\pycode|a| and \pycode|b|, which results in \pycode|a+b|
 \(\in \{6, 9, 20, 7, 10, 21, 8, 11, 22\}\). Notice how the result of
-calculating \texttt{a+b} overapproximates the real values \texttt{a+b}
-can take, i.e. \texttt{a} and \texttt{b} are assumed to be independent
-of each other so we get way more possible values for \texttt{a+b} than
+calculating \pycode|a+b| overapproximates the real values \pycode|a+b|
+can take, i.e. \pycode|a| and \pycode|b| are assumed to be independent
+of each other so we get way more possible values for \pycode|a+b| than
 can actually be computed (we overapproximate).
 
 It is clear that computing with sets of values is expensive, even
@@ -415,8 +402,8 @@ abstraction that lets us overapproximate the values contained in the
 sets. For example, if we use interval arithmetic to approximate the sets
 we get:
 
-\texttt{a} \(\in \left[0, 2\right]\), \texttt{b}
-\(\in \left[6, 20\right]\), and \texttt{a+b} \(\in \left[6, 22\right]\)
+\pycode|a| \(\in \left[0, 2\right]\), \pycode|b|
+\(\in \left[6, 20\right]\), and \pycode|a+b| \(\in \left[6, 22\right]\)
 
 Which can be easily stored and manipulated (we only require two numbers
 to encode an interval). Notice how any abstraction will make us lose
@@ -427,29 +414,27 @@ Notice that overapproximating the value of variables can lead us often
 to think that a piece of code may be erroneous even if it does not.
 Consider:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{b }\OperatorTok{=} \BuiltInTok{bool}\NormalTok{(}\BuiltInTok{input}\NormalTok{())}
+\begin{pythoncode}
+b = bool(input())
 
-\ControlFlowTok{if}\NormalTok{ b:}
-\NormalTok{  a }\OperatorTok{=} \DecValTok{2}
-\NormalTok{  b }\OperatorTok{=} \DecValTok{-1}
-\ControlFlowTok{else}\NormalTok{:}
-\NormalTok{  a }\OperatorTok{=} \DecValTok{6}
-\NormalTok{  b }\OperatorTok{=} \DecValTok{3}
+if b:
+  a = 2
+  b = -1
+else:
+  a = 6
+  b = 3
 
-\NormalTok{c }\OperatorTok{=}\NormalTok{ a }\OperatorTok{/}\NormalTok{ b  }\CommentTok{# c is either -2 or 2}
-\end{Highlighting}
-\end{Shaded}
+c = a / b  # c is either -2 or 2
+\end{pythoncode}
 
 It is simple for us to run this example in all possible inputs, as there
-are only two, an notice that the code never fails. If \texttt{b} is
-\texttt{True}, then we know that \texttt{c} is \texttt{-2}, and if
-\texttt{b} is \texttt{False}, then we know that \texttt{c} is
-\texttt{2}. We know that no matter the input, the code will never fail!
+are only two, an notice that the code never fails. If \pycode|b| is
+\pycode|True|, then we know that \pycode|c| is \pycode|-2|, and if
+\pycode|b| is \pycode|False|, then we know that \pycode|c| is
+\pycode|2|. We know that no matter the input, the code will never fail!
 But when we abstractly interpret the code using intervals as an
-overapproximation, we get that \texttt{a} \(\in [2,6]\) and \texttt{b}
-\(\in [-1,3]\), so when we try to run \texttt{a\ /\ b} we are alerted
+overapproximation, we get that \pycode|a| \(\in [2,6]\) and \pycode|b|
+\(\in [-1,3]\), so when we try to run \pycode|a\ /\ b| we are alerted
 that we may be dividing by zero\footnote{dividing by zero throws an
   Exception in Python}.
 
@@ -470,23 +455,23 @@ many true positives as possible.
 
 Fortunately, if the overapproximation we are using allows us to
 distinguish between single values, e.g.~the overapproximation can tell
-us that \texttt{a} has been set to the value \texttt{5} after the
-assignation \texttt{a\ =\ 5}\footnote{The sign overapproximation (or
+us that \pycode|a| has been set to the value \pycode|5| after the
+assignation \pycode|a = 5|\footnote{The sign overapproximation (or
   Sign Interval Abstract Domain) has only three posible values:
-  \texttt{-}, \texttt{0} and \texttt{+}, while the interval
+  \pycode|-|, \pycode|0| and \pycode|+|, while the interval
   overapproximation (or Interval Abstract Domain) contains any interval
   \([a,b]\) with \(a,b \in \mathbb{R}\). Therefore, if we use the
   Interval Abstract Domain we are able to tell when we know a variable
   has a specific value rather than many. On the other hand it is
   imposible for use to determine a unique value using Sign Interval
-  Domain other than the case \texttt{0}.}, then it is possible for us to
+  Domain other than the case \pycode|0|.}, then it is possible for us to
 check if two single values are equal or different. If we are able to
 assert with certainty that two values are equal or different, then we
 are able to find true positive comparisons (oppossed to maybe
-\texttt{True} comparisons)\footnote{Consider the result of
-  \texttt{{[}4,4{]}\ ==\ {[}3,3{]}} (\texttt{False}) and the result of
-  \texttt{{[}3,8{]}\ ==\ {[}2,3{]}} (it may be \texttt{True} or
-  \texttt{False})}.
+\pycode|True| comparisons)\footnote{Consider the result of
+  \pycode|[4,4] == [3,3]| (\pycode|False|) and the result of
+  \pycode|[3,8] == [2,3]| (it may be \pycode|True| or
+  \pycode|False|)}.
 
 The formal definition of an overapproximation is an Abstract Domain. An
 Abstract Domain is composed of a lattice, a Galois connection between a
@@ -593,44 +578,40 @@ else:
 a -= 6
 \end{verbatim}
 
-We know that the value of \texttt{a} in the \emph{then} branch of the of
-the \emph{if} statement is equal to \texttt{{[}2,2{]}} and
-\texttt{{[}4,4{]}} in the \emph{else} branch. The value of \texttt{a}
+We know that the value of \pycode|a| in the \emph{then} branch of the of
+the \emph{if} statement is equal to \pycode|[2,2]| and
+\pycode|[4,4]| in the \emph{else} branch. The value of \pycode|a|
 after the execution of the \emph{if} statement will be
-\texttt{{[}2,2{]}} \(\cup{}\) \texttt{{[}4,4{]}} \(=\)
-\texttt{{[}2,4{]}}. At the end of the execution the value of \texttt{a}
-lie inside the interval \texttt{{[}-4,-2{]}}.
+\pycode|[2,2]| \(\cup{}\) \pycode|[4,4]| \(=\)
+\pycode|[2,4]|. At the end of the execution the value of \pycode|a|
+lie inside the interval \pycode|[-4,-2]|.
 
 Notice that with a (Value) Abstract Domain, we can overapproximate the
 value of a single variable but we cannot warranty \textbf{termination}
 of the evaluation of the code. Take for example:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=} \DecValTok{4}
-\ControlFlowTok{while} \KeywordTok{not}\NormalTok{ condition(a):}
-\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = 4
+while not condition(a):
+  a += 3
+\end{pythoncode}
 
 Unrolling the loop, we get:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=} \DecValTok{4}     \CommentTok{# a \textbackslash{}in [4,4]}
+\begin{pythoncode}
+a = 4     # a $\in [4,4]$
 
-\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,7]}
-\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,10]}
-\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,13]}
-\NormalTok{  a }\OperatorTok{+=} \DecValTok{3}  \CommentTok{# a \textbackslash{}in [4,16]}
-\NormalTok{  ...}
-  \CommentTok{# a \textbackslash{}in [4, inf]}
-\end{Highlighting}
-\end{Shaded}
+  a += 3  # a $\in [4,7]$
+  a += 3  # a $\in [4,10]$
+  a += 3  # a $\in [4,13]$
+  a += 3  # a $\in [4,16]$
+  ...
+  # a $\in [4, inf]$
+\end{pythoncode}
 
-Because we do not know when \texttt{condition(a)} will be met, it is
-impossible for us to know how many times will the \texttt{while}'s body
-be executed, an so we know that \texttt{a} may be either 4, 7, 11, or
+Because we do not know when \pycode|condition(a)| will be met, it is
+impossible for us to know how many times will the \pycode|while|'s body
+be executed, an so we know that \pycode|a| may be either 4, 7, 11, or
 any other integer. An Abstract Interpreter is an interpreter and
 therefore will run the body of the while loop forever if we do not do
 something to terminate it.
@@ -644,8 +625,7 @@ The idea of a widening operator is to make a series of ascending values
 reach a fixed point in a finite amount of time.
 
 Consider the (increasing) sequence from before\footnote{Notice that:
-  \texttt{{[}4,4{]}} \(\le\) \texttt{{[}4,7{]}} \(\le\)
-  \texttt{{[}4,11{]}}}:
+$[4,4]$ \(\le\) $[4,7]$ \(\le\) $[4,11]$}:
 
 \begin{verbatim}
 [4,4] [4,7] [4,10] [4,13] [4,16] [4,19] [4,22] [4,25] ...
@@ -671,12 +651,12 @@ Applying the operator over our sequence over an over we will get:
 [4,7] [4,10] [4,13] [4,16] [4,inf] [4,inf] [4,inf] ...
 \end{verbatim}
 
-And we found a fixed point, namely, \texttt{{[}4,inf{]}}. We have
+And we found a fixed point, namely, $[4,inf]$. We have
 arrived now at the top of the latter.
 
 Notice how the cutoff of the sequence must be defined beforehand (in our
-case any interval with a value bigger than \texttt{15} defaults to
-\(\infty{}\)). This is a little bit annoying as one would like for the
+case any interval with a value bigger than \pycode|15| defaults to
+\(\infty\)). This is a little bit annoying as one would like for the
 Abstract Interpreter to work under any condition, but this is the price
 to pay for termination, we need to set some parameters by hand.
 
@@ -704,37 +684,35 @@ State: Var -> Val
 State#: Var -> Val#
 \end{verbatim}
 
-If the \texttt{State} of the program is defined as a function from
-\texttt{Var}s into their values (\texttt{Var\ -\textgreater{}\ Val}),
-and \texttt{Val\#} is the Abstract Domain for values in the languages,
-then the function \texttt{Var\ -\textgreater{}\ Val\#} is an Abstract
+If the \pycode|State| of the program is defined as a function from
+\pycode|Var|s into their values (\verb|Var -> Val|),
+and \pycode|Val#| is the Abstract Domain for values in the languages,
+then the function \verb|Var -> Val#| is an Abstract
 Domain\footnote{For a deeper look and a proof on this statement see
-  \textcite{nielson2015principles}, subchapter 4.4.} for the state of
+  \textcite{nielson2015principles}, Subchapter 4.4.} for the state of
 the program.
 
 As an example consider:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\DataTypeTok{int}\NormalTok{ main() \{}
-  \DataTypeTok{int}\NormalTok{ cond1, cond2, a, b, c;}
-  \BuiltInTok{std::}\NormalTok{cin >> cond1 >> cond2;}
+\begin{pythoncode}
+int main() {
+  int cond1, cond2, a, b, c;
+  std::cin >> cond1 >> cond2;
 
-  \ControlFlowTok{if}\NormalTok{ (cond1) \{}
-\NormalTok{    a = }\DecValTok{0}
-\NormalTok{    b = }\DecValTok{20}
-\NormalTok{  \} }\ControlFlowTok{else} \ControlFlowTok{if}\NormalTok{ (cond2) \{}
-\NormalTok{    a = }\DecValTok{2}
-\NormalTok{    b = }\DecValTok{6}
-\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
-\NormalTok{    a = }\DecValTok{1}
-\NormalTok{    b = }\DecValTok{9}
-\NormalTok{  \}}
-\NormalTok{  c = a + b;}
-  \ControlFlowTok{return} \DecValTok{0}\NormalTok{;}
-\NormalTok{\}}
-\end{Highlighting}
-\end{Shaded}
+  if (cond1) {
+    a = 0
+    b = 20
+  } else if (cond2) {
+    a = 2
+    b = 6
+  } else {
+    a = 1
+    b = 9
+  }
+  c = a + b;
+  return 0;
+}
+\end{pythoncode}
 
 Note: This example is written in C++ because we can assume all variables
 to have a set type, a unique type. In C++, a variable always has a value
@@ -745,41 +723,39 @@ Suppose that the State Abstract Domain for this piece of code is a
 function from the set \(\{cond1, cond2, a, b, c\}\) to the Interval
 Abstract Domain. If we evaluate the code line by line we will get:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{// T: means Top}
-\DataTypeTok{int}\NormalTok{ main() \{}
-  \DataTypeTok{int}\NormalTok{ cond1, cond2, a, b, c;}
-  \CommentTok{// \{'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T\}}
-  \BuiltInTok{std::}\NormalTok{cin >> cond1 >> cond2;}
-  \CommentTok{// \{'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T\}}
+\begin{pythoncode}
+// T: means Top
+int main() {
+  int cond1, cond2, a, b, c;
+  // {'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T}
+  std::cin >> cond1 >> cond2;
+  // {'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T}
 
-  \ControlFlowTok{if}\NormalTok{ (cond1) \{}
-\NormalTok{    a = }\DecValTok{0}
-    \CommentTok{// \{'cond': T, 'cond2': T, 'a': 0, 'b': T, 'c': T\}}
-\NormalTok{    b = }\DecValTok{20}
-    \CommentTok{// \{'cond': T, 'cond2': T, 'a': 0, 'b': 20, 'c': T\}}
-\NormalTok{  \} }\ControlFlowTok{else}\NormalTok{ \{}
-    \ControlFlowTok{if}\NormalTok{ (cond2) \{}
-\NormalTok{      a = }\DecValTok{2}
-      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 2, 'b': T, 'c': T\}}
-\NormalTok{      b = }\DecValTok{6}
-      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 2, 'b': 6, 'c': T\}}
-\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
-\NormalTok{      a = }\DecValTok{1}
-      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 1, 'b': T, 'c': T\}}
-\NormalTok{      b = }\DecValTok{9}
-      \CommentTok{// \{'cond': T, 'cond2': T, 'a': 1, 'b': 9, 'c': T\}}
-\NormalTok{    \}}
-    \CommentTok{// \{'cond': T, 'cond2': T, 'a': [1,2], 'b': [6,9], 'c': T\}}
-\NormalTok{  \}}
-  \CommentTok{// \{'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': T\}}
-\NormalTok{  c = a + b;}
-  \CommentTok{// \{'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': [6,22]\}}
-  \ControlFlowTok{return} \DecValTok{0}\NormalTok{;}
-\NormalTok{\}}
-\end{Highlighting}
-\end{Shaded}
+  if (cond1) {
+    a = 0
+    // {'cond': T, 'cond2': T, 'a': 0, 'b': T, 'c': T}
+    b = 20
+    // {'cond': T, 'cond2': T, 'a': 0, 'b': 20, 'c': T}
+  } else {
+    if (cond2) {
+      a = 2
+      // {'cond': T, 'cond2': T, 'a': 2, 'b': T, 'c': T}
+      b = 6
+      // {'cond': T, 'cond2': T, 'a': 2, 'b': 6, 'c': T}
+    } else {
+      a = 1
+      // {'cond': T, 'cond2': T, 'a': 1, 'b': T, 'c': T}
+      b = 9
+      // {'cond': T, 'cond2': T, 'a': 1, 'b': 9, 'c': T}
+    }
+    // {'cond': T, 'cond2': T, 'a': [1,2], 'b': [6,9], 'c': T}
+  }
+  // {'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': T}
+  c = a + b;
+  // {'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': [6,22]}
+  return 0;
+}
+\end{pythoncode}
 
 Excellent! We have done it! We have the idea of how to build an Abstract
 Interpreter for a language with only one type of variable, a global
@@ -818,29 +794,27 @@ has been said here.
 \textcite{mine_weakly_2004} extends an Abstract Interpreter with the
 backward assignment. The backward assignment is meant to restrict the
 possible values a variable may have when it enters an \emph{if}
-statement. Consider the following piece of C++ (\texttt{a} and
-\texttt{b} are integers):
+statement. Consider the following piece of C++ (\pycode|a| and
+\pycode|b| are integers):
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{// \{'a': [2,4], 'b': Top\}}
-\ControlFlowTok{if}\NormalTok{ (a < }\DecValTok{3}\NormalTok{) \{}
-  \CommentTok{// Appling backward assignment. `a<3 and a in [2,4]`}
-  \CommentTok{// \{'a': 2, 'b': Top\}}
-\NormalTok{  b = a;}
-  \CommentTok{// \{'a': 2, 'b': 2\}}
-\NormalTok{\} }\ControlFlowTok{else}\NormalTok{ \{}
-  \CommentTok{// Appling backward assignment. `a>=3 and a in [2,4]`}
-  \CommentTok{// \{'a': [3,4], 'b': Top\}}
-\NormalTok{  b = a - }\DecValTok{2}\NormalTok{;}
-  \CommentTok{// \{'a': [3,4], 'b': [1,2]\}}
-\NormalTok{\}}
-\CommentTok{// \{'a': [2,4], 'b': [1,2]\}}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+// {'a': [2,4], 'b': Top}
+if (a < 3) {
+  // Appling backward assignment. `a<3 and a in [2,4]`
+  // {'a': 2, 'b': Top}
+  b = a;
+  // {'a': 2, 'b': 2}
+} else {
+  // Appling backward assignment. `a>=3 and a in [2,4]`
+  // {'a': [3,4], 'b': Top}
+  b = a - 2;
+  // {'a': [3,4], 'b': [1,2]}
+}
+// {'a': [2,4], 'b': [1,2]}
+\end{pythoncode}
 
-Notice that if we ignore backward assignment the interval for \texttt{b}
-is \texttt{{[}0,4{]}}. Backward assignment lets us narrow down the
+Notice that if we ignore backward assignment the interval for \pycode|b|
+is \pycode|[0,4]|. Backward assignment lets us narrow down the
 overapproximation, which means that we can have a tighter
 overapproximation and consequently less false positives.
 

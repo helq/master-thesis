@@ -45,15 +45,13 @@ attributes, subscripts, and primitive values are all objects just as in
 regular Python. The following is valid in Python and in this
 formalisation:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{a }\OperatorTok{=}\NormalTok{ []}
-\NormalTok{b }\OperatorTok{=}\NormalTok{ a.append}
-\NormalTok{b(}\DecValTok{3}\NormalTok{)}
-\NormalTok{a.append(}\FloatTok{2.0}\NormalTok{)}
-\BuiltInTok{print}\NormalTok{(a)  }\CommentTok{# prints: [3, 2.0]}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+a = []
+b = a.append
+b(3)
+a.append(2.0)
+print(a)  # prints: [3, 2.0]
+\end{pythoncode}
 
 In this sense, my formalisation is closer to that of
 \textcite{politz_python_2013}, where they also show how their
@@ -160,21 +158,21 @@ semantics of the language:
 
 \begin{itemize}
 \item
-  \texttt{a\ +\ b} gets translated into
-  \texttt{BinOp(Add,\ Name(a,\ Load),\ Name(b,\ Load))}. Notice the
-  \texttt{Load} context, it indicates that we want to get the value of
+  \pycode|a + b| gets translated into
+  \pycode|BinOp(Add, Name(a, Load), Name(b, Load))|. Notice the
+  \pycode|Load| context, it indicates that we want to get the value of
   the variable not a reference to it (if we wanted to alter it).
 \item
-  \texttt{a\ =\ 3} gets translated into
-  \texttt{Assign(Name(a,\ Store),\ Int(3))}. Notice the \texttt{Store}
+  \pycode|a = 3| gets translated into
+  \pycode|Assign(Name(a, Store), Int(3))|. Notice the \pycode|Store|
   context, it tells us that we will get a reference to where the value
   is stored and not its value.
 \item
-  \texttt{del\ a} gets translated into \texttt{Delete(Name(a,\ Del))}.
-  Notice the \texttt{Del} context, it tells us that we will get the
+  \pycode|del a| gets translated into \pycode|Delete(Name(a, Del))|.
+  Notice the \pycode|Del| context, it tells us that we will get the
   object where it was called from as well as it possition in the heap.
 \item
-  \texttt{a.b{[}3{]}\ +\ b.c} gets translated into
+  \pycode|a.b[3] + b.c| gets translated into
 
 \begin{verbatim}
 BinOp(Add,
@@ -183,7 +181,7 @@ BinOp(Add,
 )
 \end{verbatim}
 \item
-  \texttt{a.b{[}3{]}\ =\ 3} gets translated into
+  \pycode|a.b[3] = 3| gets translated into
 
 \begin{verbatim}
 Assign(
@@ -192,11 +190,11 @@ Assign(
 )
 \end{verbatim}
 
-  Notice how we only get the \texttt{Store} context for the subscript
+  Notice how we only get the \pycode|Store| context for the subscript
   and not for anything else, as we only want to know where the value of
   the subscript is stored and nothing else.
 \item
-  \texttt{del\ a.b{[}3{]}} gets translated into
+  \pycode|del a.b[3]| gets translated into
 
 \begin{verbatim}
 Delete(
@@ -204,18 +202,18 @@ Delete(
 )
 \end{verbatim}
 
-  Notice how we only get the \texttt{Del} context for the subscript and
+  Notice how we only get the \pycode|Del| context for the subscript and
   not for anything eles, as we only want where and whom belongs to the
   subscript and nothing else.
 \end{itemize}
 
-We will see in a moment, but the semantics of a \texttt{del} require us
+We will see in a moment, but the semantics of a \pycode|del| require us
 to know where the identifier or attribute is located (in an object or
 the store). Assigning a variable require us to know where to put a
 variable. Accessing to innexistant attribute
-(\texttt{class\ A():\ ...;\ a\ =\ A();\ a.length\ \#\ error:\ attribute\ unknown})
+(\pycode|class A(): ...; a = A(); a.length # error: attribute unknown|)
 it's not the same as to defining a new attribute
-(\texttt{class\ A():\ ...;\ a\ =\ A();\ a.length\ =\ 3\ \#\ works!}),
+(\pycode|class A(): ...; a = A(); a.length = 3 # works!|),
 thus we need a way to distinguish between this three different
 stament-dependent expressions.
 
@@ -227,7 +225,7 @@ the unability to define a custom function or class in the language, we
 want to be able to call a function and access to objects attributes. We
 have found that even though the amount of characteristics we support
 right now is small, we are able to capture some common errors caused
-when coding (e.g.~\texttt{5\ \%\ 0} fails and we can capture it).
+when coding (e.g.~\pycode|5 \% 0| fails and we can capture it).
 
 \subsection{Python (reduced) small step semantics}
 \label{python-reduced-small-step-semantics}
@@ -237,26 +235,26 @@ There are two types of values (objects):
 \begin{itemize}
 \tightlist
 \item
-  Primitive values (\texttt{PrimVal}): integers (\texttt{int}s),
-  Floating point numbers (\texttt{float}s), Boolean values
-  (\texttt{True} and \texttt{False}), and the lonely \texttt{None}
+  Primitive values (\pycode|PrimVal|): integers (\pycode|int|s),
+  Floating point numbers (\pycode|float|s), Boolean values
+  (\pycode|True| and \pycode|False|), and the lonely \pycode|None|
   value.
 \item
-  Mutable values: \texttt{Object}. An \texttt{Object} is a value that
+  Mutable values: \pycode|Object|. An \pycode|Object| is a value that
   holds a type, an address to where is located, and a
   \enquote{dictionary} pointing to other values.
 \end{itemize}
 
 Lists, Tuples, builtin Functions, builtin Modules, builtin Classes, and
-builtin Methods derive from \texttt{Object}. Mutable Values may not
+builtin Methods derive from \pycode|Object|. Mutable Values may not
 allow to change the value of their attributes, as in the case with
 Tuples, the name \enquote{Mutable Values} refers to their ability to
 point at other values (either Primitive and Mutable) and possibly change
 them.
 
 The \textbf{state of a Python program}, called the store of the program,
-is a tuple \texttt{(G,\ Heap)} where \texttt{G} is the \enquote{global
-scope} of variables, and \texttt{Heap} the heap (where all values are
+is a tuple \pycode|(G, Heap)| where \pycode|G| is the \enquote{global
+scope} of variables, and \pycode|Heap| the heap (where all values are
 stored). Notice that we are ignoring the statements to execute in the
 state of the program.
 
@@ -276,46 +274,44 @@ Val = PrimVal | Object | <prim-callable>
 <prim-callable> = <prim-append> | <prim-+-int> | <prim-+-float> | <prim-*-int> | ...
 \end{verbatim}
 
-A \texttt{\textless{}prim-callable\textgreater{}} is a value that is
-builtin function in Python. The special value \texttt{Undefined} is used
-to signal unassigned values in \texttt{Heap}. If one tries to operate
-with an \texttt{Undefined} value the execution should halt, operating
-with \texttt{Undefined} values is forbidden as they never appear on
-Python (In Python, an \texttt{Undefined} value is an errorneous memory
+A \pycode|<prim-callable>| is a value that is
+builtin function in Python. The special value \pycode|Undefined| is used
+to signal unassigned values in \pycode|Heap|. If one tries to operate
+with an \pycode|Undefined| value the execution should halt, operating
+with \pycode|Undefined| values is forbidden as they never appear on
+Python (In Python, an \pycode|Undefined| value is an errorneous memory
 value, or an unassigned region of memory).
 
-An \texttt{Iden} is a Python identifier. A Python identifier is a string
-that can only contain letters, numbers, and the character \texttt{\_}.
+An \pycode|Iden| is a Python identifier. A Python identifier is a string
+that can only contain letters, numbers, and the character \pycode|_|.
 An identifier cannot start with a number\footnote{I am simplifying here
   for the sake of brevity. In fact Python 3 does allow a wide array of
   Unicode characters to construct an identifier.
   https://docs.python.org/3/reference/lexical\_analysis.html\#identifiers}.
 
-Notice how the index (\texttt{Key}) for the function that relates an
-\texttt{Object} to its attributes can be one of two things. \texttt{Key}
-is either an \texttt{Iden} or a tuple \texttt{string\ x\ PrimVal}. The
+Notice how the index (\pycode|Key|) for the function that relates an
+\pycode|Object| to its attributes can be one of two things. \pycode|Key|
+is either an \pycode|Iden| or a tuple \pycode|string x PrimVal|. The
 idea behind indexing an object with two separate kinds of keys is to be
 able to diffirenciate between a value that is inherit to the
-\texttt{Object} and other that the object simply points. Consider a
+\pycode|Object| and other that the object simply points. Consider a
 list, an inherit, unmodifiable, value of a list is its size. The size of
 a list can only be modified if an element is added or removed from it.
 Now, consider the value at the index 2 of the list
-\texttt{{[}2,\ 54,\ {[}True{]},\ 6,\ 0.0{]}}, the value is another
-\texttt{Object}. Any object stored in a list is not an intrisic property
+\pycode|[2, 54, [True], 6, 0.0]|, the value is another
+\pycode|Object|. Any object stored in a list is not an intrisic property
 of the list.
 
-A \texttt{Key} can be a tuple \texttt{string\ x\ PrimVal}. There are
+A \pycode|Key| can be a tuple \pycode|string x PrimVal|. There are
 only two types of tuples in the current formalisation, either
-\texttt{(\textquotesingle{}index\textquotesingle{},\ val)} or
-\texttt{(\textquotesingle{}attr\textquotesingle{},\ val)}. A key of the
-form \texttt{(\textquotesingle{}attr\textquotesingle{},\ val)} indicates
-us that \texttt{val} (hopefully an \texttt{Iden}) is an attribute of the
-object. \texttt{(\textquotesingle{}index\textquotesingle{},\ val)} is
+\pycode|('index', val)| or
+\pycode|('attr', val)|. A key of the
+form \pycode|('attr', val)| indicates
+us that \pycode|val| (hopefully an \pycode|Iden|) is an attribute of the
+object. \pycode|('index', val)| is
 used for lists.
 
-For example, the list
-\VERB|\NormalTok{[}\VariableTok{None}\NormalTok{, }\DecValTok{4}\NormalTok{, ()]}|
-can be expressed as:
+For example, the list \pycode|[None, 4, ()]| can be expressed as:
 
 \begin{verbatim}
 (List,
@@ -328,12 +324,12 @@ can be expressed as:
 ),
 \end{verbatim}
 
-The first element of the triple is \texttt{List}, indicating us that the
-\texttt{Object} is a list. The second element is the address on the
+The first element of the triple is \pycode|List|, indicating us that the
+\pycode|Object| is a list. The second element is the address on the
 heap, a natural number. The third element is a function from
-\texttt{Key} values to \texttt{Val}s. Strictly speaking an
-\texttt{Object} cannot be defined isolated, it requires to be defined as
-part of a \texttt{Heap}:
+\pycode|Key| values to \pycode|Val|s. Strictly speaking an
+\pycode|Object| cannot be defined isolated, it requires to be defined as
+part of a \pycode|Heap|:
 
 \begin{verbatim}
 H = {
@@ -347,13 +343,13 @@ H = {
 \end{verbatim}
 
 \textbf{Notation:} A function is defined as a Python Dictionary. It is
-slightly easier to type and understand \texttt{\{x:\ m,\ y:\ n\}} than
+slightly easier to type and understand \pycode|{x: m, y: n}| than
 \(x \rightarrow m; y \rightarrow n\).
 
 {\nonsection{Semantics of Expressions}}
 
 In the same manner as \textcite{fromherz_static_2018}, we define the
-semantics of an \texttt{E{[}}\emph{expr}\texttt{{]}} as a function that
+semantics of an \pycode|E[expr]| as a function that
 takes a state and returns a state plus a value.
 
 An expression takes as inputs: * A Global Scope, and * A Heap
@@ -367,9 +363,9 @@ and the result of executing an expression is:
 \item
   A new Heap, and
 \item
-  One of three things: A \texttt{Val}, an \texttt{Addr} or
-  \texttt{(Object+None)xIden} if the context was \texttt{Load},
-  \texttt{Store} or \texttt{Del}, respectively.
+  One of three things: A \pycode|Val|, an \pycode|Addr| or
+  \pycode|(Object+None)xIden| if the context was \pycode|Load|,
+  \pycode|Store| or \pycode|Del|, respectively.
 \end{itemize}
 
 {\inlinetodo{check all equations, especially E{[}Call(\ldots{}){]}}}
@@ -383,7 +379,10 @@ E[expr] :: Global x Heap
 E[Name(id, ctx)](G, H) :=
   match ctx in
     case Load  -> if G(id) = Undefined
-                  then <Execution Halt>
+                  -- if a variable is not in the global scope we check if it is builtin
+                  then if isbuiltin(id)
+                       then (G, H, <builtin-val>(id))
+                       else <Execution Halt>
                   else (G, H, G[id])
     case Store -> (G, H, id)  -- Something will be stored in id S[Assign(...)] or variation will take care of it
     case Del   -> (G, H, id)  -- The id will be deleted, S[Delete(...)] will take care of it
@@ -467,75 +466,33 @@ E[List(lst)](G, H) :=
 E[Call(caller, vals)](G, H) :=
   match E[caller](G, H) in
     -- Abusing notation by magically unfolding `vals`
-    case (G1, H1, call: Val) -> call(*vals, G, H)
+    case (G1, H1, call: <prim-callable>) -> call(*vals, G, H)
 
     otherwise -> <Execution Halt>  -- the caller must be a Val
+
+<builtin-val> : string -> Val
+<builtin-val>(id) :=
+   match id in
+     case 'int' -> <prim-int-type>
+     case 'list' -> <prim-list-type>
+     ...
 \end{verbatim}
 
-\texttt{\textless{}Execution\ Halt\textgreater{}} is used in two ways in
+\pycode|<Execution\ Halt>| is used in two ways in
 here. Either it means that we found an operation that throws an
 exception (which this formalisation does not handle), or it means that
 the AST is malformed and nothing can be further calculated (an example
-of this is using the wrong context, e.g.~\texttt{Load} when the value
-required a \texttt{Store} context).
+of this is using the wrong context, e.g.~\pycode|Load| when the value
+required a \pycode|Store| context).
 
 Note: Regarding the semi-casual notation used in here,
-\texttt{type(Something)} is meant to be a shorthand to expanding on the
-definition of \texttt{Something}. The porpuse is to make the code a
+\pycode|type(Something)| is meant to be a shorthand to expanding on the
+definition of \pycode|Something|. The porpuse is to make the code a
 little bit more intelligible.
 
-\iffalse
-
-\textless{}!-- -Too complex, shows how it doesn't really matters to
-write this stuff from scratch. -Rewriting Python taking into account all
-the inconsistencies of the language argghhh -E\href{G,\%20H}{BinOp(op,
-a, b)} := - let \ldots{} (as above) - in if prim\_op /= Undefined - then
-prim\_op(v1, v2, G2, H2) - -- This case will never occur because no
-custom Object can be defined yet - else - if isobj(v1) and
-v1\href{\%22__add__\%22}{2} /= Undefined - -- Executing an user defined
-function always returns - then let (G3, H3, v) :=
-v1\href{\%22__add__\%22}{2}(v2, G2, H2) - in if type(v) /= Val - then -
-else if v == NotImplemented - -- This is not completely accurate,
-because of implementation reasons the - -- when two numbers are added no
-lookup to their attributes is done, but - -- to their classes!! ie: - --
-\textgreater{}\textgreater{}\textgreater{} class A(): - -- \ldots{} def
-\textbf{add}(s, o): \ldots{} - --
-\textgreater{}\textgreater{}\textgreater{} A() + 3 \# Works!!! - --
-\textgreater{}\textgreater{}\textgreater{} class B(): \ldots{} - --
-\textgreater{}\textgreater{}\textgreater{} b = B() - --
-\textgreater{}\textgreater{}\textgreater{} b.\_\_add\_\_ = lambda s, o:
-None - -- \textgreater{}\textgreater{}\textgreater{} b + 3 \# DO NOT
-Work!!! - -- \textgreater{}\textgreater{}\textgreater{} B.\_\_add\_\_ =
-lambda s, o: None - -- \textgreater{}\textgreater{}\textgreater{} b + 3
-\# Now it works - -- Basically, this example shows that any attempt to
-make a complete - -- formal specification for Python will eventually run
-into these kind of - -- very specific and annoying problem. Therefore,
-there is always a - -- compromise between what the implementation really
-does and what - -- formalisation says - - then if isobj(v2) and
-v2\href{\%22__radd__\%22}{2} /= Undefined - then let (G3, H3, v) :=
-v2\href{\%22__radd__\%22}{2}(v1, G2, H2) - in if v == NotImplemented -
-then -- the addition cannot be performed - else (G3, H3, v) - else (G3,
-H3, v) - -E\href{G,\%20H}{Attribute(e, attr, ctx)} := - let (G1, H1, ad)
-:= E\href{G,\%20H}{e} - -- \texttt{e} must compute to a value, we don't
-need Addr's or an Iden to delete - v := if not is\_value(ad) then else
-ad - in - match ctx in - case Load -\textgreater{} - match kind(v) in -
-case PrimVal -\textgreater{} - -- primitive, similar how get\_prim\_op
-is coded - get\_prim\_attr(type(v), atr)(G1, H1, v) - - case Object
--\textgreater{} - let addr := v(\enquote{attr}, attr) - in if addr =
-Undefined - then - else (G1, H1, addr) - - case -\textgreater{} - (G1,
-H1, v) - - case Store -\textgreater{} - match kind(v) in - -- A
-primitive's attribute cannot be changed - case PrimVal -\textgreater{} -
-- case Object -\textgreater{} - -- all current values in the reduced
-version of Python are not - -- Attribute Mutable, ie, this check isn't
-necessary but we leave - -- it as for future development, enhancement to
-add user defined - -- objects and classes - if is\_attr\_mutable(v) -
-then if v(attr) = Undefined - then let freeaddr = get\_free\_addr(H1) -
-in (G1, H1{[}v{[}attr-\textgreater{}freeaddr{]}{]}) - else (G1, H1,
-v(attr)) --\textgreater{} \fi
-
-Notice that we make use of \texttt{get\_prim\_op} to find the appropiate
+Notice that we make use of \pycode|get_prim_op| to find the appropiate
 primitive function to operate two different values. Later, when we
-extend Python with NumPy arrays will extend \texttt{get\_prim\_op} to
+extend Python with NumPy arrays will extend \pycode|get_prim_op| to
 work with them.
 
 \begin{verbatim}
@@ -559,10 +516,12 @@ get_prim_op(Add, t1, t2) :=
     case otherwise -> <Execution Halt>
 \end{verbatim}
 
-As an example, \texttt{\textless{}prim-+-int\textgreater{}} is defined
+As an example, \pycode|<prim-+-int>| is defined
 as the function:
 
-\texttt{\textless{}prim-+-int\textgreater{}(i,\ j,\ G,\ H)\ :=\ (G,\ H,\ i+j)}
+\begin{pythoncode}
+<prim-+-int>(i, j, G, H) := (G, H, i+j)|
+\end{pythoncode}
 
 {\nonsection{Statements Semantics}}
 
@@ -661,16 +620,15 @@ the language, are evaluated and can modify the state of the program. For
 Python 4, it is planned that Type annotations will not modify the state
 of the program\footnote{Well, this is not strictly true. In both, Python
   3.6+ and Python 4, type annotations are stored in the special variable
-  \texttt{\_\_annotations\_\_}. {\inlinetodo{add ref to peps where this
+  \pycode|__annotations__|. {\inlinetodo{add ref to peps where this
   is described}}} but must obey the syntax of Python {\todo{add ref to
-pep}}. In Python 3.7 a \texttt{\_\_future\_\_} import was added to
+pep}}. In Python 3.7 a \pycode|__future__| import was added to
 modify the behaviour/semantics of Type Annotations for Python 3.7+. One
-can add
-\VERB|\ImportTok{from}\NormalTok{ __future__ }\ImportTok{import}\NormalTok{ annotations}|
+can add \pycode|from __future__ import annotations|
 at the start of the file to forgo the evaluation of type annotations. We
 assume in this work that the type annotations do not alter the state,
 i.e.~we assume that the user implicitely or explicitely is using the
-\texttt{annotations}' future statement.
+\pycode|annotations|' future statement.
 
 In this formalisation, the delete statement is only able to delete
 variables in the global scope, but cannot delete attributes of an
@@ -688,19 +646,19 @@ subchapter, I extend the formalisation with NumPy array and discuss some
 of their semantics.
 
 The following are all the things to take into account when extending our
-formalisation to handle a new type of \enquote{builtin} \texttt{Object}
+formalisation to handle a new type of \enquote{builtin} \pycode|Object|
 type:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  Extend the types of \texttt{Object}s to handle NumPy arrays.
+  Extend the types of \pycode|Object|s to handle NumPy arrays.
 
 \begin{verbatim}
 Type = List | Tuple | Module | NdArray
 \end{verbatim}
 
-  As an example, consider the numpy array \texttt{np.zeros((4,\ 3))}, it
+  As an example, consider the numpy array \pycode|np.zeros((4, 3))|, it
   can be expressed as:
 
 \begin{verbatim}
@@ -720,18 +678,18 @@ Object(NdArray,
 )
 \end{verbatim}
 
-  Note: Remember that an \texttt{Object} is a triple of the form
-  \texttt{Type\ x\ Addr\ x\ (Key\ -\textgreater{}\ Addr\ +\ Undefined)}.
+  Note: Remember that an \pycode|Object| is a triple of the form
+  \pycode|Type x Addr x (Key -> Addr + Undefined)|.
   Also remember that example above is faulty as the codomain of the
-  function defined above is \texttt{Val} not \texttt{Addr} as it should
+  function defined above is \pycode|Val| not \pycode|Addr| as it should
   be.
 \item
   Extend primitive functions with NumPy's primitive functions. The
   NumPy's primitive functions implemented in the Abstract Interpreter
-  are: \texttt{array}, \texttt{zeros}, \texttt{dot}, \texttt{ones},
-  \texttt{abs} (and all other functions that don't alter the shape of
-  the tensor they take), \texttt{arange}, \texttt{size}, \texttt{ndim},
-  \texttt{astype}, and \texttt{T}.
+  are: \pycode|array|, \pycode|zeros|, \pycode|dot|, \pycode|ones|,
+  \pycode|abs| (and all other functions that don't alter the shape of
+  the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
+  \pycode|astype|, and \pycode|T|.
 
 \begin{verbatim}
 <prim-callable> = ... (old operations) |
@@ -746,19 +704,19 @@ Object(NdArray,
 
   Nonetheless, defining formaly each one of the NumPy functions above is
   fairly straightforward. Although, the hardest part of a formal
-  defitinion of Numpy arrays is detailing how \texttt{array} works. To
-  define the function \texttt{\textless{}np-array\textgreater{}} one
+  defitinion of Numpy arrays is detailing how \pycode|array| works. To
+  define the function \pycode|<np-array>| one
   must consider the many input cases it can handle, and it can handle
-  almost any Python object\footnote{The NumPy function \texttt{array}
-    takes almost anything as an input. \texttt{arrays} tries to
+  almost any Python object\footnote{The NumPy function \pycode|array|
+    takes almost anything as an input. \pycode|arrays| tries to
     interpret its input as an array in any way it can. There is no
     formal definition of how the values are interpreted althought its
     semantics can be extracted by looking at its C implementation:
     https://stackoverflow.com/a/40380014}.
 
-  Once the \texttt{\textless{}np-array\textgreater{}} function is
+  Once the \pycode|<np-array>| function is
   implemented all other functions are much simpler to define. As an
-  example, the implementation of the function \texttt{size} is:
+  example, the implementation of the function \pycode|size| is:
 
 \begin{verbatim}
 <prim-np-size>(val)(G, H) :=
@@ -769,7 +727,7 @@ Object(NdArray,
    in  tup('size')
 \end{verbatim}
 \item
-  Extend the cases that \texttt{get\_prim\_op} handles to cover NumPy
+  Extend the cases that \pycode|get_prim_op| handles to cover NumPy
   arrays. All operations defined in NumPy handle broadcasting.
   {\todo{Explain what broadcasting is}} For example:
 
@@ -802,7 +760,7 @@ get_prim_op(Add, t1, t2) :=
 )
 \end{verbatim}
 \item
-  And finally, \texttt{S{[}Import(name){]}} is extended (now it handles
+  And finally, \pycode|S[Import(name)]| is extended (now it handles
   a single library):
 
 \begin{verbatim}
@@ -853,17 +811,17 @@ Val = PrimVal | Object | <prim-callable>
 Type = List | Tuple | Module | NdArray
 \end{verbatim}
 
-The definition of \texttt{Val} is a recursive but not the definition of
-\texttt{PrimVal}. We will start defining an Abstract Domain for
-\texttt{PrimVal}s and later we will expand on it to define a
-\enquote{recursive} definition for the Abstract Domain of \texttt{Val}s.
+The definition of \pycode|Val| is a recursive but not the definition of
+\pycode|PrimVal|. We will start defining an Abstract Domain for
+\pycode|PrimVal|s and later we will expand on it to define a
+\enquote{recursive} definition for the Abstract Domain of \pycode|Val|s.
 
-\subsubsection{\texorpdfstring{\texttt{PrimVal} Abstract
+\subsubsection{\texorpdfstring{\pycode|PrimVal| Abstract
 Domain}{PrimVal Abstract Domain}}\label{primval-abstract-domain}
 
-\texttt{PrimVal} is composed of five different types: \texttt{int},
-\texttt{float}, \texttt{bool}, \texttt{NoneType}, and
-\texttt{Undefined}. We can define individual non-relational Abstract
+\pycode|PrimVal| is composed of five different types: \pycode|int|,
+\pycode|float|, \pycode|bool|, \pycode|NoneType|, and
+\pycode|Undefined|. We can define individual non-relational Abstract
 Domains\footnote{A relational Abstract Domain is an Abstract Domain
   where the value of variables is not assumed to be independent of each
   other. For more information on relational Abstract Domains look at
@@ -873,14 +831,14 @@ Domains\footnote{A relational Abstract Domain is an Abstract Domain
   arange of Abstract Domains to use to some relational Abstract Domains.}
 (AD) for each of the types.
 
-The simplest of all AD is that of \texttt{NoneType}. \texttt{None} is
-the only inhabitant of \texttt{NoneType}. There is only one order for a
+The simplest of all AD is that of \pycode|NoneType|. \pycode|None| is
+the only inhabitant of \pycode|NoneType|. There is only one order for a
 set of one element, the trivial order: \(\text{None} \le \text{None}\).
 The Galois connection for a trivial order is also very simple:
 \(\alpha(None) = None^{\#}\) and \(\gamma(None) = None^{\#}\).
 
-A little bit more interesting is the AD for \texttt{bool}. \texttt{bool}
-is inhabited only by \texttt{True} and \texttt{False}. We define the
+A little bit more interesting is the AD for \pycode|bool|. \pycode|bool|
+is inhabited only by \pycode|True| and \pycode|False|. We define the
 following order:
 
 {\inlinetodo{translate figure to latex}}
@@ -909,15 +867,15 @@ Where \(\gamma{}\) is just defined as \(\alpha^{-1}\) given
 Notice how our previous two Abstract Domains do not require us to define
 widening or narrowing operators because none of them has a
 
-For \texttt{int} and \texttt{float} there a plenty different different
+For \pycode|int| and \pycode|float| there a plenty different different
 options. For some of them take a look at {\todo{add ref to octagons
 thesis}}. We are going to use here, probably, the simplest AD for number
 systems there is Constant Propagation {\todo{add ref to Kil73 (from
 octagons thesis)}}.
 
-Constant Propagation is very simple, in fact both \texttt{None\#} and
-\texttt{Bool\#} are Constant Propagation Abstract Domains. We define
-\texttt{int}'s AD as:
+Constant Propagation is very simple, in fact both \pycode|None#| and
+\pycode|Bool#| are Constant Propagation Abstract Domains. We define
+\pycode|int|'s AD as:
 
 {\inlinetodo{translate figure to latex}}
 
@@ -961,8 +919,8 @@ Int# = Int U {Top_int, Bot_int}
 
 We define \(\text{Float}^{\#}\) just in the same way.
 
-Now that we have an Abstract Domain for each of \texttt{PrimVal}s we can
-construct an AD for \texttt{PrimVal}. The idea is simple, as shown in
+Now that we have an Abstract Domain for each of \pycode|PrimVal|s we can
+construct an AD for \pycode|PrimVal|. The idea is simple, as shown in
 the image below we just define an Abstract Domain that groups them all
 together and puts a value on top and one below all of them:
 
@@ -999,18 +957,18 @@ connection as everything is quite straightforward:
 
 This is not the only way to define an Abstract Domain out of other
 Abstract Domains. In fact there are many ways, on of which is to define
-an Abstract Domain where each is extended with \texttt{Undef} and they
+an Abstract Domain where each is extended with \pycode|Undef| and they
 are all packed into a tuple {\todo{add ref to Python AI by mile}}.
 
 {\todo{this is lacking a proper proof of the Galois connection
 property}}
 
-\subsubsection{\texorpdfstring{\texttt{Val}s Abstract
+\subsubsection{\texorpdfstring{\pycode|Val|s Abstract
 Domain}{Vals Abstract Domain}}\label{vals-abstract-domain}
 
-\noindent \textbf{\texttt{Val} definition}
+\noindent \textbf{\pycode|Val| definition}
 
-Remember \texttt{Val}'s definition:
+Remember \pycode|Val|'s definition:
 
 \begin{verbatim}
 Val = PrimVal | Object | <prim-callable>
@@ -1022,27 +980,27 @@ Key = Iden + (string x (Iden + PrimVal))
 Heap = Addr -> Val    -- Heap
 \end{verbatim}
 
-A couple of important details about \texttt{Val}'s definition:
+A couple of important details about \pycode|Val|'s definition:
 
 \begin{itemize}
 \tightlist
 \item
-  A \texttt{Val} can be a \texttt{PrimVal}, an \texttt{Object} or a
-  \texttt{\textless{}prim-callable\textgreater{}}.
+  A \pycode|Val| can be a \pycode|PrimVal|, an \pycode|Object| or a
+  \pycode|<prim-callable>|.
 \item
-  A \texttt{Val} is not isolated, it makes part of a bigger set of
-  variables, all of them must be defined in \texttt{Heap}. Any
-  \texttt{Val} we define must be stored in \texttt{H} \(\in\)
-  \texttt{Heap}.
+  A \pycode|Val| is not isolated, it makes part of a bigger set of
+  variables, all of them must be defined in \pycode|Heap|. Any
+  \pycode|Val| we define must be stored in \pycode|H| \(\in\)
+  \pycode|Heap|.
 \item
   We say that a \((a, H) \in \text{Addr} \times \text{Heap}\) is a
   \textbf{valid} value if every value defined in \(H\):
   \(vars = \{v \in Img(H) : v \ne \text{Undefined}\}\) is reachable from
-  \(H(a)\), and no \texttt{Addr} inside any defined \texttt{Object}
-  points to \texttt{Undefined}.
+  \(H(a)\), and no \pycode|Addr| inside any defined \pycode|Object|
+  points to \pycode|Undefined|.
 \end{itemize}
 
-An example of a possible value is \texttt{(0,\ H)} where \texttt{H} is
+An example of a possible value is \pycode|(0, H)| where \pycode|H| is
 defined as:
 
 \begin{verbatim}
@@ -1057,11 +1015,11 @@ H = {
 \end{verbatim}
 
 \textbf{Notation:} As in the previous subchapter we are using the Python
-dictionary notation to define functions. \texttt{\{0:\ 4,\ 1:\ 5\}}
+dictionary notation to define functions. \pycode|{0: 4, 1: 5}|
 means \(0 \mapsto 4; 1 \mapsto 5\)
 
 We shall remember this example from the previous subchapter, it
-represents the list \texttt{{[}None,\ 4,\ (){]}}.
+represents the list \pycode|[None, 4, ()]|.
 
 Notice that the values \((1, H)\), \((2, H)\), \ldots{}, and \((5, H)\)
 are not considered valid as it is impossible from them to reach all
@@ -1081,8 +1039,8 @@ Val# = PrimVal# | Object# | <prim-callable># | Top_Val | Bot_Val
 Object# = Type x Addr x ((Key -> Addr + Undefined) + ImTop + ImBot)
 \end{verbatim}
 
-Notice that a \texttt{Val\#} requires a Heap to work! Just as
-\texttt{Val} required it. Some examples of Abstract Values are
+Notice that a \pycode|Val#| requires a Heap to work! Just as
+\pycode|Val| required it. Some examples of Abstract Values are
 \((a, H^\#) \in Val^\# \times Heap^\#\) are:
 
 \begin{verbatim}
@@ -1153,7 +1111,7 @@ with \(a\) as root:
                         |-- 'size' -> (Bot_Int)
 \end{verbatim}
 
-We have defined the first ingredient of the \texttt{Val} Abstract
+We have defined the first ingredient of the \pycode|Val| Abstract
 Domain. The ingredients left are:
 
 \begin{itemize}
@@ -1208,34 +1166,34 @@ follow the following sensible rules:
 \begin{itemize}
 \tightlist
 \item
-  \texttt{Bot\_Val} must be the lowest value in the order, therefore any
+  \pycode|Bot_Val| must be the lowest value in the order, therefore any
   value joining with it should be the same value
-  (\texttt{Bot\_Val\ U\ n\ =\ n}).
+  (\pycode|Bot_Val U n = n|).
 \item
-  \texttt{Top\_Val} is the biggest value in the order, therefore any
-  value joining with it should give back \texttt{Top\_Val}
-  (\texttt{Top\_Val\ U\ n\ =\ Top\_Val}).
+  \pycode|Top_Val| is the biggest value in the order, therefore any
+  value joining with it should give back \pycode|Top_Val|
+  (\pycode|Top_Val U n = Top_Val|).
 \item
-  Values of the same kind, \texttt{PrimVal\#}, \texttt{Object\#} and
-  \texttt{\textless{}prim-callable\textgreater{}}, should not be
-  comparable, e.g.~any value from \texttt{PrimVal\#} joined with any of
-  \texttt{Object\#} should give \texttt{Top\_Val}.
+  Values of the same kind, \pycode|PrimVal#|, \pycode|Object#| and
+  \pycode|<prim-callable>|, should not be
+  comparable, e.g.~any value from \pycode|PrimVal#| joined with any of
+  \pycode|Object#| should give \pycode|Top_Val|.
 \item
-  Joining \texttt{PrimVal\#}s should use \texttt{UPrimVal\#}.
+  Joining \pycode|PrimVal#|s should use \pycode|UPrimVal#|.
 \item
-  Joining \texttt{Object\#}s should take into account the recursive
-  nature of the defitinion of \texttt{Val\#}s and \texttt{Object\#}s.
+  Joining \pycode|Object#|s should take into account the recursive
+  nature of the defitinion of \pycode|Val#|s and \pycode|Object#|s.
 \end{itemize}
 
-Notice tha it is \texttt{joinVal} where the whole magic of this Abstract
-Domain lies. \texttt{joinVal} is meant walk through both graphs
+Notice tha it is \pycode|joinVal| where the whole magic of this Abstract
+Domain lies. \pycode|joinVal| is meant walk through both graphs
 simultaneously, find the similarities, implode the differences between
 the graphs and preserve the equaly looking parts.
 
-The definition of \texttt{joinVal} requires the help of the function
-\texttt{joinObjectFn} which joins the values to which an
-\texttt{Object\#} points (the function
-\texttt{(Key\ -\textgreater{}\ Addr\ +\ Undefined)}).
+The definition of \pycode|joinVal| requires the help of the function
+\pycode|joinObjectFn| which joins the values to which an
+\pycode|Object#| points (the function
+\pycode|(Key -> Addr + Undefined)|).
 
 \begin{verbatim}
 HeapCon# = Addr -> Val# + Undefined + InConstruction
@@ -1344,15 +1302,15 @@ joinObjectFn((fn, H1#), (fm, H2#), joined, H_new#) :=
 \end{verbatim}
 
 {\inlinetodo{there are a couple of functions missing, one of them is
-\texttt{makealltop}}}
+\pycode|makealltop|}}
 
-\texttt{joined} is a function that stores the similarities between nodes
-(values), and \texttt{Hnew\#} stores the values of each new value. The
-type of \texttt{Hnew\#} is not \texttt{Heap\#} but
-\texttt{Addr\ -\textgreater{}\ Val\#\ +\ Undefined\ +\ InConstruction}
-(the output of \texttt{Heap\#} extended with an \texttt{InConstruction}
+\pycode|joined| is a function that stores the similarities between nodes
+(values), and \pycode|Hnew#| stores the values of each new value. The
+type of \pycode|Hnew#| is not \pycode|Heap#| but
+\pycode|Addr -> Val# + Undefined + InConstruction|
+(the output of \pycode|Heap#| extended with an \pycode|InConstruction|
 new value). The new value to which a heap can point to is
-\texttt{InConstruction} and it is meant to be a wildcard value while the
+\pycode|InConstruction| and it is meant to be a wildcard value while the
 graph is being constructed.
 
 {\inlinetodo{Reconsider eliminating the whole paragraph from below: We
@@ -1363,12 +1321,12 @@ it (the only way to use \emph{merge} would be by incoporating backward
 assignment, which is out of the scope of Pytropos)}}
 
 One last function, that was not explained before is
-\texttt{removeallInConstruction}. It is in charge of looking in the Heap
-if there is one reference to some \texttt{InConstruction} value left.
-All \texttt{InConstruction} values left after returning from the whole
+\pycode|removeallInConstruction|. It is in charge of looking in the Heap
+if there is one reference to some \pycode|InConstruction| value left.
+All \pycode|InConstruction| values left after returning from the whole
 walk will be only those which appeared when joining some node to a
-\texttt{ImBot} or \texttt{Bot\_Val}. Because we expect
-\texttt{ImBot\ U\ fn\ =\ fn}, we must copy all values from the joining
+\pycode|ImBot| or \pycode|Bot_Val|. Because we expect
+\pycode|ImBot U fn = fn|, we must copy all values from the joining
 heaps into the new heap.
 
 Because the \enquote{code} describing how to \emph{join} to abstract
@@ -1377,9 +1335,9 @@ a couple of examples. The two graphs at the left represent the two
 values to join, on the right the resulting new value is defined.
 
 {\inlinetodo{show six examples of uniting different values, they can be
-as complicated as possible. \texttt{1\ U\ 2},
-\texttt{{[}1,2{]}\ U\ {[}1,3{]}},
-\texttt{a\ =\ {[}2,\ 3{]};\ a.append(a)} (extract three more examples
+as complicated as possible. \texttt{1 U 2},
+\texttt{[1,2]\ U\ [1,3]},
+\texttt{a = [2, 3]; a.append(a)} (extract three more examples
 from tests)}}
 
 {\inlinetodo{Add note saying that this scheme of Abstract Domain is
@@ -1585,23 +1543,21 @@ S#[Import(name)](G#, H#) :=
 
 \subsection{Type Annotations}\label{type-annotations}
 
-I left out, purposefully, the abstract semantics of \texttt{AnnAssign}.
+I left out, purposefully, the abstract semantics of \pycode|AnnAssign|.
 The idea of type annotations is that they let us refine the value/type
 of a variable when the Abstract Interpreter is unable to define a
 precise value.
 
 An example of what annotations should be able to do is:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\ImportTok{from}\NormalTok{ mypreciouslib }\ImportTok{import}\NormalTok{ amatrix}
-\ImportTok{from}\NormalTok{ pytropos.hints.numpy }\ImportTok{import}\NormalTok{ NdArray}
+\begin{pythoncode}
+from mypreciouslib import amatrix
+from pytropos.hints.numpy import NdArray
 
-\NormalTok{mat: NdArray[}\DecValTok{1}\NormalTok{,}\DecValTok{12}\NormalTok{,}\DecValTok{6}\NormalTok{,}\DecValTok{7}\NormalTok{] }\OperatorTok{=}\NormalTok{ np.array(amatrix)}
-\NormalTok{newmat }\OperatorTok{=}\NormalTok{ (mat }\OperatorTok{+} \DecValTok{12}\NormalTok{).reshape((}\DecValTok{12}\OperatorTok{*}\DecValTok{6}\NormalTok{, }\DecValTok{-1}\NormalTok{))  }\CommentTok{# newmat has shape (12*6,7)}
-\NormalTok{newmat }\OperatorTok{=}\NormalTok{ newmat.dot(np.ones((}\DecValTok{8}\NormalTok{, }\DecValTok{21}\NormalTok{)))  }\CommentTok{# Error! Matrix multiplication, 7!=8}
-\end{Highlighting}
-\end{Shaded}
+mat: NdArray[1,12,6,7] = np.array(amatrix)
+newmat = (mat + 12).reshape((12*6, -1))  # newmat has shape (12*6,7)
+newmat = newmat.dot(np.ones((8, 21)))  # Error! Matrix multiplication, 7!=8
+\end{pythoncode}
 
 When one imports an arbitrary library like \texttt{mypreciouslib} it is
 impossible to know what we may have imported so every variable imported

@@ -161,144 +161,132 @@ Statically Value-Analyse tensor operations.
 
 {\inlinetodo{Should I add some research questions?}}
 
-\subsubsection{Assumptions and Scope}\label{assumptions-and-scope}
+\subsubsection{Assumptions and Scope}
 
-Very little can be asserted from a piece of code in a programming
-language like Python without making any assumptions about the
-environment. For example, consider the following piece of code:
+Very little can be asserted from a piece of code in a programming language like Python
+without making any assumptions about the environment. For example, consider the following
+piece of code:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\CommentTok{# runme.py}
-\NormalTok{a }\OperatorTok{=} \BuiltInTok{int}\NormalTok{(}\StringTok{'6'}\NormalTok{) }\OperatorTok{+} \DecValTok{2}
-\BuiltInTok{print}\NormalTok{(}\DecValTok{7}\NormalTok{)}
-\ControlFlowTok{assert}\NormalTok{ a }\OperatorTok{==} \DecValTok{8}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode*}{gobble=2}
+  # runme.py
+  a = int('6') + 2
+  print(7)
+  assert a == 8
+\end{pythoncode*}
 
-One may be tempted to say that the code above never fails, but it would
-be mistaken. Thanks to Python's introspection capabilities, the code
-above could do just about anything. A piece of Python code can be run
-directly in the interpreter or executed by an \VERB|\BuiltInTok{exec}|
-or \VERB|\BuiltInTok{eval}| statement. The functions \texttt{int} and
-\texttt{print} can be redefined to compute anything we want. For
-example, consider the following piece of code in that calls
-\texttt{runme.py}:
+One may be tempted to say that the code above never fails, but one would be mistaken.  It
+will never fail to run if we assume that the program starts from a blank state, i.e. no
+variables have been defined before its execution. In fact, the functions \pycode+int+ and
+\pycode+print+ can be redefined to compute anything we want. Also, thanks to the
+introspection capabilities of Python, the code above could do just about anything, and
+that is without considering that the piece of code could be evaluated by an \pycode+exec+
+or an \pycode+eval+ statement. For example, consider the following piece of code that
+calls \texttt{runme.py}:
 
-\begin{Shaded}
-\begin{Highlighting}[]
-\NormalTok{runme }\OperatorTok{=} \BuiltInTok{open}\NormalTok{(}\StringTok{'runme.py'}\NormalTok{).read()}
-\NormalTok{fakeinit }\OperatorTok{=} \StringTok{"""}
-\StringTok{def int(val):}
-\StringTok{  return 3.0}
-\StringTok{def print(val):}
-\StringTok{  global a}
-\StringTok{  a = val}
-\StringTok{"""}
-\BuiltInTok{exec}\NormalTok{(fakeinit }\OperatorTok{+}\NormalTok{ runme, \{\})  }\CommentTok{# Throws an exception}
-\end{Highlighting}
-\end{Shaded}
+\begin{pythoncode}
+  runme = open('runme.py').read()
+  fakeinit = """
+  def int(val):
+    return 3.0
+  def print(val):
+    global a
+    a = val
+  """
+\end{pythoncode}
 
-From now on, we will assume that any piece of code written in Python
-will be called from the interpreter directly without changing the
-behaviour of any builtin function or variable (this includes the
-behaviour of variables and functions from non-builtin libraries as
-NumPy), i.e.~we assume that the code will never be run by an
-\VERB|\BuiltInTok{exec}| call but always \texttt{import}ed or
-interpreted directly by \texttt{python\ file-code.py}.
+From now on, we will assume that any piece of code written in Python will be called from
+the interpreter directly without changing the behaviour of any builtin function or
+variable (this includes the behaviour of variables and functions from non-builtin
+libraries as NumPy), i.e.~we assume that the code will be run from a blank state with no
+global variables defined.
 
-As a developer, I can say that I like when I see a piece of code flag
-wrong and IT IS really WRONG, but I despise when the opposite happens.
-It is very annoying to have a tool flag every sentence you write as
-wrong even though the code works just fine. We will assume from here
-onwards that we want the Tensor Analysis to flag only errors that are
-going to happen if the code is run, i.e.~we want only true positives not
-maybe positives (as a lack of a better word).
+As a developer, I can say that I like when I see a piece of code flagged wrong and IT IS
+WRONG and not a false alarm, a false positive. It is very annoying to have a tool flag
+every sentence you write as wrong even though the code works just fine. We will assume
+from here onwards that we want the Tensor Analysis to flag only errors that are going to
+happen if the code is run, i.e.~we want only true positives not maybe positives (as a lack
+of a better word).
 
 Although, TensorFlow \autocite{abadi_tensorflow_2016}, PyTorch
-\autocite{paszke2017pytorch} and other libraries would benefit from the
-development of a tool targeted to check them, I chose to check NumPy's
-tensor operations. NumPy is the standard library for computing with
-tensors and it is used as backend on most projects.
+\autocite{paszke2017pytorch} and other libraries would benefit from the development of a
+tool targeted to check them, we chosed to check NumPy's tensor operations. NumPy is the
+standard library for computing with tensors and it is used as backend on most tensor
+projects.
 
-Implementing an Abstract Interpreter, or any Static Analysis, for a
-language like Python is a considerable undertaking, mainly because of
-the breadth of characteristics a mature Programming Language like Python
-has. Thus, we will centre on just a couple of Python core
-characteristics and will leave others for future work. The
-characteristics explored in the current document are:
+Implementing an Abstract Interpreter, or any Static Analysis, for a language like Python
+is a considerable undertaking, mainly because of the breadth of characteristics a mature
+Programming Language like Python has. Thus, we will centre on just a couple of Python core
+characteristics and will leave others for future work. The characteristics explored in the
+current document are:
 
 \begin{itemize}
 \tightlist
 \item
-  Builtin primitive variables: \texttt{int}, \texttt{float},
-  \texttt{bool}, \texttt{None}, \texttt{list}, \texttt{tuple}
+  Builtin primitive variables: \pycode|int|, \pycode|float|, \pycode|bool|, \pycode|None|,
+  \pycode|list|, \pycode|tuple|
 \item
-  Primitive functions: \texttt{int}, \texttt{print}, \texttt{input},
+  Primitive functions: \pycode|int|, \pycode|print|, \pycode|input|,
   \ldots{}
 \item
-  Boolean and numeric operations: \texttt{+}, \texttt{-}, \texttt{*},
-  \texttt{/}, \texttt{\%}, \texttt{**}, \texttt{\textless{}\textless{}},
-  \texttt{\textgreater{}\textgreater{}}, \texttt{//},
-  \texttt{\textless{}}, \texttt{\textless{}=}, \texttt{\textgreater{}}
-  and \texttt{\textgreater{}=}
+  Boolean and numeric operations: \pycode|+|, \pycode|-|, \pycode|*|, \pycode|/|,
+  \pycode|\%|, \pycode|**|, \pycode+<<+, \pycode|>>|, \pycode|//|, \pycode+<+,
+  \pycode|<=|, \pycode+>+ and \pycode+>=+
 \item
-  \texttt{if} and \texttt{while} staments
+  \pycode|if| and \pycode|while| staments
 \item
-  Import statement (limited only to the \texttt{numpy} library)
+  Import statement (limited only to the \pycode|numpy| library)
 \item
-  NumPy arrays and some of its methods/functions to work with NumPy
-  arrays (including \texttt{dot}, \texttt{zeros}, \texttt{shape}, and
-  numeric operations with broadcasting)
+  NumPy arrays and some of its methods/functions to work with NumPy arrays (including
+  \pycode|dot|, \pycode|zeros|, \pycode|shape|, and numeric operations with broadcasting)
 \end{itemize}
 
 Consider the following piece of code:
 
-\begin{verbatim}
+\begin{pythoncode}
 if someval:
   i = 3
 else:
   i = "ntr"
 print(i)
-\end{verbatim}
+\end{pythoncode}
 
-The variable \texttt{i} can be either an \texttt{int} or a \texttt{str},
-thus the type of \texttt{i} should be \texttt{Union{[}int,str{]}}. If
-the type of a variable is an \texttt{Union} type then we need to build
+The variable \pycode|i| can be either an \pycode|int| or a \pycode|str|,
+thus the type of \pycode|i| should be \pycode|Union[int,str]|. If
+the type of a variable is an \pycode|Union| type then we need to build
 an Abstract Interpreter (actually, an Abstract Domain) aware of unions.
-Building an Abstract Interpreter aware of \texttt{Union} types is not
+Building an Abstract Interpreter aware of \pycode|Union| types is not
 considered part of this work, therefore if a variable holds more than
-one value, e.g.~it is either a \texttt{5} or \texttt{2.3}, then the
-variable's type will be \texttt{Any} and not \texttt{Union}.
-\texttt{Any} and \texttt{Union} types are defined in the \texttt{typing}
+one value, e.g.~it is either a \pycode|5| or \pycode|2.3|, then the
+variable's type will be \pycode|Any| and not \pycode|Union|.
+\pycode|Any| and \pycode|Union| types are defined in the \pycode|typing|
 library \autocite{pep484}, an implementation of Gradual Typing\footnote{Gradual
   Typing is a kind of Static Type Analysis targeted to Dynamically Typed
   Languages like Python}.
 
 Gradual Typing restricts the number of valid programs to those that type
 check. A variable in Gradual Typing is of a specific type and it never
-changes, i.e.~if a variable's type is set to be \texttt{int} then it can
-only contain \texttt{int}s. \texttt{Union} types are meant to indicate
+changes, i.e.~if a variable's type is set to be \pycode+int+ then it can
+only contain \pycode+int+s. \pycode+Union+ types are meant to indicate
 that a variable may take more than one value at any point in time, which
-would mean that any variable with a \texttt{Union} type would
-automatically become an \texttt{Any} in this work, but that is not the
+would mean that any variable with a \pycode+Union+ type would
+automatically become an \pycode+Any+ in this work, but that is not the
 truth. Consider the following piece of code:
 
-\begin{verbatim}
+\begin{pythoncode}
 i = 3
 i = "ntr"
 i += "ueor"
 print(i)  # the type of `i` is `str`
-\end{verbatim}
+\end{pythoncode}
 
-Under Gradual Typing, the type of \texttt{i} is
-\texttt{Union{[}int,str{]}}, but we know that the variable \texttt{i}
-holds only one type at \textbf{all} times, i.e. \texttt{i} never holds
+Under Gradual Typing, the type of \pycode+i+ is
+\pycode+Union[int,str]+, but we know that the variable \pycode+i+
+holds only one type at \textbf{all} times, i.e. \pycode+i+ never holds
 two or more values as in the previous example. An Abstract Interpreter
 would run each line sequentially, and it would never find a that the
-value of \texttt{i} is both \texttt{int} and \texttt{str} at the same
-time, i.e.~the variable is never considered to be of type \texttt{Any}
-but it will have type \texttt{int} and then type \texttt{str} as the
+value of \pycode+i+ is both \pycode+int+ and \pycode+str+ at the same
+time, i.e.~the variable is never considered to be of type \pycode+Any+
+but it will have type \pycode+int+ and then type \pycode+str+ as the
 code is run. In this regard, an Abstract Interpreter can give a better
 approximation of what the types of a variable are at any point in time,
 while Gradual Typing considers all possible types a variable may have at
@@ -311,8 +299,8 @@ To recapitulate, the assumptions and scope of the thesis are:
 \item
   The behaviour of builtins and imported variables and functions is
   always the same and is determined by the Python reference manual or
-  the library's author, e.g.~\texttt{input} is a function that returns
-  a \texttt{str}.
+  the library's author, e.g.~\pycode+input+ is a function that returns
+  a \pycode+str+.
 \item
   The user will only be reported errors that will happen but no errors
   that \emph{may} happen (This means, the resulting tool is not a
@@ -326,7 +314,7 @@ To recapitulate, the assumptions and scope of the thesis are:
 \item
   A variable can hold only one type of value at the time. If a variable
   is set to hold values of different types at the same time, then its
-  value will be \texttt{Any}.
+  value will be \pycode+Any+.
 \end{itemize}
 
 \section{Objectives}\label{objectives}

@@ -73,6 +73,65 @@ Pytropos}}
 {\inlinetodo{lyra was not the first to try abstract interpretation for
 Python, mention pydrogen https://github.com/lapets/pydrogen}}
 
+
+% - Localized Type Inference [@cannon_localized_2005]: Cannon was the first (to my
+%   knowledge) to try to statically infer and type check code in Python.  His idea was to
+%   infer variables’ types before executing the code, and use this knowledge to speed up
+%   execution time. He acknowledges that the nature of python makes type inference to be
+%   very weak and therefore the complexity that the project brought did not improve
+%   performance as much as he hoped. This work is previous to @siek_gradual_2006 Gradual
+%   Types. Recent work has been focused on Gradual Types, see below.
+%
+% - Mypy [@lehtosalo2016mypy]: it is a static typing tool, focused
+%   on type checking code annotated with types. The mypy group has had an impact in Python
+%   itself, since version 3.5 of python a library developed by mypy (typing) has been added
+%   to the official list of Python libraries. Being mypy as relevant and impactful as it is,
+%   I discuss about it deeper in the subsection below.
+%
+% - Enforce[^enforce]: Checks for type mismatches
+%   at runtime. It checks every time that a function is called if the annotated types
+%   correspond with the types of the data that is passed to the functions. It is not
+%   different to adding your own asserts in code to check if the data passed is what the
+%   functions expects.  Enforce may be not more than a assertion tool, but it integrates
+%   with existing python type annotations and it is simpler to use than asserts.
+%
+% Mypy is a tool developed by the mypy group led by Jukka Lehtosalo, Guido van Rossum, and
+% others. Mypy developments (and findings) have influenced the latest versions of Python. In
+% the version 3.5 of the language, a new library (typing), taken from mypy has been added to
+% the official library. Mypy was originally the result of the master’s thesis of Jukka
+% Lehtosalo, but it has got many contributors since, one of which is Guido van Rossum, the
+% benevolent dictator for life (creator and principal maintainer) of Python. One of the
+% goals of mypy is to make easy for developers to type check code.
+%
+% However useful Mypy is, it suffers a lack of user support, which means it still remains as
+% an experimental and semi-hard tool to use. Adding type annotations to Python code is often
+% hard, but not because of the complexity of Mypy’s type system, rather because type
+% annotations to existing code are hard to find, thus annotating any piece of code requires
+% writing too the type annotations for the libraries used.
+%
+% Mypy has already been used in the industry, where it is fundamental to ensure the code has
+% no bugs (two examples of this, are dropbox and instagram). Type annotating code in a large
+% source code bases may be a monumental task, thus different companies have created tools to
+% generate type annotations automatically from sample executions. Two of these tools are
+% dropbox’ library pyannotate[^7], and instagram’s MonkeyType[^8].
+%
+% [^7]: Available at <https://github.com/dropbox/pyannotate>
+% [^8]: Available at <https://github.com/Instagram/MonkeyType>
+%
+% The goal of type annotating code is to reduce the number of potential bugs caused by
+% mismatched types. Paraphrasing Gradual Types’ principal thesis, stricter and more precise
+% types should make harder for the programmer to make mistakes and should catch bugs before
+% running the code. The Gradual Types’ thesis (applied to mypy) gets challenged by
+% @gopinath_how_2017, who present their analysis (although with a very small code base) of
+% python code. They analyze python code with type annotations vs extensive testing. As
+% expected, a very good test base captures all possible bugs that the type system could
+% capture.  However, @gopinath_how_2017 analysis do not make Mypy any less useful. In fact
+% one may argue that the power of a type system is not only to assert that code written has
+% no type mismatches, but it also helps the developer to refactor code by showing which
+% parts of the code must be modified if one wants to change the type of variables and
+% functions. Type annotations also serve as a way to document the inputs and outputs of a
+% function or method.
+
 \section{Tensor Shape Analysis}\label{tensor-shape-analysis}
 
 {\inlinetodo{add idea from http://nlp.seas.harvard.edu/NamedTensor
@@ -81,6 +140,12 @@ do not have some of the problems of working with nameless shapes}}
 
 {\inlinetodo{extend solutions described below with the new libraries you
 found, comment below}}
+%  {2018.06.25} tensors papers and libraries
+%  * (mypy-python) https://github.com/machinalis/mypy-data/tree/master/numpy-mypy
+%  * (python (in java)) ariadne https://github.com/wala/ML (paper by dolby (weird name))
+%  * (haskell) https://github.com/achirkin/easytensor
+%  * (nopython) https://github.com/Diderot-Language/diderot (Diderot: a domain-specific language for portable parallel scientific visualization and image analysis)
+%                                                           Chiw et al (2018) - Compiling Diderot
 
 \subsection{Solutions in other languages}%
 \label{solutions-in-other-languages}
@@ -109,10 +174,10 @@ accessible at compile time, thus the Rakić et al.~library type checks at
 compile.
 
 One recent effort to type check tensor shapes in Haskell is the library
-\texttt{tensorflow-haskell-deptyped} written by
+\pycode|tensorflow-haskell-deptyped| written by
 \textcite{elkin_haskell_2018}. The library is written as a wrapper
 around the library port of TensorFlow for Haskell.
-\texttt{tensorflow-haskell-deptyped} enforces at the type level how and
+\pycode|tensorflow-haskell-deptyped| enforces at the type level how and
 which results a operation between compatible tensors is to be performed.
 
 A different path to take is to extend an existing type checking system,
