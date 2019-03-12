@@ -8,7 +8,9 @@ Chapter \ref{appendix-ai-theory}.
 \label{dynamic-and-static-analysis}
 
 Static Analysis and Dynamic Analysis are two
-disciplines{\todo{really??}} whose ideal is to ensure some property
+disciplines%
+%\todo{really??}}
+whose ideal is to ensure some property
 holds on a piece of code. Static Analysis checks the code without the
 need to run the code, while Dynamic Analysis checks the code as it is
 executed.
@@ -227,7 +229,7 @@ Reshaping preserves the number of elements in an array. If an
 \pycode|-1| is found, it will be taken as a wild card and the missing
 dimension will be calculated to keep the original shape.
 
-Numpy has this little, nice trick to handle operations that would
+NumPy has this little, nice trick to handle operations that would
 require reshaping or copying an array when operating with two arrays
 with different, but similar, shapes. The trick is called broadcasting,
 and can be better understood with an example:
@@ -456,7 +458,7 @@ many true positives as possible.
 Fortunately, if the overapproximation we are using allows us to
 distinguish between single values, e.g.~the overapproximation can tell
 us that \pycode|a| has been set to the value \pycode|5| after the
-assignation \pycode|a = 5|\footnote{The sign overapproximation (or
+assignment \pycode|a = 5|\footnote{The sign overapproximation (or
   Sign Interval Abstract Domain) has only three posible values:
   \pycode|-|, \pycode|0| and \pycode|+|, while the interval
   overapproximation (or Interval Abstract Domain) contains any interval

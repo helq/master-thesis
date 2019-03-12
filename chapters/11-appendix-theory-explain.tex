@@ -79,7 +79,7 @@ expr = Int(i) for i \in \N | Float(j) for j \in floats
      | expr(expr*)        -- Function calling
 
      | expr.identifier    -- Attribute access
-     | expr[expr]         -- Not supported for Numpy Arrays :S
+     | expr[expr]         -- Not supported for NumPy Arrays :S
      | [expr*]            -- list
      | (expr*)            -- tuple
 
@@ -348,7 +348,7 @@ H = {
 slightly easier to type and understand \pycode|{x: m, y: n}| than
 \(x \rightarrow m; y \rightarrow n\).
 
-{\nonsection{Semantics of Expressions}}
+\subsubsection*{Semantics of Expressions}
 
 In the same manner as \textcite{fromherz_static_2018}, we define the
 semantics of an \pycode|E[expr]| as a function that
@@ -522,7 +522,7 @@ As an example, \pycode|<prim-+-int>| is defined as the function:
 <prim-+-int>(i, j, G, H) := (G, H, i+j)
 \end{pythoncode}
 
-{\nonsection{Statements Semantics}}
+\subsubsection*{Statements Semantics}
 
 The semantic of statements is a function between the state of the
 program, just like it was done with expressions. Unlike with expresions,
@@ -705,7 +705,7 @@ and the ability to define functions and classes.
 %
 %   Nonetheless, defining formaly each one of the NumPy functions above is
 %   fairly straightforward. Although, the hardest part of a formal
-%   defitinion of Numpy arrays is detailing how \pycode|array| works. To
+%   defitinion of NumPy arrays is detailing how \pycode|array| works. To
 %   define the function \pycode|<np-array>| one
 %   must consider the many input cases it can handle, and it can handle
 %   almost any Python object\footnote{The NumPy function \pycode|array|
@@ -782,8 +782,6 @@ and the ability to define functions and classes.
 
 \section{Abstract Interpreter}\label{abstract-interpreter}
 
-{\ichange{This is just a DRAFT! REVISE!!}}
-
 We have the base to build an Abstract Interpreter, we have the semantics
 of Python (what is a variable, what is the state of the program, and how
 to modify the program (its formal semantics)).
@@ -817,7 +815,7 @@ The definition of \pycode|Val| is a recursive but not the definition of
 \pycode|PrimVal|s and later we will expand on it to define a
 \enquote{recursive} definition for the Abstract Domain of \pycode|Val|s.
 
-\subsubsection{\texorpdfstring{\pycode|PrimVal| Abstract
+\subsubsection*{\texorpdfstring{\pycode|PrimVal| Abstract
 Domain}{PrimVal Abstract Domain}}\label{primval-abstract-domain}
 
 \pycode|PrimVal| is composed of five different types: \pycode|int|,
@@ -964,7 +962,7 @@ are all packed into a tuple {\todo{add ref to Python AI by mile}}.
 {\todo{this is lacking a proper proof of the Galois connection
 property}}
 
-\subsubsection{\texorpdfstring{\pycode|Val|s Abstract
+\subsubsection*{\texorpdfstring{\pycode|Val|s Abstract
 Domain}{Vals Abstract Domain}}\label{vals-abstract-domain}
 
 \noindent \textbf{\pycode|Val| definition}
@@ -1028,7 +1026,7 @@ other values in the Heap. For this section, all values will be valid
 values. If we find a non-valid value \((n, H)\), we can define a new
 value \((n, H')\) where \(H'\) has all non-reachable values removed.
 
-{\nonsection{\(Val^\#\) definition}}
+\subsubsection*{\(Val^\#\) definition}
 
 An Abstract Value is a tuple
 \((a, H^\#) \in \text(Addr) \times \text(Val)^\#\) where:
@@ -1128,7 +1126,7 @@ Domain. The ingredients left are:
   a Galois connection.
 \end{itemize}
 
-{\nonsection{\(\cup^{\text{Val}^\#}\) definition}}
+\subsubsection*{\(\cup^{\text{Val}^\#}\) definition}
 
 We will start by the defining the \emph{join} operation and the
 rationale behind its innerworkings. All other operations and functions
@@ -1346,7 +1344,7 @@ general enough to let us switch between different non-relation AD for
 the PrimVals. There are probably some tweaks necessary to allow this AD
 to work with relational ADs for the PrimVals}}
 
-{\nonsection{\(Val^\#\) Order definition}}
+\subsubsection*{\(Val^\#\) Order definition}
 
 Now that we have defined the \emph{join} function, we can move to the
 function that defines a lattice a lattice.
@@ -1363,7 +1361,7 @@ relation or a proper \emph{join} operation. We leave the proof that
 \(\le{}\) defines an order for valid values
 (\texttt{v\ \textbackslash{}in\ Addr\ x\ Heap\#}) for future work.
 
-{\nonsection{Other definitions}}
+\subsubsection*{Other definitions}
 
 My goal is not to present in detail all functions and operations
 necessary to define the AD for \texttt{Val\#}s. That would require three

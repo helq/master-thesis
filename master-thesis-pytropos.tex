@@ -15,7 +15,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %----------------------------------------------------------------------------------------
-%	PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
+% PACKAGES AND OTHER DOCUMENT CONFIGURATIONS
 %----------------------------------------------------------------------------------------
 
 % Based on: https://tex.stackexchange.com/a/17819
@@ -48,13 +48,30 @@ headsepline, % Uncomment to get a line under the header
 \setdefaultlanguage[variant=uk]{english}
 \setotherlanguage{spanish}
 
-\usepackage{lipsum}
+\usepackage[flushleft]{threeparttable}
+\usepackage{rotating}
+
+%\usepackage{lipsum}
 
 %\usepackage{ifxetex,ifluatex}
-\usepackage{fixltx2e} % provides \textsubscript
+%\usepackage{fixltx2e} % provides \textsubscript
 
 \usepackage{mathtools}
 \usepackage{unicode-math}
+
+%----------------------------------------------------------------------------------------
+% BIBLIOGRAPHY
+%----------------------------------------------------------------------------------------
+
+\usepackage[backend=biber,natbib=false,style=apa]{biblatex}
+\DeclareLanguageMapping{english}{english-apa}
+
+\addbibresource{bibliography.bib} % The filename of the bibliography
+
+%----------------------------------------------------------------------------------------
+% FONTS SETTINGS
+%----------------------------------------------------------------------------------------
+
 \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
 \usepackage{fontspec}
 \usepackage{xcolor}
@@ -72,15 +89,29 @@ headsepline, % Uncomment to get a line under the header
 %\setmonofont{Fira Mono}
 \setmonofont{Fira Code}
 
-\usepackage[backend=biber,natbib=false,style=apa]{biblatex}
-\DeclareLanguageMapping{english}{english-apa}
-
-\addbibresource{bibliography.bib} % The filename of the bibliography
-
 \usepackage[autostyle=true]{csquotes} % Required to generate language-dependent quotes in the bibliography
 
+% straight quotes in verbatim environments
+\usepackage{upquote}
+% use microtype to make everything look nice
+% http://www.khirevich.com/latex/microtype/
+% \usepackage[activate={true,nocompatibility},
+%             expansion=false, % does not work with xetex
+%             final,
+%             %tracking=true, % does not work with xetex
+%             %kerning=true, % does not work with xetex
+%             %spacing=true, % does not work with xetex
+%             factor=1100,
+%             stretch=10,
+%             shrink=10]{microtype}
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+
+% For check mark ✔
+\usepackage{pifont}
+
 %----------------------------------------------------------------------------------------
-%	SOURCE CODE LINTING SETTINGS
+% SOURCE CODE LINTING SETTINGS
 %----------------------------------------------------------------------------------------
 
 \usepackage{minted}
@@ -95,7 +126,7 @@ headsepline, % Uncomment to get a line under the header
 \newmintinline[pycode]{python}{bgcolor=bgcode}
 
 %----------------------------------------------------------------------------------------
-%	TIKZ CONFIGURATION
+% TIKZ CONFIGURATION
 %----------------------------------------------------------------------------------------
 
 \usepackage{tikz}
@@ -104,23 +135,64 @@ headsepline, % Uncomment to get a line under the header
 \usetikzlibrary{calc}
 
 %----------------------------------------------------------------------------------------
-%	MARGIN SETTINGS
+% MARGIN SETTINGS
 %----------------------------------------------------------------------------------------
 
 \geometry{
-	paper=letterpaper, % Change to letterpaper for US letter
+  paper=letterpaper, % Change to letterpaper for US letter
   textwidth=165mm,
   textheight=225mm,
-	%inner=2.5cm, % Inner margin
-	%outer=3.8cm, % Outer margin
-	bindingoffset=.5cm, % Binding offset
-	%top=1.5cm, % Top margin
-	%bottom=1.5cm, % Bottom margin
-	%showframe, % Uncomment to show how the type block is set on the page
+  %inner=2.5cm, % Inner margin
+  %outer=3.8cm, % Outer margin
+  bindingoffset=.5cm, % Binding offset
+  %top=1.5cm, % Top margin
+  %bottom=1.5cm, % Bottom margin
+  %showframe, % Uncomment to show how the type block is set on the page
 }
 
 %----------------------------------------------------------------------------------------
-%	THESIS INFORMATION
+% MISC
+%----------------------------------------------------------------------------------------
+% Copied from Pandoc's markdown
+
+% Makes a list tight. "Better looking"
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+% % Redefines (sub)paragraphs to behave more like sections
+% \ifx\paragraph\undefined\else
+% \let\oldparagraph\paragraph
+% \renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
+% \fi
+% \ifx\subparagraph\undefined\else
+% \let\oldsubparagraph\subparagraph
+% \renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
+% \fi
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+%----------------------------------------------------------------------------------------
+% TODONOTES
+%----------------------------------------------------------------------------------------
+
+\ifdraft
+\usepackage[textsize=tiny,bordercolor=yellow,color=yellow,textwidth=4cm,colorinlistoftodos]{todonotes}
+\else
+\usepackage[disable]{todonotes}
+\fi
+
+\newcommand{\inlinetodo}[1]{\todo[inline,size=\normalsize]{#1}}
+
+% Custom color todos: https://tex.stackexchange.com/a/178806
+\usepackage{xargs} % Use more than one optional parameter in a new commands
+\newcommandx{\change}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+\newcommandx{\ichange}[2][1=]{\todo[inline,linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
+
+%----------------------------------------------------------------------------------------
+% THESIS INFORMATION
 %----------------------------------------------------------------------------------------
 
 \thesistitle{Static Analysis of Python Programs using Abstract Interpretation: An
@@ -145,72 +217,9 @@ Application to Tensor Shape Analysis} % Your thesis title, this is used in the t
 \hypersetup{pdfkeywords=\keywordnames} % Set the PDF's keywords to your keywords
 }
 
-%%%% Copied from Pandoc's markdown
-
-% use upquote if available, for straight quotes in verbatim environments
-\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
-% use microtype if available
-\IfFileExists{microtype.sty}{%
-\usepackage[]{microtype}
-\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
-}{}
-
-\providecommand{\tightlist}{%
-  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
-% Redefines (sub)paragraphs to behave more like sections
-\ifx\paragraph\undefined\else
-\let\oldparagraph\paragraph
-\renewcommand{\paragraph}[1]{\oldparagraph{#1}\mbox{}}
-\fi
-\ifx\subparagraph\undefined\else
-\let\oldsubparagraph\subparagraph
-\renewcommand{\subparagraph}[1]{\oldsubparagraph{#1}\mbox{}}
-\fi
-
-% set default figure placement to htbp
-\makeatletter
-\def\fps@figure{htbp}
-\makeatother
-
-%%% Other little tweaks
-
-% TODONOTES
-\ifdraft
-\usepackage[textsize=tiny,bordercolor=yellow,color=yellow,textwidth=4cm,colorinlistoftodos]{todonotes}
-\else
-\usepackage[disable]{todonotes}
-\fi
-
-% Addittional information passed by the user
-%\usepackage{graphicx}
-
-%\usepackage{layout} % package to look at the page layout
-
-%\hypersetup{bookmarks=true,
-%            pdfauthor={},
-%            colorlinks=true,
-%            citecolor=blue,
-%            urlcolor=blue,
-%            linkcolor=magenta}
-
-\usepackage{setspace} % for pandoc-citeproc-preamble
-
-%%%% todonotes stuff %%%%
-\newcommand{\inlinetodo}[1]{\todo[inline,size=\normalsize]{#1}}
-
-% Custom color todos: https://tex.stackexchange.com/a/178806
-\usepackage{xargs} % Use more than one optional parameter in a new commands
-\newcommandx{\change}[2][1=]{\todo[linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
-\newcommandx{\ichange}[2][1=]{\todo[inline,linecolor=red,backgroundcolor=red!25,bordercolor=red,#1]{#2}}
-
-\newcommand{\nonsection}[1]{\vspace{3mm}\noindent\textbf{\large #1}\vspace{2mm}}
-
-% color for "monospace" inline text
-%\usepackage{xcolor}
-%\usepackage{soulutf8}
-\usepackage[normalem]{ulem} % use normalem to protect \emph
-\newcommand\hl{\bgroup\markoverwith
-  {\textcolor{yellow}{\rule[-.5ex]{2pt}{2.5ex}}}\ULon}
+%----------------------------------------------------------------------------------------
+% DOCUMENT BEGIN
+%----------------------------------------------------------------------------------------
 
 \begin{document}
 
@@ -219,7 +228,7 @@ Application to Tensor Shape Analysis} % Your thesis title, this is used in the t
 \pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
 
 %----------------------------------------------------------------------------------------
-%	TITLE PAGE
+% TITLE PAGE
 %----------------------------------------------------------------------------------------
 
 \begin{titlepage}
@@ -274,7 +283,7 @@ Application to Tensor Shape Analysis} % Your thesis title, this is used in the t
 \cleardoublepage
 
 %----------------------------------------------------------------------------------------
-%	QUOTATION PAGE
+% QUOTATION PAGE
 %----------------------------------------------------------------------------------------
 
 \ifdraft
@@ -298,13 +307,13 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 \fi
 
 %----------------------------------------------------------------------------------------
-%	ABSTRACT PAGE
+% ABSTRACT PAGE
 %----------------------------------------------------------------------------------------
 
 \include{chapters/00-abstract}
 
 %----------------------------------------------------------------------------------------
-%	ACKNOWLEDGEMENTS
+% ACKNOWLEDGEMENTS
 %----------------------------------------------------------------------------------------
 
 \begin{acknowledgements}
@@ -313,7 +322,7 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 \end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
-%	LIST OF CONTENTS/FIGURES/TABLES PAGES
+% LIST OF CONTENTS/FIGURES/TABLES PAGES
 %----------------------------------------------------------------------------------------
 
 \tableofcontents % Prints the main table of contents
@@ -324,13 +333,13 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 
 
 %----------------------------------------------------------------------------------------
-%	DEDICATION
+% DEDICATION
 %----------------------------------------------------------------------------------------
 
 \dedicatory{\inlinetodo{fill me!!! I am the dedication}}
 
 %----------------------------------------------------------------------------------------
-%	THESIS CONTENT - CHAPTERS
+% THESIS CONTENT - CHAPTERS
 %----------------------------------------------------------------------------------------
 
 \mainmatter % Begin numeric (1,2,3...) page numbering
@@ -362,7 +371,7 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 \include{chapters/08-conclusions}
 
 %----------------------------------------------------------------------------------------
-%	THESIS CONTENT - APPENDICES
+% THESIS CONTENT - APPENDICES
 %----------------------------------------------------------------------------------------
 
 \appendix % Cue to tell LaTeX that the following "chapters" are Appendices
@@ -372,10 +381,10 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 
 \include{chapters/11-appendix-theory-explain}
 
-\include{chapters/12-appendix-some-history}
+%\include{chapters/12-appendix-some-history}
 
 %----------------------------------------------------------------------------------------
-%	BIBLIOGRAPHY
+% BIBLIOGRAPHY
 %----------------------------------------------------------------------------------------
 
 \printbibliography[heading=bibintoc]

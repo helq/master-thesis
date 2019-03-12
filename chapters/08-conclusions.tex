@@ -1,155 +1,111 @@
 \chapter{Conclusions}\label{conclusions}
 
-{\ichange{This is just a DRAFT! REVISE!!}}
-
-In this work I have presented the application of a very powerfull and
-very well studied technique for Static Analysis (Abstract
-Interpretation), applied to a domain where it has not been applied much
-(just a couple of recent papers and applications are using it). In a
-brief note the work done includes:
+In this work, we have presented the definition and implementation of an Abstract
+Interpreter for Python focused on the analysis of tensor shapes. In brief, the work done
+includes:
 
 \begin{itemize}
 \tightlist
-\item
-  A formalisation of a subset of Python 3.6
-\item
-  An Abstract Domain for Python Values
-\item
-  An Abstract Domain for Python program states
-\item
-  The semantics of an Abstract Interpreter for Python
-\item
-  The implementation of the Abstract Interpreter
-\item
-  A prove of concept domain where, tensor shapes, where the Abstract
-  Interpreter could show its power
-\item
-  A series of tests showcasing the scenarios where the AI is able to
-  work fine and show results
-\item
-  A way for developers to annotate code to improve the accuracy of the
-  AI
+\item A formalisation of a subset of Python 3.6 (Syntax and small-step semantics)
+\item An Abstract Domain for Python Values
+\item An Abstract Domain for Python program states
+\item The semantics of an Abstract Interpreter for Python
+\item The implementation of the Abstract Interpreter
+\item An application for the Abstract Interpreter to statically analyse the shapes of
+  tensors and tensor operations
+\item A series of tests showcasing the abilities of the Abstract Interpreter and its
+  failures
+\item A way for developers to annotate code to improve the accuracy of the Abstract
+  Interpreter
 \end{itemize}
 
-The formalisation of the subset of Python showed one more attempt to
-formalise the Python semantics. We focused on how this formalisation
-could be used for a very specific library, the numpy library a corner
-stone of modern Python.
+The presented Python formalisation is easily extendible to calculate the value of a
+library-defined class. NumPy arrays were added to the formalisation to show how to analyse
+code the shape of tensors.
 
-To implement the Abstract Interpreter, we required the formalisation of
-the Abstract Domain which carries the values stored in memory. The State
-Abstract Domain is wholy defined by the join operation. The join
-operation is the most complex piece in the whole work, it tries to
-combine the information of two different states into one that contains
-information from both. The values where they differ are then collapsed
-properly to a \texttt{Top} value. \texttt{Top} values can be think of as
-\texttt{?} types in Gradual Type systems, they are valid types/values
-but carry only the information of their existance not what could be they
-carrying.
+%The State Abstract Domain is wholy defined by the join operation.
+%An Abstract Domain for the state of the program was designed. The Abstract Domain was
+%built to take into account aliasing. If there is some inconsistency between two states
+%between two states are collapsed into a $\top$ value. $\top$ values can be think of as
+%\verb|?| types in Gradual Type systems.
 
-Fortunately, the semantics of the Abstract Interpreter are not very
-complicated, they just borrow their capabilities from the State Abstract
-Domain and the semantics of Python. It is easy to see how the
-formalisation could be extended to work with other values by just
-augmenting the Abstract Domain.
+The abstract semantics, the semantics of the Abstract Interpreter, are easy to develop. It
+was shown how to get from the concrete semantics (small-step semantics) to the abstract
+semantics.
 
-\enquote{Extensive} testing showed that the implementation of the
-Abstract Interpreter, Pytropos, is able to actually check many common
-shape cases. The biggest problem of the implementation relies on the
-lack of capabilities it can offer (harshly limited to forgo user-defined
-functions and classes).
+Testing showed that the Pytropos, the implementation of the Abstract Interpreter, is able
+to actually check many common shape mismatches. The biggest problem of the implementation
+is on the lack of support for builtin functions and values.
 
-The Abstract Interpreter also lets itself to extend with type
-annotations. Type Annotations are meant to be given by the user, who
-always knows what is doing, and can tell the poor AI what the value of
-some variable is. This is easily done by replacing the old value by the
-new one with the annotation only if the annotation contains for
-information about the variable than the value contained on it (ie, hint
-\textless{} val).
+When the Abstract Interpreter cannot compute the correct tensor shape, the user help the
+the Abstract Interpreter with Type Annotations. If the user gives a type annotation that
+does not improve the precision of the value, the intepreter will warn the user of his
+mistake.
 
 \section{Future Work}\label{future-work}
 
-Python is a huge and rich language. The amount of Python characteristics
-exceeds that of what a single human could try to implement for a work
-like this. In fact, implementing an Abstract Interprer can be regarded
-to be as hard, or harder, than a regular interpreter.
+Python is a huge and rich language. The amount of Python characteristics exceeds that of
+what a single human can implement in the span of a master thesis.
 
-Much work left to do to try to match the power of Pytropos to make it
-usable for the regular developer. I propose the following roadmap to
-continue building the Abstract Interpreter:
+Much work left to do to try to match the power of Pytropos to make it usable for the
+regular developer. We propose the following roadmap to continue building the Abstract
+Interpreter:
 
 \begin{itemize}
 \tightlist
-\item
-  Extend Pytropos to include Exception handling (probably, a similar
-  approach to that of {\todo{add ref to ai last year python}} could be
-  applied here).
-\item
-  Improve how spliting stores and \textbf{join}ing them latter is
-  done. The join operation between stores is very, very costly. It
-  requires walking through both graphs/stores at the same time. That is
-  extremely expensive when only a variable has changed its value between
-  two different stores. This associated cost could be reduced if not a
-  whole store is created everytime a new store is need to be created.
-  (One way to do this is by using immutable structures for all values in
-  the implementation. The current implementation uses the Heap provided
-  by CPython underneat but if one where to define ones heap from scratch
-  this would not be a problem).
-\item
-  Extend, again using the ideas put on the paper on ai {\todo{add ref,
-  same as above}}, Pytropos to handle break statements.
-\item
-  Extend the definition of Store from a simple Global scope + heap to
-  something that handles different levels of scope. This would allow an
-  easier implementation of user defined functions. The function scope of
-  Python is middly complex (this is due to the \pycode|compile|-ation
-  process to which the parsed code is put to. Python does compile, but
-  it does it very, very fast) with four different variable scopes:
-  global, local, nonlocal, and class.
-\item
-  Once the interpreter handles user-defined functions properly,
-  extending the interpreter to work with user-defined objects is not a
-  big problem. The biggest difficulty is the inherit MRO behind the
-  complex multi-classing system of Python.
+\item Extend Pytropos to include Exception handling. A similar approach to that of
+  \textcite{fromherz_static_2018} could be a good starting point.
+\item Improve how copying stores and \textbf{join}ing them latter is done. The join
+  operation between stores is very, very costly. It requires walking through both
+  graphs/stores at the same time. That is extremely expensive when only a variable has
+  changed. This associated cost could be reduced if only \enquote{diff}s of stores were
+  used.  One way to do this is by using immutable structures for all values in the
+  implementation. Using immutable structures would require the implementation of a heap
+  and garbage collector as the current implementation uses leaves the variable management
+  to CPython.
+\item Extend Pytropos to handle breaking control statements (\pycode|continue|,
+  \pycode|break| and \pycode|return|). \textcite{fromherz_static_2018} also present a way
+  to handle breaking control statement in Python.
+\item Extend the global scope to handle local and nonlocal scopes. The scope rules of
+  Python are middly complex with four different variable scopes: global, local, nonlocal,
+  and class. Something to take into account is the ability of CPython to statically
+  analyse the use of local and non local variables before interpreting the code (at
+  \pycode|compile|-ation time)
+\item Extend the possible values to allow user-defined functions and objects.  Once the
+  interpreter handles user-defined functions properly, extending the interpreter to work
+  with user-defined objects is not a big problem. The biggest difficulty is the inherit
+  MRO behind the complex multi-classing system of Python.
 \end{itemize}
 
-{\inlinetodo{add idea that Pytropos could be run inside an IDE just as
-paper: Sulir\_Poruban (2018) - Augmenting Source Code Lines with Sample
-Variable Values}} {\inlinetodo{add idea that the parser could be
-extended to add holes, or insert Top values, just as done in paper: Omar
-et al (2018) - Live Functional Programming with Typed Holes (I wrote
-something about it in the SoRI)}}
+% \inlinetodo{add idea that Pytropos could be run inside an IDE just as paper: Sulir Poruban
+%   (2018) - Augmenting Source Code Lines with Sample Variable Values}
+% \inlinetodo{add idea that the parser could be extended to add holes, or insert Top values,
+%   just as done in paper: Omar et al (2018) - Live Functional Programming with Typed Holes
+%   (I wrote something about it in the SoRI)}
+% \inlinetodo{The Python Regression tests are very broad in scope, they use too many builtin
+%   capabilities which makes it hard for a prototype like Pytropos to make any of them work
+%   (and that is maybe why they are the regression tests for Python, after all they need to
+%   check as many characteristics as possible!).}
 
-Besides what is left to do to make Pytropos more powerful, there are
-some tasks related to the formality of the work. This work just
-presented a formalisation of a subset of Python, an Abstract Domain for
-Python, and \enquote{inferred} Abstract Semantics, but it nothing is
-ever proved. I built from theories to make something workable, but it
-may be good if we try to formalise a little bit more Python. We want
-some warranties after all! The things that I consider should be done
-next are:
+Besides what is left to do to make Pytropos more powerful, there are some tasks related to
+the formality of the work. This work presented some concrete and abstract semantics for
+Python but there was never a proof of its correctness. We consider the following to be the
+problems to solve to prove the formalisation correct:
 
 \begin{itemize}
 \tightlist
-\item
-  Give a complete and through formal definition for a subset of Python
-  in a proof-assistant language such as Agda, Idris, Coq, Isabelle/HOL,
-  or one of the many others.
-\item
-  Define in the same proof-assistance language the Abstract Domain, the
-  properties it must follow, and the inferred semantics it produces.
-\item
-  Prove that the inferred semantics are in fact \textbf{inferred} from
-  the Galois connection of the Abstract Domain.
+\item Give a complete and through formal definition for a subset of Python in a
+  proof-assistant language such as Agda, Idris, Coq, and Isabelle/HOL.
+\item Define in the same proof-assistance language the Abstract Domain, the properties it
+  must follow, and the abstract semantics.
+\item Prove that the abstract semantics are in fact consistent with the concrete semantics
+  and abstract domain.
 \end{itemize}
 
-Such a formalisation of Python would likely/hopefully help future
-endeavours on proofs and verification.
+% Such a formalisation of Python would likely/hopefully help future
+% endeavours on proofs and verification.
 
-Notice that any formalisation of Python must take some stance on how
-closely it wants to follow the implementation of CPython. CPython has
-many, many little undocumented semantic subtleties that trying to write
-a full formal definition would probably defeat its purpose, namely, help
-other projects where a clean and clear formalisation is necessary.
-
-{\inlinetodo{expand on what you wrote in SoRI}}
+% Notice that any formalisation of Python must take some stance on how closely it wants to
+% follow the implementation of CPython. CPython has many, many little undocumented semantic
+% subtleties. Trying to write a full formal definition of Python semantics is probably
+% undoable.

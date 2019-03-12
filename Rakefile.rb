@@ -13,19 +13,19 @@ CLEAN.include(['chapters/*.aux'] +
 CLOBBER.include PDF
 
 task :default => [:compile] do
-  sh "xelatex -shell-escape '#{TEX}'"
-  sh "xelatex -shell-escape '#{TEX}'"
+  sh "lualatex -shell-escape '#{TEX}'"
+  sh "lualatex -shell-escape '#{TEX}'"
   puts "DONE"
 end
 
 file AUX => ['bibliography.bib'] do
-  sh "xelatex -shell-escape '#{TEX}'"
+  sh "lualatex -shell-escape '#{TEX}'"
   sh "biber '#{MAIN}'"
 end
 
 file PDF => (['MastersDoctoralThesis.cls', AUX, TEX] + TEX_FILES) do
-  sh "xelatex -shell-escape '#{TEX}'"
-  sh "xelatex -shell-escape '#{TEX}'"
+  sh "lualatex -shell-escape '#{TEX}'"
+  sh "lualatex -shell-escape '#{TEX}'"
   puts "DONE"
 end
 

@@ -1,10 +1,43 @@
 \begin{abstractpage}
 \begin{abstract}[Resumen][spanish]
-\inlinetodo{Translate from Abstract}
+
+Los tensores, una extensión de los arrays, se usan de manera extensiva en una gran
+variedad de problemas en programación. Los tensores son los bloques básicos de
+construcción de múltiples frameworks de Aprendizaje de Máquina y son fundamentales en la
+definición de modelos de Aprendizaje Profundo. Los linters son herramientas indispensables
+para los programadores de hoy en día, ya que estos ayudan a los desarrolladores a revisar
+el código antes de ejecutarlo. Aunque los tensores son muy populares no existen tensores
+que revisen código con operaciones tensoriales. Dada la gran cantidad de trabajo hecho en
+Python con (y sin) tensores, es sorprendente el poco trabajo que se ha hecho en esta área.
+La Interpretación Abstracta es una metodología/framework diseñada para analizar código de
+forma estática. La idea de Interpretación Abstracta es sobreaproximar de manera "sound" el
+resultado de ejecutar una pieza de código sobre todos las posibles entradas del programa.
+Una sobreaproximación "sound" asegura que el Interprete Abstracto nunca omitirá un
+verdadero negativo, es decir, si una pieza de código no es señalada como incorrecta por el
+Interprete Abstracto entonces se puede asumir con seguridad que el código nunca fallará.
+El Interprete Abstracto puede ser modificado para que sólo informe acerca de verdaderos
+positivos, aunque se pierda la propiedad de "soundness", es decir, el interprete sólo
+informa acerca de las partes de código que fallarán sin importar que suceda.
+
+En este trabajo, formalizamos un subconjunto de Python con énfasis en operaciones con
+tensores. Nuestra formalización de la semántica de Python está basada en la Referencia
+oficial del Lenguage Python. Definimos un Interprete Abstracto y presentamos su
+implementación. Mostramos como cada parte del Interprete Abstracto fué definido: su
+Dominio Abstracto y semántica abstracta.
+
+Presentamos la estructura de Pytropos, la implementación del Interprete Abstracto.
+Pytropos es capaz de revisar las operaciones de arreglos de NumPy teniendo en cuenta
+broadcasting y algunas funciones complejas de NumPy como \texttt{array} y \texttt{dot}.
+Construimos 74 casos de prueba unitaros, los cuales chequean la capacidad de Pytropos,
+además de 20 casos de prueba de propiedades, los cuales chequean que las reglas semánticas
+de Pytropos correspondan con la forma en la que Python es ejecutado. Mostramos cómo y
+cuántos bugs es el Interprete Abstracto capaz de detectar.
 \end{abstract}
 
+\cleardoublepage
+
 \begin{abstract}[Abstract][english]
-Tensors are, an extension of arrays, widely used in a variety of
+Tensors, an extension of arrays, are widely used in a variety of
 programming tasks. Tensors are the building block of many modern machine
 learning frameworks and are fundamental in the definition of deep
 learning models. Linters are indispensable tools for today's developers,
@@ -24,15 +57,16 @@ positives, although losing soundness, i.e.~the interpreter can flag
 which parts of the code are going to fail no matter how the code is run.
 
 In this work, we formalise a subset of Python with emphasis on tensor
-operations. Our formal Python semantics are based on The Python Language
-Reference. An Abstract Interpreter was defined and implemented from the
-Python formalisation. We show how each part of the Abstract Interpreter
-was built: the Abstract Domains defined, and the inferred formal
-semantics. We present the structure of Pytropos, the Abstract
+operations. Our formal Python semantics are based on The Python Language Reference. We
+define an Abstract Interpreter and present its implementation. We show how each part of the
+Abstract Interpreter was built: the Abstract Domains defined and the abstract
+semantics.
+
+We present the structure of Pytropos, the Abstract
 Interpreter implemeted. Pytropos is able to check NumPy array operations
 taking into account broadcasting and complex NumPy functions as
-\texttt{array} and \texttt{dot}. We constructed 80 unit test cases
-checking the capabilities of Pytropos and 50 property test cases
+\texttt{array} and \texttt{dot}. We constructed 74 unit test cases
+checking the capabilities of Pytropos and 20 property test cases
 checking compliance with the official Python implementation. We show
 what and how many bugs the Abstract Interpreter was able to find.
 \end{abstract}

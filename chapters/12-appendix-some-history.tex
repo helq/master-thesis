@@ -25,7 +25,7 @@ and some exposure into SMT solvers theory and practice.
 I will mention each one of the approaches I tried in chronological
 order.
 
-{\nonsection{Tensor Shape Type Checking - Haskell}}
+\subsubsection*{Tensor Shape Type Checking - Haskell}
 
 Everything started in Haskell. I wrote a wrapper library around a
 Haskell wrapper library for TensorFlow \autocite{abadi_tensorflow_2016}.
@@ -56,7 +56,7 @@ Some efforts have been made to add type inference and type checking into
 Python (See Related Work, Chapter \ref{related-work})), the most
 important one being MyPy.
 
-{\nonsection{Extending MyPy}}
+\subsubsection*{Extending MyPy}
 
 MyPy builds on the idea of Gradual Typing. MyPy is able to infer the
 type of primitive values and allows optional annotations to check the
@@ -137,7 +137,7 @@ in \texttt{self} (\texttt{s2}) should be the same as the first dimension
 in \texttt{b}, but MyPy does not verify this condition
 (\texttt{three\ !=\ four}).
 
-Unfortunatelly, MyPy's \texttt{TypeVar}s are not fully-fledged type
+Unfortunately, MyPy's \texttt{TypeVar}s are not fully-fledged type
 variables. MyPy does not handle Dependent Types, so a solution as the
 one suggested for Haskell could not completely be coded.
 
@@ -145,7 +145,7 @@ Two options came from this experiment, either look how to extend MyPy
 type variables handling to work in the general case or ignore type
 checking as a possible solution at the moment.
 
-{\nonsection{StyPy}}
+\subsubsection*{StyPy}
 
 As I mentioned in Chapter \ref{pytropos-analysis-implementation}, before
 I encountered Abstract Interpretation as a way to Statically Analyse
@@ -191,7 +191,7 @@ it would mean rewriting the whole program for my purpose. So I went on
 looking different projects that I could modify to implement the Static
 Value Analysis I was considering.
 
-{\nonsection{Modify PyPy}}
+\subsubsection*{Modify PyPy}
 
 Once I considered building a special purpose interpreter to analyse the
 shape of tensors (as an Abstract Interpreter is), I took a look in other
@@ -213,7 +213,7 @@ program and joining them (used in \texttt{if} branching when choice can
 be made between two branches) seemed to require rewritting a big chunk
 of the core of pypy. starting from zero seemed a better idea.
 
-{\nonsection{abstract interpretation}}
+\subsubsection*{abstract interpretation}
 
 in the end, i decided to build my own interpreter from scratch. it took
 me a couple of months to arrive to something relatively usable but i
@@ -253,7 +253,7 @@ was that i had found the idea of reusing some of the python
 infraestructure too fascinating to let it into oblivion, rewriting
 python code to run it into with python seems just a nice metaidea.
 
-{\nonsection{Other Ideas}}
+\subsubsection*{Other Ideas}
 
 Other routes, I did considered to follow but did not because of time
 restrictions where:

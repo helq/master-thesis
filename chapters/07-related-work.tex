@@ -1,77 +1,83 @@
 \chapter{Related Work}\label{related-work}
 
-{\ichange{Revise, rewrite and extend this subsection}}
+A big, widely used, and mature language like Python has no lack of Static Analysis tools.
+A big, widely used, and mature area like Machine Learning has no lack of people trying to
+build tools to make writing code for it easier. In this chapter, a brief overview of the
+many Static Analysis tools developed for Python code and the several approaches taken to
+solve the problem of tensor shapes.
 
-A big, widely used, and mature language like Python has no lack of
-Static Analysis tools. A big, widely used, and mature area like Machine
-Learning has no lack of people trying to build tools to make writing
-code for it easier. In this chapter, a brief overview of the many Static
-Analysis tools developed for Python code and the several approaches
-taken to solve the problem of tensor shapes.
+\section{Static Analysis in Python}
 
-\section{Static Analysis in Python}\label{static-analysis-in-python}
+% {\inlinetodo{add note in the difficulty of knowing what is the theory
+% behind some of the most widely used linters}}
 
-{\inlinetodo{write down which are the possible classification categories
-for Analysis Tools in Python}}
+In the Table~\ref{relatedworktable}, a list of all analysis tools found in the literature
+and libraries is given. The usage of a tool refers to how is the tool used by developers:
+embeded in the python interpreter, used as a linter, or as a library that runs with the
+code to analyse. The Analysis base of a tool refers to which is the theory behind the
+tool, how it works underneat.
+% The purpose of analysis tools are varied and broad in scope.
 
-{\inlinetodo{add note in the difficulty of knowing what is the theory
-behind some of the most widely used linters}}
+\begin{sidewaystable}[p]
+\centering
+\begin{threeparttable}
+\begin{longtable}[]{|l|l|l|l|}
+  \caption{Analysis tools for Python.
+  }\label{relatedworktable}\tabularnewline
+  \toprule
+  Tool Name / Source & Usage & Analysis base & Purpose \tabularnewline
+  \midrule
+  \endhead
+    \textcite{cannon_localized_2005}                     & Embeded & Type analysis           & Typecheking     \tabularnewline
+    Pyflakes \autocite{pyflakes2005}                     & Linter  & N/A                     & Various checks  \tabularnewline
+    Pylint \autocite{thenaultpylint}                     & Linter  & N/A                     & Various checks  \tabularnewline
+    Pychecker \autocite{norwitzpychecker}                & Linter  & N/A                     & Various checks  \tabularnewline
+    MyPy \autocite{lehtosalo2016mypy}                    & Linter  & Gradual Type Analysis   & Type checking   \tabularnewline
+    Enforce\tnote{1}\tnote{+} (defunct)                  & Library & Gradual Type Analysis   & Type checking               \tabularnewline
+    Sagitta\tnote{2}\tnote{+} (defunct)                  & Library & Type analysis           & Type checking               \tabularnewline
+    StyPy \autocite{ortin_towards_2015}                  & Linter  & Novel                   & Type checking               \tabularnewline
+    Lyra\tnote{3}                                        & Library & Abstract Interpretation & Various analyses (including Value Analysis) \tabularnewline
+    Pytropos\tnote{4} (This Work)                        & Linter  & Abstract Interpretation & Value Analysis (specialised on tensor shapes) \tabularnewline
+    PyType\tnote{5}                                      & Linter  & N/A                     & Type checking and inference \tabularnewline
+    ICBD\tnote{6} (defunct)                              & Linter  & N/A                     & Type checking and inference \tabularnewline
+    Pyre\tnote{7}                                        & Linter  & Abstract Interpretation & Type checking               \tabularnewline
+    Nagini\tnote{8} \autocite{eilers_nagini_2018}        & Linter  & SMT (Viper)             & Verifier                    \tabularnewline
+    Typpete\tnote{9} \autocite{hassan_maxsmt-based_2018} & Linter  & SMT                     & Type inference              \tabularnewline
+    \textcite{fromherz_static_2018}\tnote{*}             & N/A     & Abstract Interpretation & Value Analysis | Verifier   \tabularnewline
+    \textcite{monat_static_2018}\tnote{*}                & N/A     & Abstract Interpretation & Type Analysis               \tabularnewline
+    PyAnnotate\tnote{+}                                  & Library & Gradual Type Analysis   & Type inference              \tabularnewline
+  \bottomrule
+\end{longtable}
+\begin{tablenotes}
+  \item[+] \footnotesize It is not an static analysis. It is a dynamic analysis.
+  \item[*] Tool has not been made public.
+  \item[1] Homepage: \url{https://github.com/RussBaz/enforce}
+  \item[2] Homepage: \url{https://github.com/peterhil/sagitta}
+  \item[3] Homepage: \url{https://github.com/caterinaurban/Lyra}
+  \item[4] Homepage: \url{https://github.com/helq/pytropos}
+  \item[5] Homepage: \url{https://github.com/google/pytype}
+  \item[6] Homepage: \url{https://github.com/kmod/icbd}
+  \item[7] Homepage: \url{https://github.com/facebook/pyre-check}
+  \item[8] Homepage: \url{https://github.com/marcoeilers/nagini}
+  \item[9] Homepage: \url{https://github.com/caterinaurban/Typpete}
+  \item[10] Homepage: \url{https://github.com/dropbox/pyannotate}
+\end{tablenotes}
+\end{threeparttable}
+\end{sidewaystable}
 
-The table below summarises the different tools and what they rely on:
+\inlinetodo{write a brief description of each one of the tools presented in the table}
 
-\begin{verbatim}
-Tool name/source |  Usage  | Analysis base  | Purpose                     |
----------------------------------------------------------------------------
-@cannon.._2005   | Embeded | Type analysis  | Type checking               |
-Pyflakes[ref]    | Linter  | NA             | Various checks              |
-Pylint           | Linter  | NA             | Various checks              |
-Pychecker        | Linter  | NA             | Various checks              |
-MyPy             | Linter  | Type analysis  | Type checking               |
-Enforce*+(defun) |         | Type analysis  | Type checking               |
-Sagitta* (defun) |         | Type analysis  | Type checking               |
-StyPy            | Linter  | Novel          | Type checking               |
-Lyra             |         | AbstrInter     | Various analyses (including Value Analysis)   |
-Pytropos         | Linter  | AbstrInter     | Value Analysis (specialised on tensor shapes) |
-PyType           | Linter  |                | Type checking and inference |
-ICBD (defun)     | Linter  |                | Type checking and inference |
-Pyre             | Linter  | AbstrInter     | Type checking               |
-Nagini           | Linter  | SMT (Viper)    | Verifier                    |
-Typpete          | Linter  | SMT            | Type inference              |
-fromherz...2018  | ?       | AbstrInter     | Value Analysis | Verifier   |
-monat..2018      | ?       | AbstrInter     | Type Analysis               |
-PyAnnotate*+     | Library | Type analysis  | Type inference              |
-
-*: special cases, they are not an static analysis, but dynamic analysis!
-?: tool has not been made public
-+: uses gradual types
-
-Pyflakes [@pyflakes2005]
-Pylint [@thenaultpylint]
-PyChecker [@norwitzpychecker]
-Pytype https://github.com/google/pytype
-ICBD https://github.com/kmod/icbd
-Pyrecheck https://github.com/facebook/pyre-check
-Sagitta https://github.com/peterhil/sagitta
-Nagini https://github.com/marcoeilers/nagini (has paper)
-Typpete https://github.com/caterinaurban/Typpete (two references, a thesis and a paper)
-monat..2018 paper: Static Analysis by Abstract Interpretation Collecting Types of Python Programs
-PyAnnotate https://github.com/dropbox/pyannotate
-\end{verbatim}
-
-{\inlinetodo{write a brief description of each one of the tools
-presented in the table}}
-
-{\inlinetodo{explain special case of the library \texttt{astroid} (part
-of pylint), which is able to perform some Static Value Analysis. It
-stops when it cannot determine the value of anything else. Pretty nice.
-\texttt{astroid.extract\_node(\textquotesingle{}a=1\textbackslash{}nb=2\textbackslash{}nc=a+b\textbackslash{}nc\textquotesingle{});\ next(\_.infer())}.
-https://astroid.readthedocs.io/en/latest/inference.html}}
-
-\inlinetodo{explain differences between lyra, fromherz..2018 and Pytropos}
-\inlinetodo{mention about the four papers that propose semantics for python}
-
-{\inlinetodo{lyra was not the first to try abstract interpretation for
-Python, mention pydrogen https://github.com/lapets/pydrogen}}
+% {\inlinetodo{explain special case of the library \texttt{astroid} (part
+% of pylint), which is able to perform some Static Value Analysis. It
+% stops when it cannot determine the value of anything else. Pretty nice.
+% \texttt{astroid.extract\_node(\textquotesingle{}a=1\textbackslash{}nb=2\textbackslash{}nc=a+b\textbackslash{}nc\textquotesingle{});\ next(\_.infer())}.
+% https://astroid.readthedocs.io/en/latest/inference.html}}
+%
+% \inlinetodo{explain differences between lyra, fromherz..2018 and Pytropos}
+% \inlinetodo{mention about the four papers that propose semantics for python}
+%
+% {\inlinetodo{lyra was not the first to try abstract interpretation for
+% Python, mention pydrogen https://github.com/lapets/pydrogen}}
 
 
 % - Localized Type Inference [@cannon_localized_2005]: Cannon was the first (to my
@@ -134,12 +140,12 @@ Python, mention pydrogen https://github.com/lapets/pydrogen}}
 
 \section{Tensor Shape Analysis}\label{tensor-shape-analysis}
 
-{\inlinetodo{add idea from http://nlp.seas.harvard.edu/NamedTensor
-Alexander, who suggests building the libraries in a different way so we
-do not have some of the problems of working with nameless shapes}}
-
-{\inlinetodo{extend solutions described below with the new libraries you
-found, comment below}}
+% {\inlinetodo{add idea from http://nlp.seas.harvard.edu/NamedTensor
+% Alexander, who suggests building the libraries in a different way so we
+% do not have some of the problems of working with nameless shapes}}
+%
+% {\inlinetodo{extend solutions described below with the new libraries you
+% found, comment below}}
 %  {2018.06.25} tensors papers and libraries
 %  * (mypy-python) https://github.com/machinalis/mypy-data/tree/master/numpy-mypy
 %  * (python (in java)) ariadne https://github.com/wala/ML (paper by dolby (weird name))

@@ -13,7 +13,9 @@ In Mathematics, the word \enquote{semantics} refers to the meaning of sentences 
 languages \autocite{gunter_semantics_1992}. The semantics of programming languages
 consist of what a piece of code means, how to interpret it, and how to analyse it.
 
-\textcite{mitchell1996foundations}\todo{find a better reference} classifies programming
+\textcite{mitchell1996foundations}%
+%\todo{find a better reference}
+classifies programming
 languages semantics into three categories: axiomatic semantics, denotational semantics,
 and operational semantics. Axiomatic semantics are all about describing the behaviour of
 code with mathematical logic. Denotational semantics goal is to find a mathematical
@@ -64,7 +66,7 @@ expr = Int(i) for i \in \N | Float(j) for j \in floats
      | expr(expr*)        -- Function calling
 
      | expr.identifier    -- Attribute access
-     | expr[expr]         -- Not supported for Numpy Arrays :S
+     | expr[expr]         -- Not supported for NumPy Arrays :S
      | [expr*]            -- list
      | (expr*)            -- tuple
 
@@ -729,7 +731,7 @@ Object(NdArray,
 
   Nonetheless, defining formaly each one of the NumPy functions above is
   fairly straightforward. Although, the hardest part of a formal
-  defitinion of Numpy arrays is detailing how \pycode|array| works. To
+  defitinion of NumPy arrays is detailing how \pycode|array| works. To
   define the function \pycode|<np-array>| one
   must consider the many input cases it can handle, and it can handle
   almost any Python object\footnote{The NumPy function \pycode|array|
@@ -754,7 +756,8 @@ Object(NdArray,
 \item
   Extend the cases that \pycode|get_prim_op| handles to cover NumPy
   arrays. All operations defined in NumPy handle broadcasting.
-  {\todo{Explain what broadcasting is}} For example:
+  %{\todo{Explain what broadcasting is}}
+  For example:
 
 \begin{verbatim}
 get_prim_op(Add, v1, v2) :=
