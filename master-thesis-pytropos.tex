@@ -48,16 +48,14 @@ headsepline, % Uncomment to get a line under the header
 \setdefaultlanguage[variant=uk]{english}
 \setotherlanguage{spanish}
 
-\usepackage[flushleft]{threeparttable}
-\usepackage{rotating}
-
-%\usepackage{lipsum}
-
-%\usepackage{ifxetex,ifluatex}
-%\usepackage{fixltx2e} % provides \textsubscript
-
 \usepackage{mathtools}
 \usepackage{unicode-math}
+
+%----------------------------------------------------------------------------------------
+% FORMULAS
+%----------------------------------------------------------------------------------------
+
+\input{maths/defs.tex}
 
 %----------------------------------------------------------------------------------------
 % BIBLIOGRAPHY
@@ -173,6 +171,16 @@ headsepline, % Uncomment to get a line under the header
 \makeatletter
 \def\fps@figure{htbp}
 \makeatother
+
+\usepackage[flushleft]{threeparttable}
+\usepackage{rotating}
+
+%\usepackage{lipsum}
+
+%\usepackage{ifxetex,ifluatex}
+%\usepackage{fixltx2e} % provides \textsubscript
+
+\usepackage{forest}
 
 %----------------------------------------------------------------------------------------
 % TODONOTES
@@ -318,7 +326,84 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 
 \begin{acknowledgements}
 \addchaptertocentry{\acknowledgementname} % Add the acknowledgements to the table of contents
-{\inlinetodo{fill me!!! I am the acknowledgements}}
+
+Research, the verb, is as any other skill, a thing that you develop only with time and
+practice. And boy, have I not been in a intensive camp for the last two years. Research is
+hard, but harder is to explain what you have done. One of the most useful and important
+parts of this journey has been writing everything down.  Research is not always fun,
+failing at it is depressing, and also it has those boring and ardous parts like state of
+the art paper search. Fortunately, I was not alone in this journey, I have been sorrounded
+by masters in the art and I would like to thank them.
+
+To my advisors:
+
+\begin{itemize}
+\tightlist
+\item Felipe Restrepo, who has been very supportive and who has held wave after wave of my
+  bad written texts.
+\item Fabio González, who has been flexible enough to let me explore different areas on my
+  own. Without his critics on my wild ideas, I would not have put the effort to show that
+  some of those ideas actually had some substance.
+\end{itemize}
+
+To the staff and people at the university:
+
+\begin{itemize}
+\tightlist
+\item Jonatan Perdomo, who told me with years of anticipation what I should not be doing.
+  His knowledge in what could be wrong has always been an inspiration to do better.
+\item Rodrigo, Oscar, and all the others for their support and company in the long and
+  ardous days at the university.
+\item To all my students, who showed me how hard it is to actually program human heads.
+  Some are very succeptible others impossible to push.
+\end{itemize}
+
+No human being can live without others, we all need a social net, something to support
+ourselves. I wold like to acknowledge their time on keeping me distracted from insanity.
+To my friends:
+
+\begin{itemize}
+\tightlist
+\item Sergio Dorado, who motivated me to do my best and find new goals. He contagied me--I
+  envy him--with his ideas and accomplishments.
+\item Helen, who, even at 8 thounsand kilometers away, was able to find time to chat
+  with this Colombian guy.
+\item William, Solene and Vinicius for their time and memories.
+\item Vicky, whos perseverance I envy, and whos work and learning ethic I try to imitate.
+\end{itemize}
+
+To the external events that delayed or accelerated this thesis culmination:
+
+\begin{itemize}
+\tightlist
+\item To the \enquote{paro}, a students university strike, for giving me 3 extra months to
+  write this document,  and
+\item To the sicknesses of my family members, which helped me center myself in what is
+  important.
+\end{itemize}
+
+I could go on and on, there are hundreds of people and little pieces of
+reality that made me who I am, and who helped me to get to the end. I am
+grearfull of having them all, albeit my memory is not the best, as I
+feel forgeting everything.
+
+But certainly, I could have never done a thing without the help of my
+family:
+
+\begin{itemize}
+\tightlist
+\item Isabel Camacho, my mom, who has done all the boring tasks and to let me concentrate
+  on the work, I owe her my life.
+\item María del Carmen Gordillo, my granma, who has alwalys been keen on my health and my
+  mom's.
+\item My cousins Paola, Laura, Danilo, Angie, Duvan, and Karol who have always given me
+  some excuse to relax, and from whom I have learnt so much about.
+\item My aunties Marta, Teresa and Patricia, and my Uncle Juan for their support.
+\item My dad, without whom I would not be here.
+\end{itemize}
+
+To all, thank you for being there.
+
 \end{acknowledgements}
 
 %----------------------------------------------------------------------------------------
@@ -336,7 +421,7 @@ is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 % DEDICATION
 %----------------------------------------------------------------------------------------
 
-\dedicatory{\inlinetodo{fill me!!! I am the dedication}}
+\dedicatory{A mi mamá y a mi abuelita\\¡Gracias por todo lo que han hecho por mí!}
 
 %----------------------------------------------------------------------------------------
 % THESIS CONTENT - CHAPTERS

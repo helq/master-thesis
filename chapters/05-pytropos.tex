@@ -18,14 +18,22 @@ couple of different examples.
 
 \section{The big picture}\label{the-big-picture}
 
-{\missingfigure{How the system works in an image}}
+\begin{figure}
+\begin{center}
+  \includegraphics[width=0.6\textwidth]{figures/pytroposimage.png}
+\end{center}
+\caption{Up, blackbox step by step of executing a piece of code in Python (CPython). Down,
+  Pytropos extension of Python. Pytropos transforms the code prior to run it by CPython.
+  The transformation wraps the code to be run with the help of a custom library.
+  \label{pytroposinter}}
+\end{figure}
 
 Pytropos works in a similar way as any other Python interpreter does. It
 reads code and executes it expression by expression. Its main difference
 to CPython is that it does not transform code into bytecode to execute
 but it wraps code before it is transformed into CPython bytecode. The
 code is wrapped to use a library that implements the semantics of the
-Abstract Interpreter.
+Abstract Interpreter. See Figure~\ref{pytroposinter}
 
 Similar to how Python works, Pytropos can not only \enquote{run}
 individual files, but also offers a REPL (Read-eval-print loop) to check
@@ -34,8 +42,12 @@ small portions of code.
 \section{Wrapped code + libs + interpreter vs.~from scratch interpreter}%
 \label{wrapped-code-libs-interpreter-vs.from-scratch-interpreter}
 
-{\inlinetodo{add little note on what means to write an interpreter from
-scratch}}
+The traditional methodology to build an interpreter is to code the parser and the
+semantics of the language in one big program. For a language like Python, building an
+interpreter from scratch would require considerable effort given the large amount of
+characteristics Python comes with. A \enquote{complete} Python implementation would
+requireto code--among other things--memory management, garbage collection, function calling and return, type
+analysis, exception handling.
 
 \textcite{ortin_towards_2015} show how to build a Static Type Analysis
 by rewriting code to operate with the types of values rather than with
@@ -162,7 +174,7 @@ implementation of Pytropos:
   inferred the inferred value will not change.
 \end{itemize}
 
-\section{Details on the guts}\label{details-on-the-guts}
+\section{Details about the guts}
 
 To start with, I do not follow the structure defined in the previous
 chapter for how elements are saved in memory. I did not explicitly
@@ -199,12 +211,17 @@ Abstract Domain should have, namely \pycode|is_top()|, \pycode|join()|,
 \pycode|top()| and \pycode|widen_op()|. \pycode|PythonValue| and
 \texttt{Store}, unsurprisingly, also subclass \texttt{AbstractDomain}.
 
-The figure below presents a class diagram showing the relationships
+Figure~\ref{classPytropos} presents the class diagram showing the relationships
 between the different components in Pytropos.
 
+\begin{figure}
 \includegraphics[width=0.8\textwidth]{figures/classes_Pytropos-small.pdf}
-{\todo{add types to each attribute, and add hidden attributes like
-\pycode+__getitem__+}}
+\caption{Class diagram for Pytropos, the implementation of the Abstract
+  Interpreter.\label{classPytropos}}
+\end{figure}
+
+%\todo{add types to each attribute, and add hidden attributes like
+%\pycode+__getitem__+}
 
 \verb+<prim-callable>+ and all other
 \texttt{Objects\#} are implemented by a subclass of
@@ -216,8 +233,8 @@ by \pycode|BuiltinFun|, \texttt{Module} objects by
 The implementation of the Abstract Interpreter also includes a class log that stores all
 warnings generated in the abstract interpretation of the code.
 
-{\inlinetodo{mention that \texttt{children} is the function
-\texttt{Key\ -\textgreater{}\ Addr\ +\ Undefined}}} {\inlinetodo{mention
-that \texttt{joinVal} is defined as \texttt{join\_mut} in
-\texttt{PythonValue}, and \texttt{joinObject} is defined as
-\texttt{join\_mut} in \texttt{AbstractMutVal}}}
+%{\inlinetodo{mention that \texttt{children} is the function
+%\texttt{Key\ -\textgreater{}\ Addr\ +\ Undefined}}} {\inlinetodo{mention
+%that \texttt{joinVal} is defined as \texttt{join\_mut} in
+%\texttt{PythonValue}, and \texttt{joinObject} is defined as
+%\texttt{join\_mut} in \texttt{AbstractMutVal}}}

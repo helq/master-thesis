@@ -2,14 +2,14 @@
 
 \section{Motivation}\label{motivation}
 
-Dynamically typed programming languages (Dynamically typed languages for short) like
+Dynamically typed programming languages (dynamically typed languages for short) like
 Python and Ruby have risen in popularity over the last two decades. Their simple syntax,
 ease of use, out-of-the-box REPLs\footnote{Read-eval-print loop}, dynamic type systems,
 and their great number of libraries have been the main factors to this rise. Indeed,
-developers can to write, execute and see results immediately in fast development cycles,
+developers can  write, execute and see results immediately in fast development cycles,
 especially at the initial stages. However, their simple syntax and dynamic typing makes
 them particularly difficult to analyse as the more rigid the language, the easier to
-analyse it is. Most efforts on Static Analysis for Python have focused on assuming some
+analyse it is. Most efforts on static analysis for Python have focused on assuming some
 restrictions on the language. For example, MyPy \autocite{lehtosalo2016mypy} assumes the
 type of variables as static.
 
@@ -39,11 +39,12 @@ piece of Python code without assuming some fixed basic semantics in the interpre
 tackles the undecidability problem of Python dynamic nature by restricting the number
 of valid Python programs to those that conform to a static type system\footnotemark.
 
-\footnotetext{I would like to express my inmense gratitude to the MyPy team for writing
+\footnotetext{I would like to express my immense gratitude to the MyPy team for writing
   such an amazing tool. I do not know how many hours they saved me from endless
-  frustration at debugging. What I like more about MyPy is that writing code with it feels
-  just remarkably similar to writing code in language with a stronger static type system
-  (e.g.~Haskell).}
+  frustration at debugging. All Python code I write now is full of typing annotations to
+  allow MyPy check for any faulty. What I like about MyPy is that it alerts me of faulty
+  code as I write. It feels remarkably similar to writing code in language with a
+  stronger static type system (e.g.~Haskell).}
 
 Even with some assumptions in place, the inference ability of MyPy infers the type of
 variables, but not the type of functions. MyPy allows optionally to add type annotations
@@ -348,28 +349,21 @@ The contributions of this work are the following:
 
 \begin{itemize}
 \tightlist
-\item
-  Formalised a subset of Python using a methodology similar to
-  \autocite{fromherz_static_2018}. The formalisation includes a subset
-  of the Python syntax, an AST representation of the syntax more
-  malleable to work with, and the semantics of the subset of the Python
-  Language.
-\item
-  Defined an Abstract Domain for Variables in Python.
-\item
-  Defined an aliasing-aware Abstract Domain for the state of a Python
-  program.
-\item
-  Derived semantics from the Abstract Domain, i.e.~an Abstract
+\item Specification of an operational semantics for a subset of Python using a methodology
+  similar to \autocite{fromherz_static_2018}. This specification includes a subset of the
+  Python syntax, an AST representation of the syntax more malleable to work with, and the
+  semantics of the subset of the Python Language.
+\item Definition of an Abstract Domain for variables in Python.
+\item Definition of an aliasing-aware Abstract Domain for the state of a Python program.
+\item Derivation of an operational semantics from the Abstract Domain, i.e.~an Abstract
   Interpreter for Python.
-\item
-  A working open source implementation of the Abstract Interpreter
-  nicknamed Pytropos.
+\item A working, open source implementation of the Abstract Interpreter nicknamed Pytropos
+  with a plugin for (Neo)Vim to work as a linter.
 \end{itemize}
 
 \section{Thesis Structure}\label{thesis-structure}
 
-The following parts of this document are as follows:
+The remaining parts of this document are organized as follows:
 
 \begin{itemize}
 \tightlist

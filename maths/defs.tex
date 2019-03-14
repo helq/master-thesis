@@ -1,0 +1,24 @@
+\usepackage{stmaryrd}
+
+\newcommand{\alt}{~~|~~} % by: Cameron Swords url: https://github.com/cgswords/texsem
+\newcommand{\Ctx} [2] {\mathbb{#1}\!\left\llbracket #2 \right\rrbracket}
+
+\definecolor{halt}{rgb}{0.3,0,0}
+
+\newcommand{\Glo}{\mathscr{G}}
+\newcommand{\Hea}{\mathscr{H}}
+\newcommand{\Halt}{\color{halt}\mathtt{\texttt{<Execution Halt>}}}
+\newcommand{\ifm}{\mathsf{if}\;}
+\newcommand{\thenm}{\mathsf{then}\;}
+\newcommand{\elsem}{\mathsf{else}\;}
+\newcommand{\letm}{\mathsf{let}\;}
+\newcommand{\inm}{\mathsf{in}\;}
+\newcommand{\undefm}{\mathsf{Undefined}}
+\newcommand{\matchm}[1]{\mathsf{match}\;#1\;\mathsf{in}}
+\newcommand{\casem}[1]{\mathsf{case}\;#1}
+
+\newcommand{\SLoad}{\texttt{Load}}
+\newcommand{\SStore}{\texttt{Store}}
+\newcommand{\SDel}{\texttt{Del}}
+\newcommand{\primcall}{\textbf{\texttt{<prim-callable>}}}
+\newcommand{\SLit}[2]{\texttt{#1(}#2\texttt{)}}

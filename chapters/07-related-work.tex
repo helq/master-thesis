@@ -29,9 +29,10 @@ tool, how it works underneat.
   \midrule
   \endhead
     \textcite{cannon_localized_2005}                     & Embeded & Type analysis           & Typecheking     \tabularnewline
+    Pep8\tnote{0}                                        & Linter  & N/A                     & Code style analysis \tabularnewline
     Pyflakes \autocite{pyflakes2005}                     & Linter  & N/A                     & Various checks  \tabularnewline
     Pylint \autocite{thenaultpylint}                     & Linter  & N/A                     & Various checks  \tabularnewline
-    Pychecker \autocite{norwitzpychecker}                & Linter  & N/A                     & Various checks  \tabularnewline
+    PyChecker \autocite{norwitzpychecker}                & Linter  & N/A                     & Various checks  \tabularnewline
     MyPy \autocite{lehtosalo2016mypy}                    & Linter  & Gradual Type Analysis   & Type checking   \tabularnewline
     Enforce\tnote{1}\tnote{+} (defunct)                  & Library & Gradual Type Analysis   & Type checking               \tabularnewline
     Sagitta\tnote{2}\tnote{+} (defunct)                  & Library & Type analysis           & Type checking               \tabularnewline
@@ -42,15 +43,17 @@ tool, how it works underneat.
     ICBD\tnote{6} (defunct)                              & Linter  & N/A                     & Type checking and inference \tabularnewline
     Pyre\tnote{7}                                        & Linter  & Abstract Interpretation & Type checking               \tabularnewline
     Nagini\tnote{8} \autocite{eilers_nagini_2018}        & Linter  & SMT (Viper)             & Verifier                    \tabularnewline
-    Typpete\tnote{9} \autocite{hassan_maxsmt-based_2018} & Linter  & SMT                     & Type inference              \tabularnewline
+    Typpete\tnote{9} \autocite{hassan_maxsmt-based_2018} & Library & SMT                     & Type inference              \tabularnewline
     \textcite{fromherz_static_2018}\tnote{*}             & N/A     & Abstract Interpretation & Value Analysis | Verifier   \tabularnewline
     \textcite{monat_static_2018}\tnote{*}                & N/A     & Abstract Interpretation & Type Analysis               \tabularnewline
-    PyAnnotate\tnote{+}                                  & Library & Gradual Type Analysis   & Type inference              \tabularnewline
+    PyAnnotate\tnote{+}\tnote{10}                        & Library & Gradual Type Analysis   & Type inference              \tabularnewline
+    MonkeyType\tnote{+}\tnote{11}                        & Library & Gradual Type Analysis   & Type inference              \tabularnewline
   \bottomrule
 \end{longtable}
 \begin{tablenotes}
   \item[+] \footnotesize It is not an static analysis. It is a dynamic analysis.
   \item[*] Tool has not been made public.
+  \item[0] Homepage: \url{https://pep8.readthedocs.io/}
   \item[1] Homepage: \url{https://github.com/RussBaz/enforce}
   \item[2] Homepage: \url{https://github.com/peterhil/sagitta}
   \item[3] Homepage: \url{https://github.com/caterinaurban/Lyra}
@@ -61,84 +64,35 @@ tool, how it works underneat.
   \item[8] Homepage: \url{https://github.com/marcoeilers/nagini}
   \item[9] Homepage: \url{https://github.com/caterinaurban/Typpete}
   \item[10] Homepage: \url{https://github.com/dropbox/pyannotate}
+  \item[11] Homepage: \url{https://github.com/Instagram/MonkeyType}
 \end{tablenotes}
 \end{threeparttable}
 \end{sidewaystable}
 
-\inlinetodo{write a brief description of each one of the tools presented in the table}
+\textcite{cannon_localized_2005} was the first (to our knowledge) to try to statically
+infer and type check code in Python. His idea was to infer variables' types before
+executing the code, and use this knowledge to speed up the execution. He acknowledged that
+the nature of Python makes type inference to be too weak. Thus, the complexity that the
+project brought did not improve performance in equal measure and his work was never added
+to Python. This work was prior to \textcite{siek_gradual_2006} Gradual Types, where the
+developer can help the type checking algorithm to find and assert better types.
 
-% {\inlinetodo{explain special case of the library \texttt{astroid} (part
-% of pylint), which is able to perform some Static Value Analysis. It
-% stops when it cannot determine the value of anything else. Pretty nice.
-% \texttt{astroid.extract\_node(\textquotesingle{}a=1\textbackslash{}nb=2\textbackslash{}nc=a+b\textbackslash{}nc\textquotesingle{});\ next(\_.infer())}.
-% https://astroid.readthedocs.io/en/latest/inference.html}}
-%
-% \inlinetodo{explain differences between lyra, fromherz..2018 and Pytropos}
-% \inlinetodo{mention about the four papers that propose semantics for python}
-%
-% {\inlinetodo{lyra was not the first to try abstract interpretation for
-% Python, mention pydrogen https://github.com/lapets/pydrogen}}
+All linters' goal is to aid the developer by flagging code as faulty. What means for a
+piece of code to be faulty varies from tool to tool. Pep8 checks for syntactic deviations
+of the style guide, Pep 8\footnote{\url{https://www.python.org/dev/peps/pep-0008/}}.
+Pyflakes, Pylint and PyChecker define a variety of checks for common scenarios where a
+piece of code is known to fail, e.g.~undefined variables. MyPy, PyType and Pyre focus on
+type checking optionally type-annotated code. Nagini focuses on verifying pieces of Python
+code using the mature Viper \autocite{muller_viper_2016} infraestructure. Pytropos
+objective is different from all the other available linters: Value Analysis.
 
+Our work is closest to \textcite{fromherz_static_2018} as they focus in Value Analysis as
+well. Fromherz et.~al focus is on building an Abstract Interpreter to verify Python code.
+Our focus is not in verification but in the shape of Tensors. Their Abstract Interpreter
+incorporates more capabilities than we do: exception handling and support for breaking
+flow instructions. Unfortunately, they have not yet made their implementation public.
 
-% - Localized Type Inference [@cannon_localized_2005]: Cannon was the first (to my
-%   knowledge) to try to statically infer and type check code in Python.  His idea was to
-%   infer variables’ types before executing the code, and use this knowledge to speed up
-%   execution time. He acknowledges that the nature of python makes type inference to be
-%   very weak and therefore the complexity that the project brought did not improve
-%   performance as much as he hoped. This work is previous to @siek_gradual_2006 Gradual
-%   Types. Recent work has been focused on Gradual Types, see below.
-%
-% - Mypy [@lehtosalo2016mypy]: it is a static typing tool, focused
-%   on type checking code annotated with types. The mypy group has had an impact in Python
-%   itself, since version 3.5 of python a library developed by mypy (typing) has been added
-%   to the official list of Python libraries. Being mypy as relevant and impactful as it is,
-%   I discuss about it deeper in the subsection below.
-%
-% - Enforce[^enforce]: Checks for type mismatches
-%   at runtime. It checks every time that a function is called if the annotated types
-%   correspond with the types of the data that is passed to the functions. It is not
-%   different to adding your own asserts in code to check if the data passed is what the
-%   functions expects.  Enforce may be not more than a assertion tool, but it integrates
-%   with existing python type annotations and it is simpler to use than asserts.
-%
-% Mypy is a tool developed by the mypy group led by Jukka Lehtosalo, Guido van Rossum, and
-% others. Mypy developments (and findings) have influenced the latest versions of Python. In
-% the version 3.5 of the language, a new library (typing), taken from mypy has been added to
-% the official library. Mypy was originally the result of the master’s thesis of Jukka
-% Lehtosalo, but it has got many contributors since, one of which is Guido van Rossum, the
-% benevolent dictator for life (creator and principal maintainer) of Python. One of the
-% goals of mypy is to make easy for developers to type check code.
-%
-% However useful Mypy is, it suffers a lack of user support, which means it still remains as
-% an experimental and semi-hard tool to use. Adding type annotations to Python code is often
-% hard, but not because of the complexity of Mypy’s type system, rather because type
-% annotations to existing code are hard to find, thus annotating any piece of code requires
-% writing too the type annotations for the libraries used.
-%
-% Mypy has already been used in the industry, where it is fundamental to ensure the code has
-% no bugs (two examples of this, are dropbox and instagram). Type annotating code in a large
-% source code bases may be a monumental task, thus different companies have created tools to
-% generate type annotations automatically from sample executions. Two of these tools are
-% dropbox’ library pyannotate[^7], and instagram’s MonkeyType[^8].
-%
-% [^7]: Available at <https://github.com/dropbox/pyannotate>
-% [^8]: Available at <https://github.com/Instagram/MonkeyType>
-%
-% The goal of type annotating code is to reduce the number of potential bugs caused by
-% mismatched types. Paraphrasing Gradual Types’ principal thesis, stricter and more precise
-% types should make harder for the programmer to make mistakes and should catch bugs before
-% running the code. The Gradual Types’ thesis (applied to mypy) gets challenged by
-% @gopinath_how_2017, who present their analysis (although with a very small code base) of
-% python code. They analyze python code with type annotations vs extensive testing. As
-% expected, a very good test base captures all possible bugs that the type system could
-% capture.  However, @gopinath_how_2017 analysis do not make Mypy any less useful. In fact
-% one may argue that the power of a type system is not only to assert that code written has
-% no type mismatches, but it also helps the developer to refactor code by showing which
-% parts of the code must be modified if one wants to change the type of variables and
-% functions. Type annotations also serve as a way to document the inputs and outputs of a
-% function or method.
-
-\section{Tensor Shape Analysis}\label{tensor-shape-analysis}
+\section{Tensor Shape Analysis}
 
 % {\inlinetodo{add idea from http://nlp.seas.harvard.edu/NamedTensor
 % Alexander, who suggests building the libraries in a different way so we
@@ -152,9 +106,10 @@ tool, how it works underneat.
 %  * (haskell) https://github.com/achirkin/easytensor
 %  * (nopython) https://github.com/Diderot-Language/diderot (Diderot: a domain-specific language for portable parallel scientific visualization and image analysis)
 %                                                           Chiw et al (2018) - Compiling Diderot
+% \inlinetodo{there was one more paper to take into account. I don't recall its name but
+% it was about a tool to check for the shape of tensors!!}
 
-\subsection{Solutions in other languages}%
-\label{solutions-in-other-languages}
+\subsection{Solutions in other languages}
 
 We may think, If a type system is not expressive enough to capture the
 shape of tensors, then we should just start writing code in a language

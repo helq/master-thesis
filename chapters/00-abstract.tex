@@ -38,7 +38,7 @@ cuántos bugs es el Interprete Abstracto capaz de detectar.
 
 \begin{abstract}[Abstract][english]
 Tensors, an extension of arrays, are widely used in a variety of
-programming tasks. Tensors are the building block of many modern machine
+programming tasks. Tensors are the building blocks of many modern machine
 learning frameworks and are fundamental in the definition of deep
 learning models. Linters are indispensable tools for today's developers,
 as they help the developers to check code before executing it. Despite
@@ -56,14 +56,14 @@ The Abstract Interpreter can be modified so that it only outputs true
 positives, although losing soundness, i.e.~the interpreter can flag
 which parts of the code are going to fail no matter how the code is run.
 
-In this work, we formalise a subset of Python with emphasis on tensor
-operations. Our formal Python semantics are based on The Python Language Reference. We
+In this work, we specify a subset of Python with emphasis on tensor
+operations. Our operational Python semantics is based on The Python Language Reference. We
 define an Abstract Interpreter and present its implementation. We show how each part of the
 Abstract Interpreter was built: the Abstract Domains defined and the abstract
 semantics.
 
 We present the structure of Pytropos, the Abstract
-Interpreter implemeted. Pytropos is able to check NumPy array operations
+Interpreter implemented. Pytropos is able to check NumPy array operations
 taking into account broadcasting and complex NumPy functions as
 \texttt{array} and \texttt{dot}. We constructed 74 unit test cases
 checking the capabilities of Pytropos and 20 property test cases

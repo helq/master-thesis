@@ -18,12 +18,12 @@
   \node(Bot)   [below=6cm of Top] {$\bot_{\text{\tiny{Value}}}$};
   \path node (center) at ($.5*(Top) + .5*(Bot)$) {};
 
-  \path node (bool)    at ([xshift=-5.2cm, yshift= 11.4mm] center) {};
-  \path node (int)     at ([xshift=-1.8cm, yshift= 11.4mm] center) {};
-  \path node (float)   at ([xshift= 1.4cm, yshift= 11.4mm] center) {};
-  \node(None)          at ([xshift= 3.2cm] center) {\texttt{None}};
-  \node(Undefined)     at ([xshift= 5.4cm] center) {\texttt{Undefined}};
-  \path node (list)    at ([xshift= 6.1cm, yshift= 11.4mm] center) {};
+  \path node (bool)    at ([xshift=-4.2cm, yshift= 11.4mm] center) {};
+  \path node (int)     at ([xshift=-0.8cm, yshift= 11.4mm] center) {};
+  \path node (float)   at ([xshift= 2.4cm, yshift= 11.4mm] center) {};
+  \node(None)          at ([xshift= 5.2cm] center) {\texttt{None}};
+  %\node(Undefined)     at ([xshift= 5.4cm] center) {\texttt{Undefined}};
+  \path node (list)    at ([xshift= 7.1cm, yshift= 11.4mm] center) {};
   %\node                at ([xshift= 5.8cm] center) {$\cdots$};
   %\path node (sep)     at ([xshift= 7.4cm] center) {};
   %\path node (nparray) at ([xshift= 9.1cm, yshift= 11.4mm] center) {};
@@ -68,8 +68,8 @@
   \draw(Top) -- (None);
   \draw(Bot) -- (None);
 
-  \draw(Top) -- (Undefined);
-  \draw(Bot) -- (Undefined);
+  %\draw(Top) -- (Undefined);
+  %\draw(Bot) -- (Undefined);
 
   % \node(TopList)  at (list) {$\top_{\hspace{-1mm}{\text{\tiny{List}}}}$};
   % \node(BotList)  at ([yshift=-22.8mm] TopList) {$\bot_{\text{\tiny{List}}}$};

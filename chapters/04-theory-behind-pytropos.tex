@@ -1,194 +1,241 @@
 \chapter{Abstract Interpretation for Python}\label{ai-for-python}
 
 In this chapter, an Abstract Interpreter for Python is proposed. The chapter is divided
-into five parts: what are semantics, concrete semantics for Value Analysis of Python code,
-abstract semantics, extension to work with NumPy arrays, and the abstract semantics of
-type annotations. This chapter is intended as a guide on how was the Abstract Interpreter
-built and why was it built the way it is. A deeper look on the gory details of the
-concrete and abstract semantics is given in the Appendix~\ref{appendix-ai-theory}.
+into five parts: definition of semantics, concrete semantics for Value Analysis of Python
+code, abstract semantics from the concrete semantics, an extension to abstract semantics
+to work with NumPy arrays, and the abstract semantics of type annotations. This chapter is
+intended as a guide on how was the Abstract Interpreter built. A deeper look on the gory
+details of the concrete and abstract semantics are given in
+Appendix~\ref{appendix-ai-theory}.
 
 \section{Semantics}
 
 In Mathematics, the word \enquote{semantics} refers to the meaning of sentences in formal
 languages \autocite{gunter_semantics_1992}. The semantics of programming languages
-consist of what a piece of code means, how to interpret it, and how to analyse it.
+consist in what a piece of code means, how to interpret it, and how to analyse it.
 
-\textcite{mitchell1996foundations}%
-%\todo{find a better reference}
-classifies programming
-languages semantics into three categories: axiomatic semantics, denotational semantics,
-and operational semantics. Axiomatic semantics are all about describing the behaviour of
-code with mathematical logic. Denotational semantics goal is to find a mathematical
-"object" that represents what a program does. The program's meaning is given by the
-object properties or lack of thereof. Operational semantics are concerned with rules that
-tell how to interpret or execute a piece of code. No meaning is given to the parts of the
-program, but a meaning is given as the program is run.
+% \todo{find a better reference for the classification categories}
 
+\textcite{mitchell1996foundations} classifies programming languages semantics into three
+categories: axiomatic, denotational, and operational. Axiomatic semantics describe the
+behaviour of code with mathematical logic. Denotational semantics goal is to find a
+mathematical \enquote{object} that represents what a program does. The program meaning is
+given by the object properties or lack of thereof. Operational semantics are concerned
+with rules that tell how to interpret or execute a piece of code. No meaning is given to
+the parts of the program, but a meaning is given as the program is run.
 
-\begin{verbatim}
-  Semantics of Programming Languages
-  |-- Axiomatic Semantics -- Hoare Logic
-  |-- Denotational Semantics -- ???
-  |-- Operational Semantics -- Small-step semantics
-                           |-- Big-step semantics
-\end{verbatim}
+\begin{figure}
+\begin{center}
+\begin{forest}
+for tree={
+  draw,
+  minimum height=1cm,
+  anchor=north,
+  align=center,
+  child anchor=north
+},
+[{Semantics of\\Programming Languages}, align=center
+  [{Axiomatic\\Semantics}
+    [Hoare Logic]
+  ]
+  [{Denotational\\Semantics}]
+  [{Operational\\Semantics}
+    [{Small-step Semantics}]
+    [{Big-step Semantics}]
+  ]
+]
+\end{forest}
+\end{center}
+\caption{Classification of programming languages semantics by \textcite{mitchell1996foundations}}
+\end{figure}
 
-Notice that Denotational semantics must not provide a way to determine an implementation.
-On the other hand, an implementation can be easily build from Operational Semantics.
-Small-step semantics are define what the program does by describing a set of rules over
-the syntax of the language. The meaning of the program is given by the application of the
-rules. It is not a surprise that all efforts into defining formal semantics for Python
-have been small-step semantics
+On the one hand, denotational semantics must not provide a way to determine an implementation.
+On the other hand, an implementation can be easily build from operational semantics.
+Small-step semantics, one kind of operational semantics, define what the program does by
+describing a set of rules over the syntax of the language. The meaning of the program is
+given by the application of the rules. The set of rules is often a formalisation of what a
+compiler does. Thus, it is not surprising that all efforts to define formal semantics for
+Python have been small-step semantics as it is easy to define rules from the translation
+process from code to \enquote{binary}
 \autocites{ranson_semantics_2008}{guth_formal_2013}{politz_python_2013}{fromherz_static_2018}.
 
-Small-step semantics are also the closest in our work. Our purpose is to approximate the
-value of variables on execution. For this, we will like to follow as closely as possible
-the execution model of CPython, the official implementation of the Python language. First,
-we will define the small-step semantics of a portion of Python, our concrete semantics
-for the problem. Next, based on the concrete semantics, we will define one abstract
+We also define some small-steps semantics for Python. We define them from the execution
+model of CPython, that is, the official implementation of the Python language. In the
+following two sections, we define the small-step semantics of a portion of Python, our
+concrete semantics for the problem; and, based on them we will define some abstract
 semantics for Python.
 
 \section{Concrete Semantics of Python}
 
 Before we define the concrete semantics of Python, we need to define how to write a piece
 of code in Python. Python is a mature and large language, thus we will take just a portion
-of it into account. In the figure below, we present the subset of Python that we intend to
+of it into account. In Figure~\ref{syntaxPython}, we present the subset of Python that we intend to
 study in this work.
 
-\begin{verbatim}
-expr = Int(i) for i \in \N | Float(j) for j \in floats
-     | True | False | None
+\begin{figure}
+\[\begin{array}{rclr}
+    expr  &:=& i \in \mathbb{Z} \alt j \in \texttt{float} \alt \texttt{True} \alt
+    \texttt{False} \alt \texttt{None} & \textit{primitive values} \\
+     &\alt& identifier & \textit{variable name} \\
+     %&\alt& \texttt{Undefined} & \textit{wildcard value} \\
+     &\alt& expr~op~expr \alt expr~cmpop~expr & \textit{binary operations} \\
+     &\alt& expr\texttt{(}expr*\texttt{)}     & \textit{function call} \\
+     &\alt& expr\texttt{.}identifier & \textit{attribute access} \\
+     &\alt& expr\texttt{[}expr\texttt{]}      & \textit{subscript access} \\
+     &\alt& \texttt{[}expr*\texttt{]}         & \textit{lists} \\
+     &\alt& \texttt{(}expr*\texttt{)}         & \textit{tuples} \\
 
-     | identifier         -- variable name
+  stmt &:=& \texttt{del } expr  & \textit{delete} \\
+     &\alt& expr = expr         & \textit{assignment} \\
+     &\alt& expr~op\hspace{-0.35em}\texttt{ = } expr       & \textit{augmented assignment} \\
+     &\alt& expr\texttt{: } expr \texttt{ = } expr   & \textit{type annotation} \\
+     &\alt& \texttt{while } expr\texttt{: } stmt^+   & \textit{loop} \\
+     &\alt& \texttt{if } expr\texttt{: } stmt^+   & \textit{if} \\
+     &\alt& \texttt{import } alias^+
+     \alt \texttt{from } identifier \texttt{ import } alias^+   & \textit{import library} \\
+     &\alt& expr & \\
 
-     | expr op expr       -- eg, a + 5
-     | expr cmpop expr    -- eg, a < 5
-     | expr(expr*)        -- Function calling
+  op &:=& \texttt{+} \alt \texttt{-} \alt \texttt{*} \alt \texttt{/} \alt \texttt{\%} \alt \texttt{**} \alt
+      \texttt{<<} \alt \texttt{>>} \alt \texttt{//}  & \\
+  cmpop &:=& \texttt{<} \alt \texttt{<=} \alt \texttt{>} \alt \texttt{>=}  & \\
 
-     | expr.identifier    -- Attribute access
-     | expr[expr]         -- Not supported for NumPy Arrays :S
-     | [expr*]            -- list
-     | (expr*)            -- tuple
+  alias &:=& identifier \alt identifier \texttt{ as } identifier  & \\
 
-stmt = del expr           -- delete expression
-      | expr = expr       -- assignment
-      | expr op= expr     -- augmented assignment
-      | expr: expr = expr -- type annotation
-      | while expr: stmt+
-      | if expr: stmt+
-      | import alias+
-      | from identifier import alias+
-      | expr              -- An expression can be an statement
+  %identifier &:=& str  & \\
+\end{array}\]
+\caption{Reduced python syntax used throughout this work.\label{syntaxPython}}
+\end{figure}
 
-op = + | - | * | / | % | ** | << | >> | //
-cmpop = < | <= | > | >=
-
-alias = identifier | identifier as identifier
-
-identifier = string  -- with some restrictions
-\end{verbatim}
-
-We intentionally leave out any details related on the spacing of Python, as our main focus
-is the meaning of Python values and not how are blocks of statements defined in the
+We intentionally omit any details related to the spacing of blocks in Python, as our main
+focus is the meaning of Python values and not how blocks of statements are defined in the
 language.
 
-Python memory is represented as a function memory positions to values. The global scope is
-defined as a function from identifiers to memory positions.
+Python memory is represented as a function from memory positions ($\mathbf{Addr}$) to
+python values ($\mathbf{Val}$). The global scope is defined as a function from identifiers
+($\mathbf{Iden}$) to memory positions ($\mathbf{Addr}$).
 
-\begin{verbatim}
-Global = Iden -> Addr + Undefined   -- Global scope
-Heap = Addr -> Val + Undefined      -- Heap
-\end{verbatim}
+$$\begin{array}{rcl}
+  \mathbf{Global}  &:=& \mathbf{Iden} \to \mathbf{Addr} \cup \{\undefm\} \\
+  \mathbf{Heap}  &:=& \mathbf{Addr} \to \mathbf{Val} \cup \{\undefm\} \\
+\end{array}$$
 
 In Python everything is an object: numbers, lists, classes and even functions. We separate
-values into three categories: primitive values, like numbers, booleans and \pycode+None+;
-\verb+Object+s, like lists and tuples; and, primitive functions, like
+python values into three categories: primitive values, like numbers, booleans and
+\pycode+None+; \verb+Object+s, like lists and tuples; and, primitive functions, like
 \pycode+int.__add__+.
 
-\begin{verbatim}
-Val = PrimVal | Object | <prim-callable>
-PrimVal = ints... | floats... | True | False | None | Undefined
+$$\begin{array}{rcl}
+  \mathbf{Val} &:=& \mathbf{PrimVal} \alt \mathbf{Object} \alt \textbf{\texttt{<prim-callable>}} \\
+  \mathbf{PrimVal} &:=& i \in \mathbb{Z} \alt j \in \texttt{float} \alt \texttt{True} \alt \texttt{False} \alt \texttt{None} \\
+  \mathbf{Object} &:=& \mathbf{Type} \times \mathbf{Addr} \left(\mathbf{Key} \to \mathbf{Addr} \cup \{\undefm\}\right) \\
+  \mathbf{Type} &:=& \texttt{List} \alt \texttt{Tuple} \\
+  \mathbf{Key} &:=& \mathbf{Iden} + \left(\textsf{string} \times \mathbf{Val}\right) \\
+\end{array}$$
 
-Object = Type x Addr x (Key -> Addr + Undefined)
-Type = List | Tuple
-Key = Iden + (string x Val)
-\end{verbatim}
+We can now define the rules that describe the behaviour of a program, that is, the
+small-step semantics of the language. The equations $\Ctx{E}{expr}$ and $\Ctx{S}{stmt}$
+from Figure~\ref{smallstep1} define the small-step semantics.
 
-We can now define the rules that describe the behaviour of a program, the small-semantics
-of the language.
+\begin{figure}
 
-\begin{verbatim}
-E[expr] : Global x Heap -> Global x Heap x Val
+\begin{minipage}{.46\textwidth}
+\[\begin{array}{rl}
+  \Ctx{E}{expr} :& \mathbf{Global} \times \mathbf{Heap} \\
+  &\to \mathbf{Global} \times \mathbf{Heap} \times \mathbf{Val} \\
+\end{array}\]
+\[
+  \begin{array}{l}
+    \Ctx{E}{identifier}\left(\Glo, \Hea\right) := \\
+    \quad \ifm \Glo(identifier) = \undefm \\
+    \quad \thenm \Halt \\
+    \quad \elsem \left(\Glo, \Hea, \Hea\left(\Glo\left(identifier\right)\right)\right) \\
+    \\
+    \Ctx{E}{n}\left(\Glo, \Hea\right) := \left(\Glo, \Hea, n\right) \quad \text{for all } n \in \mathbb{Z}\\
+    \\
+    \Ctx{E}{expr_1~op~expr_2}\left(\Glo, \Hea\right) := \\
+    \quad \letm
+    \begin{aligned}[t]
+       \left(\Glo_1, \Hea_1, v_1\right) &:= \Ctx{E}{expr_1}\left(\Glo, \Hea\right) \\
+       \left(\Glo_2, \Hea_2, v_2\right) &:= \Ctx{E}{expr_2}\left(\Glo_1, \Hea_1\right) \\
+       prim\_op &:= get\_prim\_op\left(op, v_1, v_2\right) \\
+    \end{aligned} \\
+    \quad \inm prim\_op\left(\Glo_2, \Hea_2\right)
+  \end{array}
+\]
+\end{minipage}%
+\hfill%
+\begin{minipage}{.46\textwidth}
+\[\Ctx{S}{stmt} : \mathbf{Global} \times \mathbf{Heap} \to \mathbf{Global} \times \mathbf{Heap} \\\]
 
-E[identifier](G, H) :=
-    if G(id) = Undefined
-    then <Execution Halt>
-    else (G, H, H(G(id)))
+\[
+  \begin{array}{l}
+    \Ctx{S}{stmt_1\texttt{; } stmt_2}\left(\Glo, \Hea\right) := \\
+    \quad \letm \left(\Glo_1, \Hea_1\right) := \Ctx{S}{stmt_1}\left(\Glo, \Hea\right) \\
+    \quad \inm \Ctx{S}{stmt_2}\left(\Glo_1, \Hea_1\right) \\
+    \\
+    \Ctx{S}{identifier = expr}\left(\Glo, \Hea\right) := \\
+    \quad \letm
+    \begin{aligned}[t]
+      \left(\Glo_1, \Hea_1, val\right) &:= \Ctx{E}{expr}\left(\Glo, \Hea\right) \\
+      adnew &:= get\_free\_addr(\Hea_1) \\
+    \end{aligned}\\
+    \quad \inm \left(\Glo_1[identifier \to adnew], \Hea_1[adnew \to val]\right) \\
+  \end{array}
+\]
+\[
+  \begin{array}{l}
+    \Glo_{empty} : \mathbf{Global} \\
+    \Glo_{empty} := \undefm \\
+    \\
+    \Hea_{empty} : \mathbf{Heap} \\
+    \Hea_{empty} := \undefm \\
+  \end{array}
+\]
+\end{minipage}
+\caption{A portion of the Small-steps semantics for Python. The functions $get\_prim\_op$
+  and $get\_free\_addr$ are defined in Appendix~\ref{appendix-ai-theory}\label{smallstep1}}
+\end{figure}
 
--- n is a number
-E[n](G, H) := (G, H, n)
+% \begin{verbatim}
+% get_prim_op : string x Val x Val -> Global x Heap -> Global x Heap x Addr
+% get_prim_op(op, v1, v2) :=
+%   match (type(v1), type(v2)) in
+%     case (int, int) -> \(G, H) -> <prim-+-int>(v1, v2, G, H)
+%     case (float, float) -> \(G, H) -> <prim-+-float>(v1, v2, G, H)
+%     case (int, bool) -> \(G, H)-> <prim-+-int>(v1, to_int(v2), G, H)
+%     case (bool, int) -> \(G, H)-> <prim-+-int>(to_int(v1), v2, G, H)
+%     case (float, a) -> if a = Bool or a = Int
+%                        then \(G, H)-> <prim-+-float>(v1, to_float(v2), G, H)
+%                        else <Execution Halt>
+%     case (a, float) -> if a = Bool or a = Int
+%                        then \(G, H)-> <prim-+-float>(to_float(v1), v2, G, H)
+%                        else <Execution Halt>
+%     -- This function is to be extended once we add NdArrays to the mix
+%     case otherwise -> <Execution Halt>
+%
+% <prim-+-int> : Val x Val x Global x Heap -> Global x Heap x Val
+% <prim-+-int>(i, j, G, H) := (G, H, i+j)
+%
+% get_free_addr : Heap -> Addr
+% get_free_addr(H) := max({ad in H | H(ad) != Undefined}, -1) + 1
+% \end{verbatim}
 
-E[expr1 op expr2](G, H) :=
-    let (G1, H1, v1) := E[expr1](G, H)
-        (G2, H2, v2) := E[expr2](G1, H1)
-        prim_op := get_prim_op(op, v1, v2)
-     in prim_op(G2, H2)
+The construction $\Halt$ indicates that the evaluation cannot go any further, i.e. the
+interpreter will stop and throw an exception. For example, accessing to a variable that
+has not yet been defined is considered an error (Python will throw an exception if this
+happens).
 
-get_prim_op : string x Val x Val -> Global x Heap -> Global x Heap x Addr
-get_prim_op(op, v1, v2) :=
-  match (type(v1), type(v2)) in
-    case (int, int) -> \(G, H) -> <prim-+-int>(v1, v2, G, H)
-    case (float, float) -> \(G, H) -> <prim-+-float>(v1, v2, G, H)
-    case (int, bool) -> \(G, H)-> <prim-+-int>(v1, to_int(v2), G, H)
-    case (bool, int) -> \(G, H)-> <prim-+-int>(to_int(v1), v2, G, H)
-    case (float, a) -> if a = Bool or a = Int
-                       then \(G, H)-> <prim-+-float>(v1, to_float(v2), G, H)
-                       else <Execution Halt>
-    case (a, float) -> if a = Bool or a = Int
-                       then \(G, H)-> <prim-+-float>(to_float(v1), v2, G, H)
-                       else <Execution Halt>
-    -- This function is to be extended once we add NdArrays to the mix
-    case otherwise -> <Execution Halt>
+The meaning of our program is given by the function $\Ctx{S}{stmt}$ with type
+$\mathbf{State} \to \mathbf{State}$ (where $\mathbf{State} := \mathbf{Global} \times \mathbf{Heap}$).
+In this work, we are interested on the values that result from the application of the
+fuction $\Ctx{S}{stmt}$ on a clean state, which is a state that has only builtin variables
+defined.  Statements modify the state of the program while expressions modify the state of
+the program and return a python value as result, e.g. the expression \pycode+ls.pop()+
+removes the last element in the list \pycode+ls+ and returns the value contained. This is
+the reason why the type of the function $\Ctx{E}{expr}$ is
+$\mathbf{State} \to \mathbf{State} \times \mathbf{Val}$.
 
-<prim-+-int> : Val x Val x Global x Heap -> Global x Heap x Val
-<prim-+-int>(i, j, G, H) := (G, H, i+j)
-
-get_free_addr : Heap -> Addr
-get_free_addr(H) := max({ad in H | H(ad) != Undefined}, -1) + 1
-
-S[stmt] : Global x Heap -> Global x Heap
-
--- semantics of a sequence of statements
-S[stmt1; stmts](G, H) :=
-  let (G1, H1) := S[stmt1](G, H)
-   in S[stmts](G1, H1)
-
-S[identifier = expr](G, H) :=
-  let (G1, H1, val) := E[expr](G, H)
-      adnew := get_free_addr(H1)
-   in (G1[identifier->adnew], H1[adnew->val])
-
-Gempty : Global
-Gempty(x) := Undefined
-
-Hempty : Heap
-Hempty(x) := Undefined
-\end{verbatim}
-
-The construction \verb+<Execution Halt>+ indicates that the interpreter cannot go any
-further. For example, accessing to a variable that has not yet been defined is considered
-an error, in fact, Python will throw an exception if this happens.
-
-The meaning of our program is the function \verb+S[prog]+ of type \verb+State -> State+
-(where \verb|State = Global x Heap|).
-In this work we are interested on the values that result on the application of the fuction
-\verb+S[prog]+ on a clean state, which is a state that has only builtin variables defined.
-Statements modify the state of the program. Expressions also modify the state of the
-program but they additionaly return a value, e.g. the expression \pycode+ls.pop()+ removes
-the last element in the list \pycode+ls+ and returns it. Thus the type of the function
-\verb+E[expr]+ is \verb+State -> State x Val+
-
-Time to see the semantics in action. Let's consider the simple program:
+Let us consider the simple program:
 
 \begin{pythoncode}
 b = 2
@@ -196,235 +243,338 @@ a = b + 3
 \end{pythoncode}
 
 We can apply the semantics rules on the example by evaluating
-\verb|S[b = 2; a = b + 3](Gempty, Hempty)|. Step by step:
+$\Ctx{S}{b \texttt{ = } 2\texttt{; } a \texttt{ = } b \texttt{ + } 3}\left(\Glo_{empty}, \Hea_{empty}\right)$.
+Figure~\ref{evaluatingprog} presents the step by step of the evaluation.
 
-\begin{verbatim}
-S[b = 2; a = b + 3](Gempty, Hempty)
-   (def)= let (G1, H1) := S[b = 2](Gempty, Hempty)
-           in S[a = b + 3](G1, H1)
+\begin{figure}
+\[
+  \begin{array}{l}
+    \Ctx{S}{b \texttt{ = } 2\texttt{; } a \texttt{ = } b \texttt{ + } 3}\left(\Glo_{empty}, \Hea_{empty}\right) \\
+    \quad \eqdef
+      \begin{aligned}[t]
+        &\letm \left(\Glo_1, \Hea_1\right) := \Ctx{S}{b \texttt{ = } 2}\left(\Glo_{empty}, \Hea_{empty}\right) \\
+        &\inm \Ctx{S}{a \texttt{ = } b \texttt{ + } 3}\left(\Glo_1, \Hea_1\right) \\
+      \end{aligned}\\
+    \\
+    \quad\vrule\quad
+      \begin{aligned}[t]
+        &\Ctx{S}{b \texttt{ = } 2}\left(\Glo_{empty}, \Hea_{empty}\right) \\
+        &\quad\eqdef
+        \begin{aligned}[t]
+          &\letm
+          \begin{aligned}[t]
+            \left(\Glo_1, \Hea_1, val\right) &:= \Ctx{E}{2}\left(\Glo_{empty}, \Hea_{empty}\right) \\
+            adnew &:= get\_free\_addr(\Hea_1) \\
+          \end{aligned}\\
+          &\inm \left(\Glo_1[b \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
+        \end{aligned}\\
+        &\quad\eqdef
+        \begin{aligned}[t]
+          &\letm
+          \begin{aligned}[t]
+            \left(\Glo_1, \Hea_1, val\right) &:= \left(\Glo_{empty}, \Hea_{empty}, 2\right) \\
+            adnew &:= get\_free\_addr(\Hea_1) \\
+          \end{aligned}\\
+          &\inm \left(\Glo_1[b \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
+        \end{aligned}\\
+        &\quad=
+        \begin{aligned}[t]
+          &\letm adnew := get\_free\_addr(\Hea_{empty}) \\
+          &\inm \left(\Glo_{empty}[b \mapsto adnew], \Hea_{empty}[adnew \mapsto 2]\right) \\
+        \end{aligned}\\
+        &\quad=
+        \begin{aligned}[t]
+          &\letm adnew := 0 \\
+          &\inm \left(\Glo_{empty}[b \mapsto adnew], \Hea_{empty}[adnew \mapsto 2]\right) \\
+        \end{aligned}\\
+        &\quad= \left(\Glo_{empty}[b \mapsto 0], \Hea_{empty}[0 \mapsto 2]\right) \\
+        &\quad= \left([b \mapsto 0], [0 \mapsto 2]\right) \quad \textit{simplifying notation} \\
+      \end{aligned}\\
+    \\
+    \quad=
+      \begin{aligned}[t]
+        &\letm \left(\Glo_1, \Hea_1\right) := \left([b \mapsto 0], [0 \mapsto 2]\right) \\
+        &\inm \Ctx{S}{a \texttt{ = } b \texttt{ + } 3}\left(\Glo_1, \Hea_1\right) \\
+      \end{aligned}\\
+    \quad=\Ctx{S}{a \texttt{ = } b \texttt{ + } 3}\left([b \mapsto 0], [0 \mapsto 2]\right) \\
+    \\
+    \quad\eqdef
+    \begin{aligned}[t]
+      \letm
+        \begin{aligned}[t]
+          \left(\Glo_1, \Hea_1, val\right) &:= \Ctx{E}{b \texttt{ + } 3}\left([b \to 0], [0 \to 2]\right) \\
+          adnew &:= get\_free\_addr(\Hea_1) \\
+        \end{aligned}\\
+      \quad \inm \left(\Glo_1[a \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
+    \end{aligned}\\
+    \\
+    \quad= \cdots = \\
+    \\
+    \quad=
+    \begin{aligned}[t]
+      \letm
+        \begin{aligned}[t]
+          \left(\Glo_1, \Hea_1, val\right) &:= \left([b \mapsto 0], [0 \mapsto 2], 5\right) \\
+          adnew &:= get\_free\_addr(\Hea_1) \\
+        \end{aligned}\\
+      \quad \inm \left(\Glo_1[a \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
+    \end{aligned}\\
+    \quad=
+    \begin{aligned}[t]
+      &\letm adnew := get\_free\_addr([0 \mapsto 2]) \\
+      &\inm \left([b \mapsto 0][a \mapsto adnew], [0 \mapsto 2][adnew \mapsto 5]\right) \\
+    \end{aligned}\\
+    \quad= \left([b \mapsto 0][a \mapsto 1], [0 \mapsto 2][1 \mapsto 5]\right) \\
+    \quad= \left([b \mapsto 0, a \mapsto 1], [0 \mapsto 2, 1 \mapsto 5]\right) \\
+  \end{array}
+\]
+  \caption{Evaluation of the program \pycode|b = 2; a = b +3| with the small-step
+    semantics from Figure~\ref{smallstep1}\label{evaluatingprog}}
+\end{figure}
 
->  S[b = 2](Gempty, Hempty)
->    (def)= let (G1, H1, val) := E[2](Gempty, Hempty)
->               adnew := get_free_addr(H)
->            in (G1[b->adnew], H1[adnew->val])
->    (def)= let (G1, H1, val) := (Gempty, Hempty, 2)
->               adnew := get_free_addr(H)
->            in (G1[b->adnew], H1[adnew->2])
->         = let adnew := get_free_addr(H)
->            in (G1[b->adnew], H1[adnew->2])
->         = let adnew := 0
->            in (G1[b->adnew], H1[adnew->2])
->         = (Gempty[b->0], Hempty[0->2])
->         = ({b->0}, {0->2})  -- simplifying notation
+% \begin{verbatim}
+%    (def)= let (G1, H1, val) := E[b + 3]({b->0}, {0->2})
+%               adnew := get_free_addr(H)
+%            in (G1[a->adnew], H1[adnew->val])
+%
+% >  E[b + 3]({b->0}, {0->2})
+% >    (def)= let (G1, H1, v1) := E[b]({b->0}, {0->2})
+% >               (G2, H2, v2) := E[3](G1, H1)
+% >               prim_op := get_prim_op(+, v1, v2)
+% >            in prim_op(G2, H2)
+%
+% >>  E[b]({b->0}, {0->2})
+% >>     (def)= if {b->0}(b) = Undefined
+% >>            then <Execution Halt>
+% >>            else (G, H, H(G(b)))
+% >>          = ({b->0}, {0->2}, {0->2}({b->0}(b)))
+% >>          = ({b->0}, {0->2}, {0->2}(0))
+% >>          = ({b->0}, {0->2}, 2)
+%
+% >         = let (G1, H1, v1) := ({b->0}, {0->2}, 2)
+% >               (G2, H2, v2) := E[3](G1, H1)
+% >               prim_op := get_prim_op(+, v1, v2)
+% >            in prim_op(G2, H2)
+% >         = let (G2, H2, v2) := E[3]({b->0}, {0->2})
+% >               prim_op := get_prim_op(+, 2, v2)
+% >            in prim_op(G2, H2)
+% >         = let (G2, H2, v2) := ({b->0}, {0->2}, 3)
+% >               prim_op := get_prim_op(+, 2, v2)
+% >            in prim_op(G2, H2)
+% >         = let prim_op := get_prim_op(+, 2, 3)
+% >            in prim_op({b->0}, {0->2})
+% >         = ... jumping a couple of transitions
+% >         = <prim-+-int>(2, 3, {b->0}, {0->2})
+% >         = ({b->0}, {0->2}, 5)
+%
+%         = let (G1, H1, val) := ({b->0}, {0->2}, 5)
+%               adnew := get_free_addr(H)
+%            in (G1[a->adnew], H1[adnew->5])
+%         = let adnew := get_free_addr({0->2})
+%            in ({b->0}[a->adnew], {0->2}[adnew->5])
+%         = let adnew := 1
+%            in ({b->0}[a->adnew], {0->2}[adnew->5])
+%         = ({b->0}[a->1], {0->2}[1->5])
+%         = ({b->0, a->1}, {0->2, 1->5}) -- end of execution
+% \end{verbatim}
 
-        = let (G1, H1) := ({b->0}, {0->2})
-           in S[a = b + 3](G1, H1)
-        = S[a = b + 3]({b->0}, {0->2})
-   (def)= let (G1, H1, val) := E[b + 3]({b->0}, {0->2})
-              adnew := get_free_addr(H)
-           in (G1[a->adnew], H1[adnew->val])
+At the end of the execution, the state of the program is:
 
->  E[b + 3]({b->0}, {0->2})
->    (def)= let (G1, H1, v1) := E[b]({b->0}, {0->2})
->               (G2, H2, v2) := E[3](G1, H1)
->               prim_op := get_prim_op(+, v1, v2)
->            in prim_op(G2, H2)
+\noindent
+\begin{minipage}{.46\textwidth}
+\[\begin{array}{rcl}
+  \Glo_{output} : \mathbf{Iden} &\to& \mathbf{Addr} \cup \{\undefm\} \\
+  \texttt{'a'} &\mapsto& 1 \\
+  \texttt{'b'} &\mapsto& 0 \\
+  id &\mapsto& \undefm \\
+\end{array}\]
+\end{minipage}%
+\hfill%
+\begin{minipage}{.46\textwidth}
+\[\begin{array}{rcl}
+  \Hea_{output} : \mathbf{Addr} &\to& \mathbf{Val} \cup \{\undefm\} \\
+  0 &\mapsto& 2 \\
+  1 &\mapsto& 5 \\
+  n &\mapsto& \undefm \\
+\end{array}\]
+\end{minipage}%
 
->>  E[b]({b->0}, {0->2})
->>     (def)= if {b->0}(b) = Undefined
->>            then <Execution Halt>
->>            else (G, H, H(G(b)))
->>          = ({b->0}, {0->2}, {0->2}({b->0}(b)))
->>          = ({b->0}, {0->2}, {0->2}(0))
->>          = ({b->0}, {0->2}, 2)
-
->         = let (G1, H1, v1) := ({b->0}, {0->2}, 2)
->               (G2, H2, v2) := E[3](G1, H1)
->               prim_op := get_prim_op(+, v1, v2)
->            in prim_op(G2, H2)
->         = let (G2, H2, v2) := E[3]({b->0}, {0->2})
->               prim_op := get_prim_op(+, 2, v2)
->            in prim_op(G2, H2)
->         = let (G2, H2, v2) := ({b->0}, {0->2}, 3)
->               prim_op := get_prim_op(+, 2, v2)
->            in prim_op(G2, H2)
->         = let prim_op := get_prim_op(+, 2, 3)
->            in prim_op({b->0}, {0->2})
->         = ... jumping a couple of transitions
->         = <prim-+-int>(2, 3, {b->0}, {0->2})
->         = ({b->0}, {0->2}, 5)
-
-        = let (G1, H1, val) := ({b->0}, {0->2}, 5)
-              adnew := get_free_addr(H)
-           in (G1[a->adnew], H1[adnew->5])
-        = let adnew := get_free_addr({0->2})
-           in ({b->0}[a->adnew], {0->2}[adnew->5])
-        = let adnew := 1
-           in ({b->0}[a->adnew], {0->2}[adnew->5])
-        = ({b->0}[a->1], {0->2}[1->5])
-        = ({b->0, a->1}, {0->2, 1->5}) -- end of execution
-\end{verbatim}
-
-At the end of the execution, we know that the state result of executing the example code
-is \verb|(G, H)|, where:
-
-\begin{verbatim}
-  G : Iden -> Addr
-  b -> 0
-  a -> 1
-
-  H : Addr -> Val
-  0 -> 2
-  1 -> 5
-\end{verbatim}
-
-Which is telling us that the variables \pycode+a+ and \pycode+b+ hold the values
+This is telling us that the variables \pycode+a+ and \pycode+b+ hold the values
 \pycode+2+ and \pycode+5+, respectively.
 
-Notice that we have not yet defined the semantics of \verb+S[expr1 = expr2]+.
+Notice that we have not yet defined the semantics for the general case
+$\Ctx{S}{expr_1 = expr_2}$ but only for the case $\Ctx{S}{identifier = expr}$.
 Defining the small-step semantics on the syntax presented before is inconvinient. To see
-why it is inconvinient to work with the defined syntax, consider the statement delete. The
-statement delete is able to not only remove values from the global scope, e.g \pycode+del
-a+, but it can also delete elements from a list, e.g. \pycode+del ls[2]+ delets the third
-element of a list \pycode+ls+. Notice that whatever is being deleted by \pycode+del+ is an
-expression. In the examples, \pycode+a+ and \pycode+ls[2]+ are both expressions. Then,
-what should the expression return to indicate a value and a position on an object?. It is
-hard to know what to return in a case like \pycode+ls[2][0].val[1]+. We opted to follow
-what CPython does. CPython extends the syntax to make expresions return a position in memory
-or a value depending on how will they be used by the statements.
+why working with this syntax is inconvinient, observe that the delete statement,
+$\texttt{del } expr$, does not expect a value from the evalueation of the expression
+$expr$ but a name or position in memory.  Both \pycode|del a| and \pycode|ls = [1,9,4,5];
+del ls[2]| are valid python statements, but their semantics vary depending on the
+expression being evaluated. Inversely, the return value of evaluating expressions depends
+on the context they are being called, the expression \pycode|ls[2]| returns a value or a
+position in memory depending on the context is being used. \pycode|4 + ls[2]|,
+\pycode|ls[2] = 4| and \pycode|del ls[2]| are examples of the three different contexts
+where \pycode|ls[2]| can be called.
+% The delete statement is not only able to remove values from the global scope, e.g
+% \pycode+del a+, but it can also delete elements from a list, e.g. \pycode+del ls[2]+.
 
-Our new syntax will be:
+How could an expression like \pycode|ls[2]| know the context where it is going to be used?
+We opted to follow what CPython does. CPython extends the syntax of expressions to allow
+them know the context from where they are being called. The new (extended) sytax can be
+seen in Figure~\ref{syntaxPython2}.
 
-\begin{verbatim}
-mod = Module(stmt* body)
+\begin{figure}
+\[\begin{array}{rclr}
+    expr  &:=& \texttt{Int(}i\texttt{)} \textit{ for } i \in \mathbb{Z}
+          \alt \texttt{Float(}j\texttt{)} \textit{ for } j \in \texttt{float} \\
+          &\alt& \texttt{True}
+          \alt \texttt{False} \alt \texttt{None}   & \textit{primitive values} \\
+     &\alt& \SLit{Name}{identifier, expr\_context} & \textit{variable name} \\
+     %&\alt& \texttt{Undefined} & \textit{wildcard value} \\
+     &\alt& \SLit{BinOp}{op, expr, expr} \\
+     &\alt&   \SLit{Compare}{expr, cmpop, expr}             & \textit{binary operations} \\
+     &\alt& \SLit{Call}{expr, expr*}                    & \textit{function call} \\
+     &\alt& \SLit{Attribute}{expr, identifier}          & \textit{attribute access} \\
+     &\alt& \SLit{Subscript}{expr, expr, expr\_context} & \textit{subscript access} \\
+     &\alt& \SLit{List}{expr*}                          & \textit{lists} \\
+     &\alt& \SLit{Tuple}{expr*}                         & \textit{tuples} \\
 
-expr = Int(n)
-     | Float(n) | True | False | None
-     | Name(identifier, expr_context)
-     | BinOp(operator, expr, expr)
-     | Compare(expr, cmpop, expr)
-     | Call(expr, expr*)
-     | Attribute(expr, identifier)
-     -- No need for expr_context because no user made objects are allowed yet, thus
-     -- modifying attributes is not necessary
-     -- | Attribute(expr, identifier, expr_context)
-     | Subscript(expr, expr, expr_context)  -- No arbitrary slice allowed yet
-     | List(expr*)
-     | Tuple(expr*) -- No expr_context for Tuple as `(a, b) = 1, 2` is not supported
+  stmt &:=& \SLit{Delete}{expr}                      & \textit{delete} \\
+     &\alt& \SLit{Assign}{expr, expr}              & \textit{assignment} \\
+     &\alt& \SLit{AugAssign}{expr, op, expr}       & \textit{augmented assignment} \\
+     &\alt& \SLit{AnnAssign}{expr, expr, expr}     & \textit{type annotation} \\
+     &\alt& \SLit{While}{expr, stmt^+}             & \textit{loop} \\
+     &\alt& \SLit{If}{expr, stmt^+}                & \textit{if} \\
+     &\alt& \SLit{Import}{alias^+}                 & \textit{if} \\
+     &\alt& \SLit{ImportFrom}{identifier, alias^+} & \textit{import library} \\
+     &\alt& \SLit{Expr}{expr}                      & \\
 
-stmt = Delete(expr+)
-      | Assign(expr, expr)                -- a = 3
-      | AugAssign(expr, operator, expr)   -- a += 3
-      | AnnAssign(expr, expr, expr)       -- a: int = 3
+  expr\_context &:=& \SLoad \alt \SStore \alt \SDel  & \\
 
-      | While(expr, stmt+)
-      | If(expr, stmt+, stmt*)
+  op &:=& \texttt{Add} \alt \texttt{Sub} \alt \texttt{Mult} \alt \texttt{Div} \alt
+         \texttt{Mod} \alt \texttt{Pow} \\
+     &\alt& \texttt{LShift} \alt \texttt{RShift} \alt \texttt{FloorDiv}  & \\
+  cmpop &:=& \texttt{Lt} \alt \texttt{LtE} \alt \texttt{Gt} \alt \texttt{GtE}  & \\
 
-      | Import(alias+ names)
-      | ImportFrom(identifier, alias+)
+  alias &:=& identifier \alt (identifier, identifier) & \\
 
-      | Expr(expr)
+  %identifier &:=& str  & \\
+\end{array}\]
+\caption{Python syntax used to define the semantics of the Abstract Interpreter.\label{syntaxPython2}}
+\end{figure}
 
--- Indicates why are we looking up a variable, attribute or subscript
-expr_context = Load | Store | Del
+This is the same syntax that is used by the parser implemented by CPython
+\autocite{van2007python}. The developer is not supposed to write in this new syntax. The
+parser takes code written in the first syntax and defines a proper context (\verb|Load|,
+\verb|Store|, or \verb|Del|) for the expressions \pycode+Name+ and \pycode+Subscript+. All
+other expressions are considered \verb|Load| by default.
 
-operator = Add | Sub | Mult | Div | Mod | Pow | LShift
-             | RShift | FloorDiv
-
-cmpop = Lt | LtE | Gt | GtE
-
--- import name with optional 'as' alias.
-alias = (identifier, identifier?)
-\end{verbatim}
-
-This is same syntax that is used by the parser of CPython \autocite{van2007python}. The
-developer is not supposed to write in this new syntax, but code written in this syntax is
-the result of the parser. The parser takes code written in the first syntax and defines a
-proper context (\verb|Load|, \verb|Store|, or \verb|Del|) for the expressions
-\pycode+Name+ and \pycode+Subscript+. All other expressions are considered \verb|Load| by
-default.
-
-The contexts purpose is to indicate what the purpose of the returned value will be. The
-following is the informal meaning of each context:
+The following is the informal meaning of each context:
 
 \begin{itemize}
 \tightlist
-\item[\textbf{Load}] indicates that the value will be either stored in heap or some further
-  computation with it is required. For example, the result of evaluating the expression
-  \pycode|b| in \pycode|b + 2| is a value, possibly a number, as it is going to be further
-  used in the computation.
-\item[\textbf{Store}] indicates that we want to save some value wherever the expression
-  points to. For example, the result of evaluating the expression \pycode|b| in
-  \pycode|b = 2| is the position in memory to which \pycode|b| is stored.
+\item[\textbf{Load}] indicates that the result of evaluating the expression will be used
+  in further computations. For example, the result of evaluating the expression \pycode|b|
+  in \pycode|b + 2| is a value.
+\item[\textbf{Store}] indicates that we want to save to the expression a value. For
+  example, the result of evaluating the expression \pycode|b| in \pycode|b = 2| is the
+  location of \pycode|b| in the global scope.
 \item[\textbf{Del}] indicates that we want to delete the expression from where it is stored.
   For example, the result of evaluating the expression \pycode|b| in \pycode|del b| is the
   name that identifies the variable, \pycode|b|.
 \end{itemize}
 
-In CPython the expressions \pycode|Attribute|, \pycode|Subscript| and \pycode|Name| have a
-context defined. In our formalisation only \pycode|Subscript| and \pycode|Name| have a
-context defined because we are not interested in modifying or deleting the value of any
-attribute. No attribute for builtin functions and objects can be modified or deleted, only
-attributes from objects defined by on custom classes and functions can be deleted or
-modified. For example, given the list \pycode|a = [2,3]|, the statements
-\pycode|del a.insert| and \pycode|a.insert = 3| fail to execute.
+In CPython, the expressions \pycode|Attribute|, \pycode|Subscript| and \pycode|Name| have a
+context as part of their definition. In our formalisation only \pycode|Subscript| and
+\pycode|Name| have a context as we are not interested in modifying or deleting the value
+of any attribute. No attribute for builtin functions and objects can be modified or
+deleted. For example, given the list \pycode|a = [2,3]|, the statements
+\pycode|del a.insert| and \pycode|a.insert = 3| are erroneous in Python, thus we have no
+need to allow \pycode|Attribute|s to be deleted or modified.
 
-The new state of the program is defined as a value from \verb+Global x Heap+, where:
+% The new state of the program is defined as a value from \verb+Global x Heap+, where:
+%
+% \begin{verbatim}
+% Global = Iden -> Addr + Undefined -- Global scope
+% Heap = Addr -> Val + Undefined   -- Heap
+%
+% Key = Iden + (string x (Iden + PrimVal))
+% Type = List | Tuple | Module
+%
+% PrimVal = Int | Float | True | False | None | Undefined
+% Object = Type x Addr x (Key -> Addr + Undefined)
+% Val = PrimVal | Object | <prim-callable>
+%
+% <prim-callable> = <prim-append> | <prim-+-int> | <prim-+-float> | <prim-*-int> | ...
+% \end{verbatim}
 
-\begin{verbatim}
-Global = Iden -> Addr + Undefined -- Global scope
-Heap = Addr -> Val + Undefined   -- Heap
+In Figure~\ref{smallstep2}, the small-step semantics for the new syntax are presented.
 
-Key = Iden + (string x (Iden + PrimVal))
-Type = List | Tuple | Module
-
-PrimVal = Int | Float | True | False | None | Undefined
-Object = Type x Addr x (Key -> Addr + Undefined)
-Val = PrimVal | Object | <prim-callable>
-
-<prim-callable> = <prim-append> | <prim-+-int> | <prim-+-float> | <prim-*-int> | ...
-\end{verbatim}
-
-And the new semantics are defined as:
-
-\begin{verbatim}
-E[expr] :: Global x Heap
-        -> Global
-         x Heap
-         x (Val + (Object x (string x Val)) + Iden)
-
-E[Name(id, ctx)](G, H) :=
-  match ctx in
-    case Load  -> if G(id) = Undefined
-                  then <Execution Halt>
-                  else (G, H, H(G(id)))
-    case Store -> (G, H, id)  -- ctx tells us that S[Assign(id, ...)]
-    case Del   -> (G, H, id)  -- ctx tells us that S[Delete(id)]
-
-E[Int(n)](G, H) := (G, H, n)
-
-E[BinOp(op, a, b)](G, H) :=
-  let (G1, H1, v1) := E[a](G, H)
-      (G2, H2, v2) := E[b](G1, H1)
-   in if kind(v1) /= Val  or  kind(v1) /= Val
-      then <Execution Halt> -- error at parsing
-      else let prim_op := get_prim_op(op, v1, v2)
-            in prim_op(G2, H2)
-
-S[Assign(var, val)](G, H) :=
-  let (G1, H1, ass) := E[var](G, H)
-      (G2, H2, rightval) := E[val](G1, H1)
-      rval := if is_value(rightval) then val else <Execution Halt>
-   in
-      match ass in
-        case Iden -> (G2[ass->rval], H2)
-
-        case ((t, addr, o): Object, ('index', val: Val)) ->
-          let setindex := get_prim_set_index(t)
-          in setindex(G2, H2, o, val, addr, rval)
-
-        otherwise -> <Execution Halt>
-\end{verbatim}
+\begin{figure}
+\[\begin{array}{rl}
+  \Ctx{E}{expr} :& \mathbf{Global} \times \mathbf{Heap} \\
+  &\to \mathbf{Global} \\
+  &\times \mathbf{Heap} \\\
+  &\times \mathbf{Val} \cup (\mathbf{Object} \times (\textsf{string} \times \mathbf{Val})) \cup \mathbf{Iden} \\
+\end{array}\]
+\[\arraycolsep=1.4pt
+  \begin{array}[t]{l}
+    \Ctx{E}{\SLit{Name}{id}}\left(\Glo, \Hea\right) := \\
+    \quad \matchm{ctx} \\
+    \qquad \begin{array}[t]{lclr}
+      \casem{\SLoad} &\to&
+         \begin{array}[t]{l}
+            \ifm \Glo(id) = \undefm \\
+            \thenm
+               \begin{array}[t]{l}
+                  \ifm isbuiltin(id) \\
+                  \thenm \left(\Glo, \Hea, \texttt{<builtin-val>}(id)\right) \\
+                  \elsem \Halt \\
+               \end{array} \\
+            \elsem \left(\Glo, \Hea, \Hea\left(\Glo\left(id\right)\right)\right) \\
+         \end{array} \\
+      \casem{\SStore} &\to& \left(\Glo, \Hea, id\right) \quad \textit{to be assigned} \\
+      \casem{\SDel} &\to& \left(\Glo, \Hea, id\right) \quad \textit{to be deleted} \\
+    \end{array}\\
+    \\
+    \Ctx{E}{\SLit{Int}{n}}\left(\Glo, \Hea\right) := \left(\Glo, \Hea, n\right) \\
+    \\
+    \Ctx{E}{\SLit{BinOp}{op, a, b}}\left(\Glo, \Hea\right) := \\
+    \quad \letm
+       \begin{array}[t]{cl}
+          \left(\Glo_1, \Hea_1, v_1\right) &:= \Ctx{E}{a}\left(\Glo, \Hea\right) \\
+          \left(\Glo_2, \Hea_2, v_2\right) &:= \Ctx{E}{b}\left(\Glo_1, \Hea_1\right) \\
+          prim\_op &:= get\_prim\_op\left(op, v_1, v_2\right) \\
+       \end{array} \\
+    \quad \inm
+       \begin{array}[t]{l}
+         \ifm kind(v_1) \neq \mathbf{Val} \vee kind(v_2) \neq \mathbf{Val} \\
+         \thenm \Halt \\
+         \elsem
+            \begin{array}[t]{rl}
+              \letm& prim\_op := get\_prim\_op\left(op, v_1, v_2\right) \\
+              \inm& prim\_op\left(\Glo_2, \Hea_2\right)
+            \end{array} \\
+       \end{array} \\
+    \\
+    \Ctx{S}{\SLit{Assign}{var, val}}\left(\Glo, \Hea\right) := \\
+    \quad \letm
+       \begin{array}[t]{cl}
+          \left(\Glo_1, \Hea_1, ass\right) &:= \Ctx{E}{var}\left(\Glo, \Hea\right) \\
+          \left(\Glo_2, \Hea_2, rightval\right) &:= \Ctx{E}{val}\left(\Glo_1, \Hea_1\right) \\
+          rval &:= \ifm is\_value(rightval) \;\thenm val \;\elsem \Halt \\
+       \end{array} \\
+    \quad \inm \matchm{ass} \\
+    \qquad \casem{id: \mathbf{Val}} \to \left(\Glo_2[ass \mapsto rval], \Hea_2\right) \\
+    \qquad \casem{((t, addr, o): \mathbf{Object}, (\texttt{'index'}, val: \mathbf{Val}))} \to \\
+    \qquad\quad\begin{array}[t]{rl}
+            \letm& setindex := get\_prim\_set\_index(t) \\
+             \inm& setindex\left(\Glo_2, \Hea_2, o, val, addr, rval\right) \\
+    \end{array} \\
+    \qquad \casem{\textsf{otherwise}} \to \Halt \\
+  \end{array}\]
+\caption{Small-step (concrete) semantics for Python using syntax from
+  Figure~\ref{syntaxPython2}.\label{smallstep2}}
+\end{figure}
 
 % The increase in complexity of the semantics is required to handle all the
 Notice that the number of \verb+<Execution Halt>+s in the semantics have increased. The
@@ -473,9 +623,15 @@ PrimVal = Int | Float | True | False | None | Undefined
 \end{verbatim}
 
 The Abstract Domain for primitive values is constructed from individual Abstract Domains,
-one Abstract Domain per each one of the types of values that \verb+PrimVal+ holds:
+one Abstract Domain per each one of the types of values that \verb+PrimVal+ holds as it
+can be seen in Figure~\ref{latticevals}.
 
-\input{figures/latice-primvals}
+\begin{figure}
+  \begin{center}
+  \input{figures/latice-primvals}
+  \end{center}
+  \caption{Lattice/Abstract Domain for primitive values.\label{latticevals}}
+\end{figure}
 
 In this Abstract Domain, joining any two differing values gives us a $\top$. If both
 values are of the same "type", e.g. both are \pycode+Int+s, then the $\top$ will "be" of
@@ -503,8 +659,8 @@ Val# = PrimVal# | Object# | <prim-callable># | Top_Val | Bot_Val
 \end{verbatim}
 
 Explaining in detail how is the Abstract Domain for the state defined is out of the scope
-of chapter. A throughout explanation on the construction of the Abstract Domain can be
-seen in the Appendix~\ref{appendix-ai-theory}. We will dedicate the rest of this section
+of this chapter. A throughout explanation on the construction of the Abstract Domain can be
+seen in Appendix~\ref{appendix-ai-theory}. We will dedicate the rest of this section
 to show the motivation to define an Abstract Domain for states.
 
 Consider the following piece of code:
@@ -739,7 +895,7 @@ Object(NdArray,
     interpret its input as an array in any way it can. There is no
     formal definition of how the values are interpreted althought its
     semantics can be extracted by looking at its C implementation:
-    https://stackoverflow.com/a/40380014}.
+    \url{https://stackoverflow.com/a/40380014}}.
 
   Once the \pycode|<np-array>| function is
   implemented all other functions are much simpler to define. As an
@@ -753,26 +909,26 @@ Object(NdArray,
        (Tuple, addrtup, tup) := arr('shape')
    in  tup('size')
 \end{verbatim}
-\item
-  Extend the cases that \pycode|get_prim_op| handles to cover NumPy
-  arrays. All operations defined in NumPy handle broadcasting.
-  %{\todo{Explain what broadcasting is}}
-  For example:
-
-\begin{verbatim}
-get_prim_op(Add, v1, v2) :=
-  match (type(v1), type(v2)) in
-    ... -- old cases
-    case (NdArray, t1) ->
-      \(G, H)->
-        let (G1, H1, ndarr) := <prim-array>(v2)(G, H)
-        in  <prim-+-ndarray>(v1, ndarr, G1, H1)
-    case (t1, NdArray) ->
-      \(G, H)->
-        let (G1, H1, ndarr) := <prim-array>(v1)(G, H)
-        in  <prim-+-ndarray>(ndarr, v2, G1, H1)
-    case otherwise -> <Execution Halt>
-\end{verbatim}
+% \item
+%   Extend the cases that \pycode|get_prim_op| handles to cover NumPy
+%   arrays. All operations defined in NumPy handle broadcasting.
+%   %{\todo{Explain what broadcasting is}}
+%   For example:
+%
+% \begin{verbatim}
+% get_prim_op(Add, v1, v2) :=
+%   match (type(v1), type(v2)) in
+%     ... -- old cases
+%     case (NdArray, t1) ->
+%       \(G, H)->
+%         let (G1, H1, ndarr) := <prim-array>(v2)(G, H)
+%         in  <prim-+-ndarray>(v1, ndarr, G1, H1)
+%     case (t1, NdArray) ->
+%       \(G, H)->
+%         let (G1, H1, ndarr) := <prim-array>(v1)(G, H)
+%         in  <prim-+-ndarray>(ndarr, v2, G1, H1)
+%     case otherwise -> <Execution Halt>
+% \end{verbatim}
 \item
   The NumPy module holding all operations is defined:
 
@@ -855,3 +1011,5 @@ S[AnnAssign(var, hint, val)](G, H) :=
 
 Notice that we determine the \enquote{precision} of a hint with respect to the variable
 with the comparision between values, the order \verb|Val#|!
+
+Further details on the concrete and abstract semantics are given in Appendix~\ref{appendix-ai-theory}.

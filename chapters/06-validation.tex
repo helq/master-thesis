@@ -107,9 +107,11 @@ explain what is Pytropos capable of doing and when does it fail.
 
 \subsection*{Pytropos capabilities}
 
+The following are some tests where Pytropos runs as expected and it is able to compute all values correctly:
+
 \begin{itemize}
 \tightlist
-\item Pytropos is able to two states with primitive variables properly:
+\item Pytropos is able to join two states with primitive variables properly:
 
   \begin{pythoncode*}{autogobble}
   a = 5               a = 5               a = 5
@@ -303,6 +305,8 @@ explain what is Pytropos capable of doing and when does it fail.
 
 \subsection*{Pytropos failures}
 
+The following are all the tests where Pytropos does not work as intended. It either fails to compute the values correctly or fails to run the code.
+
 \begin{itemize}
 
 \item Pytropos overapproximates some join operations between states.
@@ -378,22 +382,67 @@ explain what is Pytropos capable of doing and when does it fail.
 
 \subsection{Using Pytropos as a linter}
 
+Any time Pytropos detects an error in the interpretation, Pytropos logs the error in a
+structure to be latter printed out to the user.
+
+Writing a plugin to integrate Pytropos to any IDE is simple as Pytropos writes into console
+in a standard format. Pytropos outputs all warnings in the format:
+
+\begin{verbatim}
+file:col:line: ERRORCODE: Warning message
+\end{verbatim}
+
 A plugin in vimscript was written for Pytropos to use Pytropos as a linter for the text
-editor (Neo)Vim. As it can be seen in the figure below, the developer can get feedback on
-their code on realtime.
+editor (Neo)Vim. As it can be seen in Figure~\ref{pytroposlinter}, the developer can get
+feedback on their code on realtime.
 
-\noindent
+\begin{figure}
 \includegraphics[width=\textwidth]{figures/neovim-linter.png}
+\caption{Example of warning message displayed in (Neo)Vim as a result of checking the code
+  with Pytropos.\label{pytroposlinter}}
+\end{figure}
 
-% Pytropos outputs all warnings in the format:
-%
-% \begin{verbatim}
-% file:col:line: ERROCODE: Warning message
-% \end{verbatim}
+The required steps to use Pytropos as a linter in (Neo)Vim are:
 
-\subsection*{Conclusions}
+\begin{itemize}
+\tightlist
+\item Install Pytropos and make sure it can be run from console.
+\item Install the plugin Neomake. Homepage: \url{https://github.com/neomake/neomake}.
+\item Tell Neomake how to interpret the Pytropos output by adding the following lines to
+  the configuration file \verb|vimrc|:
+  \begin{minted}[gobble=4]{vim}
+    function! PostProcessingPytropos(entry)
+        " Pytropos uses 0-indexed columns, and Neovim uses 1-indexed
+        let a:entry.col += 1
 
-Pytropos is still at a very early tage of development. Its repeirtoire of Python
+        if a:entry.text =~# '^E'  ||  a:entry.text =~# '^SyntaxError'
+            let a:entry.type = 'E'
+        elseif a:entry.text =~# '^W'
+            let a:entry.type = 'W'
+        elseif a:entry.text =~# '^F'
+            let a:entry.type = 'F'
+        else
+            let a:entry.type = 'A'
+        endif
+    endfunction
+
+    let g:neomake_python_pytropos_maker = {
+       \ 'exe': 'pytropos', " Change if Pytropos is called differently on your machine
+       \ 'args': [],
+       \ 'errorformat':
+         \ '%f:%l:%c: %m',
+      \ 'postprocess': [
+         \ function('PostProcessingPytropos'),
+         \ ]
+      \ }
+
+    let g:neomake_python_enabled_makers += ['pytropos']
+  \end{minted}
+\end{itemize}
+
+\subsection*{Summary}
+
+Pytropos is still at a very early stage of development. Its repeirtoire of Python
 characteristics is still small (No support for \pycode|for| statement, custom classes and
 objects, exception handling and the lack of builtin definitions). Nonetheless, Pytropos
 can check for errors on operations between tensors and can be extended to work with more
