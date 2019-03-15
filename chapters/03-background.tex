@@ -1,50 +1,40 @@
 \chapter{Background}\label{background}
 
-In this chapter, we explore a couple of motivational topics and ideas
-necessary for the development of the Static Value Analysis proposed in
-Chapter \ref{appendix-ai-theory}.
+In this chapter, we explore a couple of motivational topics and ideas necessary for the
+development of the Static Value Analysis presented in Chapter~\ref{ai-for-python}.
 
-\section{Dynamic and Static Analysis}%
-\label{dynamic-and-static-analysis}
+\section{Dynamic and Static Analysis}
 
 Static Analysis and Dynamic Analysis are two disciplines whose ideal is to ensure some
-property
-holds on a piece of code. Static Analysis checks the code without the
-need to run the code, while Dynamic Analysis checks the code as it is
-executed.
+property holds on a piece of code. Static Analysis checks the code without the need to run
+the code, while Dynamic Analysis checks the code as it is executed.
 
-Static Analysis is often associated with compiled Programming Languages.
-Compiled Programming Languages require to know how to precisely
-translate the operations of the language into machine instructions.
-Compiled Programming Languages make use of a variety of Static Analyses
-to find out the suitable machine instructions for a piece of code.
+Static Analysis is often associated with compiled Programming Languages. Compiled
+Programming Languages require to know how to precisely translate the operations of the
+language into machine instructions. Compiled Programming Languages make use of a variety
+of Static Analyses to find out suitable machine instructions for a piece of code.
 
-Interpreted Programming Languages, on the other hand, find out which
-machine instructions to use for a given operation as they encounter the
-operations, thus they make heavy use of Dynamic Analyses. Notice that
-the distinction between Compiled Programming Languages and Interpreted
-Programming Languages does not stem from their use of Static and Dynamic
-Analyses but how they process the input files. Compiled Programming
-Languages read the totality of the input files and translate the
-operations into machine instructions, while Interpreted Programming
-Languages do not need to read the whole file before starting to execute
-the instructions in them.
+Interpreted Programming Languages, on the other hand, find out which machine instructions
+to use for a given operation as they encounter the operations, thus they make heavy use of
+Dynamic Analyses. Notice that the distinction between Compiled Programming Languages and
+Interpreted Programming Languages does not stem from their use of Static and Dynamic
+Analyses but how they process the input files. Compiled Programming Languages read the
+totality of the input files and translate the operations into machine instructions, while
+Interpreted Programming Languages do not need to read the whole file before starting to
+execute the instructions in them.
 
-Static and Dynamic Typing are two categories of the same kind of
-Analysis, Type Analysis \autocite{pierce_types_2002}. Type Analysis
-tells compilers and interpreters the type of a variable. Both Static and
-Dynamic Typing based Programming Languages have strong and weak points:
-Compiled Languages hold stronger warranties for the resulting binary as
-they restrict the set of valid programs to those that \enquote{type
-check}, and Interpreted Languages allow the programmer to forgo the
-usually expensive step of compiling code.
+Static and Dynamic Typing are two categories of the same kind of Analysis, Type Analysis
+\autocite{pierce_types_2002}. Type Analysis tells compilers and interpreters the type of a
+variable. Both Static and Dynamic Typing based Programming Languages have strong and weak
+points: Compiled Languages hold stronger warranties for the resulting binary as they
+restrict the set of valid programs to those that \enquote{type check}, while Interpreted
+Languages allow the programmer to forgo the usually expensive step of compiling code.
 
-Dynamically Typed, Interpreted Programming Languages (Dynamically Typed
-Languages) are excellent tools for prototyping as they let the developer
-test their code without waiting for it to compile. However, writing big
-pieces of software in a Dynamically Typed Language is often a
-challenging task as the type warranties are not as strong as in compiled
-programming languages.
+Dynamically Typed Interpreted Programming Languages (Dynamically Typed Languages) are
+excellent tools for prototyping as they let the developer test their code without waiting
+for it to compile. However, writing big pieces of software in a Dynamically Typed Language
+is often a challenging task as the type warranties that hold are not as strong as in
+compiled programming languages.
 
 Developers are more prone to make a mistake that will only appear once
 the code is executed in a Dynamically Typed Languages opposed to
@@ -108,7 +98,7 @@ annotate the type the user believes the variable has. Type annotations
 are used by external libraries as MyPy \autocite{lehtosalo2016mypy} and
 Enforce \footnote{GitHub project accessible on
   \url{https://github.com/RussBaz/enforce}} to check for correctness of
-the code. The Python \pycode+typing+ library offers a builtin arange of
+the code. The Python \pycode+typing+ library offers a built-in arrange of
 variables to type annotate variables. For an in-depth explanation on the
 goal of Type Annotations and how are they used in Python refer to
 \autocite{pep483}.
@@ -134,7 +124,7 @@ debugging.
 Nowadays, most papers on Machine Learning (ML) and Deep Learning (DL)
 use Python to define their models. In fact, most DL libraries have an
 interface to Python. Some of the many Python libraries at disposition
-for programmers are: TensorFlow \autocite{abadi_tensorflow_2016},
+for programmers are TensorFlow \autocite{abadi_tensorflow_2016},
 PyTorch \autocite{paszke2017pytorch}, (the now defunct) Theano
 \autocite{bergstra2011theano}, and pycaffe \autocite[as part of the
 Caffe framework]{jia2014caffe}.
@@ -184,10 +174,11 @@ if it has two dimensions it is equivalent to a matrix.
 
 Operating with tensors is often syntactically simpler than using looping
 structures to operate with blocks of memory, i.e.~writing \pycode|a+b|,
-where \pycode|a| and \pycode|b| are tensors is simpler than
-\pycode|[a[i]+b[i] for i in range(len(a))]|. Besides,
-\pycode|a+b| even works for tensors with different (but compatible)
-shapes.
+where \pycode|a| and \pycode|b| are tensors is simpler than:
+
+\pycode|[a[i]+b[i] for i in range(len(a))]|.
+
+Besides, \pycode|a+b| even works for tensors with different (but compatible) shapes.
 
 \section{NumPy: Library for tensor computation}
 \label{numpy-library-for-tensor-computation}
@@ -201,7 +192,7 @@ of NumPy.
 NumPy tensors are called arrays. An array can be created out of almost
 anything, almost any type of value can be interpreted into an array by
 NumPy\footnote{Notice that this represents a challenge for Static Type
-  Analysis as it requeries the type of a variable to depend on the
+  Analysis as it requires the type of a variable to depend on the
   contents of the variable. Fortunately calculating the contents of a
   variable is what Abstract Interpretation does. An Abstract Interpreter
   allows us to implement/replicate the whole semantics of a library in a
@@ -223,7 +214,7 @@ a = np.arange(50)
 a = a.reshape((1,-1,2,5))
 \end{pythoncode}
 
-Reshaping preserves the number of elements in an array. If an
+Reshaping preserves the number of elements in an array. If a
 \pycode|-1| is found, it will be taken as a wild card and the missing
 dimension will be calculated to keep the original shape.
 
@@ -240,7 +231,7 @@ c = a * b
 
 Notice that the code is valid and evaluates in Python. The shape of
 \pycode|a| is \pycode|(10, 3, 4)| because adding an array of any shape
-to an \pycode|int| gives us back an array with the same shape, i.e.~we
+to a \pycode|int| gives us back an array with the same shape, i.e.~we
 have added a scalar to every element of a tensor. \pycode|b| has a shape
 of \pycode|(3,\ 1)| and the shape of \pycode|c| is
 \pycode|(10,\ 3,\ 4)|. Broadcasting \enquote{generalises} the rule of
@@ -262,7 +253,7 @@ Interpretation refer to \autocites[Chapters 1 and
 
 Static Analysis includes a broad assortment of techniques with the
 purpose of verifying some property in the code. It may be trying to
-prove some invariant in the code, like there is never a segmentation
+prove some invariant in the code like there is never a segmentation
 fault, the code does what it says it does even when ran in concurrently,
 or the codes terminates (given some restrictions
 \autocite{urban_static_2015}).
@@ -286,7 +277,7 @@ multiple of 2. An overapproximation of this computation is saying that
 \pycode|a| and \pycode|b| are both non-negative integers (notice that we
 do not say that \pycode|b| is even).
 
-There is an inherent tradeoff between the precision of an
+There is an inherent trade-off between the precision of an
 overapproximation, and the amount of storage and processing the
 overapproximation requires. The most precise method is to store in a set
 all the possible values a computation may take but it is often
@@ -319,7 +310,7 @@ formal semantics. We also need a property we want to analyse.
 Specific for this work, the property to analyse will be the value of
 variables throughout the execution of the program. i.e.~Value Analysis.
 Abstract Interpretation can be used to analyse any other property of
-programs, some examples include: memory consumption, functional
+programs, some examples include memory consumption, functional
 properties, thread safety, computation traces, and termination.
 
 Before we can analyse a piece of code, we require to know the language
@@ -407,7 +398,7 @@ we get:
 
 Which can be easily stored and manipulated (we only require two numbers
 to encode an interval). Notice how any abstraction will make us lose
-some precision. This is the inherent tradeoff of computing using
+some precision. This is the inherent trade-off of computing using
 Abstract Interpretation, we lose precision.
 
 Notice that overapproximating the value of variables can lead us often
@@ -444,7 +435,7 @@ may not exist.
 On the other hand, if we abstractly interpret a piece of code and find
 no error in it, we can be sure that the code will never fail because we
 have tested the code on an \textbf{over}approximation of all possible
-values\footnote{assuming no builtin value has been changed prior to the
+values\footnote{assuming no built-in value has been changed prior to the
   execution of the code}. This property is called \emph{soundness} and
 it is central to verification and other areas of Static Analysis.
 
@@ -457,28 +448,28 @@ Fortunately, if the overapproximation we are using allows us to
 distinguish between single values, e.g.~the overapproximation can tell
 us that \pycode|a| has been set to the value \pycode|5| after the
 assignment \pycode|a = 5|\footnote{The sign overapproximation (or
-  Sign Interval Abstract Domain) has only three posible values:
+  Sign Interval Abstract Domain) has only three possible values:
   \pycode|-|, \pycode|0| and \pycode|+|, while the interval
   overapproximation (or Interval Abstract Domain) contains any interval
   \([a,b]\) with \(a,b \in \mathbb{R}\). Therefore, if we use the
   Interval Abstract Domain we are able to tell when we know a variable
-  has a specific value rather than many. On the other hand it is
-  imposible for use to determine a unique value using Sign Interval
+  has a specific value rather than many. On the other hand, it is
+  impossible for us to determine a unique value using Sign Interval
   Domain other than the case \pycode|0|.}, then it is possible for us to
 check if two single values are equal or different. If we are able to
 assert with certainty that two values are equal or different, then we
-are able to find true positive comparisons (oppossed to maybe
+are able to find true positive comparisons (opposed to maybe
 \pycode|True| comparisons)\footnote{Consider the result of
   \pycode|[4,4] == [3,3]| (\pycode|False|) and the result of
   \pycode|[3,8] == [2,3]| (it may be \pycode|True| or
   \pycode|False|)}.
 
-The formal definition of an overapproximation is an Abstract Domain. An
-Abstract Domain is composed of a lattice, a Galois connection between a
-set of values and the lattice, and widening and narrowing operators.
+The formal definition of an overapproximation is an Abstract Domain. An Abstract Domain is
+composed of a lattice, a concretisation function, an abstraction function,
+% a Galois connection between a set of values and the lattice,
+ and widening and narrowing operators.
 
-A lattice is a partially ordered set \((L, \le)\) with the following
-properties:
+A lattice is a partially ordered set \((L, \le)\) with the following properties:
 
 \begin{itemize}
 \tightlist
@@ -504,25 +495,20 @@ Given two lattices,
 \((L_1, \le{}_{L_1}, \sqcap{}_{L_1}, \sqcup{}_{L_1}, \top{}_{L_1}, \bot{}_{L_1})\)
 and
 \((L{}_2, \le{}_{L_2}, \sqcap{}_{L_2}, \sqcup{}_{L_2}, \top{}_{L_2}, \bot{}_{L_2})\),
-a Galois connection is a pair of functions \((\alpha, \gamma)\) such
-that:
+% a Galois connection is a
+ we can define \alpha and \gamma, where:
 
 \begin{itemize}
 \tightlist
-\item
-  \(\alpha : L_1 \rightarrow L_2\). \(\alpha\) is called the abstraction
-  function.
-\item
-  \(\gamma : L_2 \rightarrow L_1\). \(\gamma\) is called the
-  concretisation function.
-\item
-  \(\forall a \in L_1, b \in L_2 : \alpha(a) \le{}_{L_2} b \iff a \le{}_{L_1} \gamma{b}\).
+\item \(\alpha : L_1 \rightarrow L_2\). \(\alpha\) is called the abstraction function.
+\item \(\gamma : L_2 \rightarrow L_1\). \(\gamma\) is called the concretisation function.
+% \item
+%   \(\forall a \in L_1, b \in L_2 : \alpha(a) \le{}_{L_2} b \iff a \le{}_{L_1} \gamma{b}\).
 \end{itemize}
 
-\(L_1\) is often called the Concrete Domain and \(L_2\) is called the
-Abstract Domain. Because the Concrete Domain is always the same, the set
-of possible values a variable can have with \(\in\) as an order
-operator, we concentrate our efforts in the Abstract Domains.
+\(L_1\) is often called the Concrete Domain and \(L_2\) is called the Abstract Domain. In
+this work, the Concrete Domain will always be defined as the power set of the values in
+the language with \(\in\) as the order operator.
 
 \emph{Notation}: It is customary to use the symbol \(\#\) to refer to
 the functions and semantics associated with the Abstract Domain, and the
@@ -544,24 +530,18 @@ where:
 
 \begin{itemize}
 \tightlist
-\item
-  Every element of \(\text{Int}^{\#}\) is an interval \([a, b]\) with
+\item Every element of \(\text{Int}^{\#}\) is an interval \([a, b]\) with
   \(a, b \in Int \cup \{-\infty,\infty\}\).
-\item
-  \([a, b] \le^{\#} [c, d] \iff c \le a \wedge b \le d\).
-\item
-  \([a, b] \sqcap^{\#} [c, d] = [max(a,c), min(b, d)]\).
-\item
-  \([a, b] \sqcup^{\#} [c, d] = [min(a,c), max(b, d)]\).
-\item
-  \(\alpha(I) = [min(I), max(I)]\) (Remember that \(I\) is a set of
-  integers).
-\item
-  \(\gamma([a, b]) = \{i \in Int : a \le i \le b\}\).
+\item \([a, b] \le^{\#} [c, d] \iff c \le a \wedge b \le d\).
+\item \([a, b] \sqcap^{\#} [c, d] = [max(a,c), min(b, d)]\).
+\item \([a, b] \sqcup^{\#} [c, d] = [min(a,c), max(b, d)]\).
+\item \(\alpha(I) = [min(I), max(I)]\) (Remember that \(I\) is a set of integers).
+\item \(\gamma([a, b]) = \{i \in Int : a \le i \le b\}\).
 \end{itemize}
 
-The goal of an Abstract Domain is to give us a very powerful tool, the
-Galois Connection. The abstraction function allows us to take any value
+% The goal of an Abstract Domain is to give us a very powerful tool, the
+% Galois Connection.
+The abstraction function allows us to take any value
 in our language and transport it to an overapproximation of our
 choosing, and the concretisation function allows us to take abstract
 values (overapproximations) and operate with them back in the semantics
@@ -570,21 +550,21 @@ of our language.
 Given, for example, the Intervals Abstract Domain, we can now calculate
 the result of computing the following piece of code:
 
-\begin{verbatim}
+\begin{pythoncode}
 if _:
   a = 2
 else:
   a = 4
 a -= 6
-\end{verbatim}
+\end{pythoncode}
 
-We know that the value of \pycode|a| in the \emph{then} branch of the of
-the \emph{if} statement is equal to \pycode|[2,2]| and
+We know that the value of \pycode|a| in the \emph{then} branch of the
+\emph{if} statement is equal to \pycode|[2,2]| and
 \pycode|[4,4]| in the \emph{else} branch. The value of \pycode|a|
 after the execution of the \emph{if} statement will be
 \pycode|[2,2]| \(\cup{}\) \pycode|[4,4]| \(=\)
-\pycode|[2,4]|. At the end of the execution the value of \pycode|a|
-lie inside the interval \pycode|[-4,-2]|.
+\pycode|[2,4]|. At the end of the execution, the value of \pycode|a|
+lies inside the interval \pycode|[-4,-2]|.
 
 Notice that with a (Value) Abstract Domain, we can overapproximate the
 value of a single variable but we cannot warranty \textbf{termination}
@@ -694,7 +674,7 @@ the program.
 
 As an example consider:
 
-\begin{pythoncode}
+\begin{minted}{cpp}
 int main() {
   int cond1, cond2, a, b, c;
   std::cin >> cond1 >> cond2;
@@ -712,7 +692,7 @@ int main() {
   c = a + b;
   return 0;
 }
-\end{pythoncode}
+\end{minted}
 
 Note: This example is written in C++ because we can assume all variables
 to have a set type, a unique type. In C++, a variable always has a value
@@ -723,7 +703,7 @@ Suppose that the State Abstract Domain for this piece of code is a
 function from the set \(\{cond1, cond2, a, b, c\}\) to the Interval
 Abstract Domain. If we evaluate the code line by line we will get:
 
-\begin{pythoncode}
+\begin{minted}{cpp}
 // T: means Top
 int main() {
   int cond1, cond2, a, b, c;
@@ -755,7 +735,7 @@ int main() {
   // {'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': [6,22]}
   return 0;
 }
-\end{pythoncode}
+\end{minted}
 
 Excellent! We have done it! We have the idea of how to build an Abstract
 Interpreter for a language with only one type of variable, a global
@@ -763,28 +743,45 @@ scope, and no aliasing.
 
 \subsection{Abstract Semantics}\label{abstract-semantics}
 
-Now we have our ingredients all ready: We have a language with its
-concrete semantics and State Abstract Domain. What we have left to do is
-to define the abstract semantics of the language. The abstract semantics
-work on the State Abstract Domain, where as the concrete semantics work
-on the state of the program.
+% Now that we have our ingredients ready: We have a language with its
+% concrete semantics and State Abstract Domain. What we have left to do is
+% to define the abstract semantics of the language.
 
-For this, we need the Galois connections defined in the State Abstract
-Domain, the abstraction \(\alpha\) and concretisation \(\gamma\)
-functions. We can infer the abstract semantics with the following little
-formula:
+Abstract Semantics is the name that is given to the semantics that operate with abstract
+values (from the Abstract Domain), as opposed to Concrete Semantics that work with the
+original (concrete) values. To define these semantics are require the original
+semantics and the Abstract values. The process involves applying the concretisation and
+abstraction functions on to the semantic rules we want to transform.
 
-\[f^\# = \alpha \cdot f \cdot \gamma\]
+Often, this process is straightforward and no need to use the abstraction or
+concretisation functions is necessary, all that is needed is to understand how each
+operation from the Concrete Domain translates to the new Domain. For example, the
+abstract operation $+$ between two (interval) integer numbers is defined as:
 
-where \(f\) is a function (a rule) in the semantics of the language.
+\[[a, b] +^{\#} [c, d] := [a+c, b+d]\]
 
-The idea is simple, if \(f\) is defined properly defined then we can
-compose it with the abstraction and concretisation functions and we will
-get a function \(f^\#\) which operates over the State Abstract Domain.
+The semantics of interval arithmetics are well studied and can be easily implemented from
+theory \autocite{hayes_interval_2003}.
 
-This step is important if we want to prove the Abstract Interpreter to
-be sound and work as expected. For a deeper discussion on how to infer
-the abstract semantics see \textcite{nielson2015principles}, chapter 4.
+% The abstract semantics work on the State Abstract Domain, where as the concrete semantics
+% work on the state of the program.
+
+% For this, we need the Galois connections defined in the State Abstract
+% Domain, the abstraction \(\alpha\) and concretisation \(\gamma\)
+% functions. We can infer the abstract semantics with the following little
+% formula:
+%
+% \[f^\# = \alpha \cdot f \cdot \gamma\]
+%
+% where \(f\) is a function (a rule) in the semantics of the language.
+%
+% The idea is simple, if \(f\) is defined properly defined then we can
+% compose it with the abstraction and concretisation functions and we will
+% get a function \(f^\#\) which operates over the State Abstract Domain.
+%
+% This step is important if we want to prove the Abstract Interpreter to
+% be sound and work as expected. For a deeper discussion on how to infer
+% the abstract semantics see \textcite{nielson2015principles}, chapter 4.
 
 \subsection{Missing Bits}\label{missing-bits}
 

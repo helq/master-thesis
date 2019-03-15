@@ -1,20 +1,20 @@
 \chapter{Validation and Discussion}\label{validation-and-discussion}
 
 In this chapter, we explore the capabilities of Pytropos, the implementation of the
-proposed abstract interpreter. The chapter is divided in two parts: how was the code
+proposed abstract interpreter. The chapter is divided into two parts: how was the code
 tested and a discussion on the results of the tests.
 
 \section{Validation}\label{validation}
 
 We created two types of tests: unit regression tests and property-based tests. Unit tests
-fulfill two purposes: they are a guide of what the abstract interpreter should do and they
+fulfil two purposes: they are a guide of what the abstract interpreter should do and they
 act as regression checks to prevent reintroducing bugs. Slightly more challenging to
-write are property-based tests. They allow us to complaince of Pytropos execution to
+write are property-based tests. They allow us to compliance of Pytropos execution to
 CPython.
 
 Comparing against the official regression battery of tests for CPython is left for future
 work as the abstract interpreter still is not ripe enough. The abstract interpreter is
-still missing a great number of builtin functions and classes.
+still missing a great number of built-in functions and classes.
 
 \subsection{Unit Tests}\label{unit-tests}
 
@@ -28,7 +28,7 @@ tests can be categorised into:
 \item \pycode|list|s and \pycode|tuple|s
 \item NumPy array operations
 \item Type annotations
-\item Miscelaneous
+\item Miscellaneous
 \end{itemize}
 
 Table~\ref{unittesttable} shows the results of evaluating in Pytropos all unit tests.
@@ -40,16 +40,15 @@ There are three cases for the evaluation of a unit test:
 
 \begin{itemize}
 \tightlist
-\item[[\✔]\!\!\!] The test run as it was expected, i.e. Pytropos catch all expected errors and
+\item \✔: The test ran as it was expected, i.e. Pytropos catch all expected errors and
   computed all values correctly.
-\item[[\.\✘]\!\!] The test did not run as expected, i.e. Pytropos did not catch all expected
-  errors or computed some value.
-incorrectly
-\item[[\✙]\!\!\!] It was not possible to run the test because some method, function, or operation
+\item \✘: The test did not run as expected, i.e. Pytropos did not catch all expected
+  errors or computed some value incorrectly.
+\item \✙: It was not possible to run the test because some method, function, or operation
   has not yet been implemented.
 \end{itemize}
 
-The tests check not only for what Pytropos is able to check now, but what it should be
+The tests check not only for what Pytropos is able to check now but what it should be
 able if implemented the whole semantics described in Appendix~\ref{appendix-ai-theory}.
 
 \begin{longtable}[]{|l|l|l|c|c|c|c|}
@@ -71,16 +70,26 @@ able if implemented the whole semantics described in Appendix~\ref{appendix-ai-t
   \bottomrule
 \end{longtable}
 
+As it can be seen in Table~\ref{unittesttable}, Pytropos passes most tests as expected,
+i.e. Pytropos conforms to our definition of the Abstract Interpreter catching all expected
+errors and calculating correctly the values of the variables. The tests that Pytropos does
+not pass are due to subtle semantic rules that have not yet been implemented or a lack in
+the support of built-in values. Pytropos errors come from too much
+\textbf{over}approxitation and never as a result of an \textbf{under}approximation.
+
 \subsection{Property-based Tests}\label{property-based-tests}
 
-Property-based testing consists in writing a property that a piece of code should fulfill.
+Property-based testing consists in writing a property that a piece of code should fulfil.
 For example, a property of lists is that adding a new element to a list of size \pycode|n|
 gives back a list of size \pycode|n+1|. Property-based testing tools try to find a
 counterexample for a given property. We use property-based testing to check for compliance
-of Pytropos against Python on builtin operations.
+of Pytropos against Python on built-in operations.
 
-There are a total of 20 property-based tests. We use Hypothesis\footnote{Homepage:
-\url{https://hypothesis.works}} to find counterexamples. For each test, Hypothesis
+There are a total of 20 property-based tests. We use Hypothesis\footnote{Hypothesis is a
+  testing tool designed to strategically generate input examples in an attempt to disprove
+  a property about the code. Tests in Hypothesis are properties of what the developer
+  thinks the code should do. Homepage: \url{https://hypothesis.works}}
+to find counterexamples. For each test, Hypothesis
 generates 100 inputs following a predefined strategy which looks for common inputs that
 tend to break code and random inputs. Property-based testing proved to be extremely
 helpful at the initial stages of Pytropos development, as Hypothesis was able to show
@@ -89,14 +98,14 @@ several weak spots in the implementation.
 Many operations between Python values throw exceptions, e.g. \pycode|3 / 0| throws a
 zero-division exception. Some of the values that trigger exceptions should be known to
 every programmer, but others have been quite surprising as they have appeared. Thanks to
-Property-based tests, Pytropos primitive values have been extensibly tested. The following
+Property-based tests, Pytropos primitive values have been extensively tested. The following
 are some of the exceptions that Hypothesis helped us find:
 
 \begin{itemize}
 \tightlist
 \item Zero-division exception on expressions like \pycode|5 \% 0| or \pycode|5 \% False|
 \item Value exception on expressions like \pycode|5 << -2|
-\item Excesive High-memory consumption on expressions like \pycode|5 << 10**10|
+\item Excessive High-memory consumption on expressions like \pycode|5 << 10**10|
 \item Overflow exception on expressions like \pycode|10**209 + 2.0|
 \end{itemize}
 
@@ -124,13 +133,13 @@ The following are some tests where Pytropos runs as expected and it is able to c
   d += 1              d += 1              d += 1
   \end{pythoncode*}
 
-  In the first two examples Pytropos selects correcty which branch to execute and warns
+  In the first two examples, Pytropos selects correctly which branch to execute and warns
   the user of the use of an undeclared variable, \pycode|d|.  All undeclared variables are
   set by default to \pycode|Undefined|. If an undeclared variable is used, it is set to
   $\top$.
 
   In the third example, Pytropos warns the user of the undeclared use of the variable
-  \pycode|d| and choses to execute both branches separately with a copy each of the state
+  \pycode|d| and chooses to execute both branches separately with a copy each of the state
   of the program. The new state of the program is the result of joining the two final
   states of running each branch.
 
@@ -206,7 +215,7 @@ The following are some tests where Pytropos runs as expected and it is able to c
           i += 1            i += 1          i += 1
   \end{pythoncode*}
 
-  Anytime Pytropos is asked to execute a loop, it tries to run the loop as any other
+  Anytime Pytropos is asked to execute a loop, it tries to run the loop like any other
   interpreter, i.e. Pytropos will run the body of the loop until the condition becomes
   false. For example, in the first piece of code the condition \pycode|i < 10| becomes
   false after 10 iterations, and the final state of the program is reached (\pycode|i| and
@@ -217,16 +226,16 @@ The following are some tests where Pytropos runs as expected and it is able to c
   possible to determine the truth value of the condition, Pytropos will the loop on a copy
   state and it will apply the widen operation on the two states. Abstract Interpretation
   warranties that the repeated application of the widen operation on an increasing
-  sequence (loop application) will eventually stop and find a fix point. The second and
-  third example arrive to the same state, \pycode|i| and \pycode|j| have the value
+  sequence (loop application) will eventually stop and find a fixpoint. The second and
+  third example arrive at the same state, \pycode|i| and \pycode|j| have the value
   $\top_{\text{Int}}$, albeit after different executions are made. In the second example,
   Pytropos executes the loop until it reaches the maximum number of executions allowed,
   then it executes the body of the loop in a copy of the state and applies the widening
-  operator on the two states. In the third example, no execution prior applying the
+  operator on the two states. In the third example, no execution prior to applying the
   widening operation is performed as the truth value of \pycode|i < n| cannot be
   determined as \pycode|n| has not been defined.
 
-\item Pytropos is able to determine appropiately the shapes of NumPy arrays defined from
+\item Pytropos is able to determine appropriately the shapes of NumPy arrays defined from
   lists, tuples and NumPy arrays.
 
   \begin{pythoncode*}{autogobble}
@@ -284,16 +293,16 @@ The following are some tests where Pytropos runs as expected and it is able to c
 
     from pytropos.hints.numpy import NdArray
 
-    a: NdArray[2,3,4] = np.array(somelib.val)  # a should be array(shape=(2,3,4))
-    b: NdArray[1,2] = somelib.numpyval()       # b should be array(shape=(1,2))
+    a: NdArray[2,3,4] = np.array(somelib.val) # a should be array(shape=(2,3,4))
+    b: NdArray[1,2] = somelib.numpyval()      # b should be array(shape=(1,2))
     c = [[6], [8]]
-    c = np.array(c)                            # c should be array(shape=(2,1))
-    d = b + c                                  # d should be array(shape=(2,2))
-    e: NdArray[2, 5] = c                       # Error. e should be array(shape=(2,1))
-    f: NdArray[()] = np.array(2)               # Everything ok. f is array(shape=())
-    g: NdArray[int,2] = somelib.numpyval()     # g should be array(shape=(int?,2))
-    h: NdArray[6,2] = np.array(g)              # h should be array(shape=(6,2))
-    i: NdArray[10] = somelib.x()               # i should be array(shape=(10,))
+    c = np.array(c)                           # c should be array(shape=(2,1))
+    d = b + c                                 # d should be array(shape=(2,2))
+    e: NdArray[2, 5] = c                      # Error. e should be array(shape=(2,1))
+    f: NdArray[()] = np.array(2)              # Everything ok. f is array(shape=())
+    g: NdArray[int,2] = somelib.numpyval()    # g should be array(shape=(int?,2))
+    h: NdArray[6,2] = np.array(g)             # h should be array(shape=(6,2))
+    i: NdArray[10] = somelib.x()              # i should be array(shape=(10,))
   \end{pythoncode*}
 
   Type annotations can only improve the current computed value. If a faulty type
@@ -359,7 +368,7 @@ The following are all the tests where Pytropos does not work as intended. It eit
 
   In the example, Pytropos runs the loop until it reaches the iteration limit. In which
   point, it runs the loop one more time in a state copy and applies the widening operator
-  on the states. Pytropos fails to run anyfurther as the widening operator has not yet
+  on the states. Pytropos fails to run any further as the widening operator has not yet
   been implemented.
 
 \item Pytropos is in active development, thus it lacks support to many primitives.
@@ -374,7 +383,7 @@ The following are all the tests where Pytropos does not work as intended. It eit
 
   In the example, the expected result is a warning explaining that one of the dimensions
   of an array cannot be a floating number. All dimensions of an array must be natural
-  numbers. Pytropos, flags the code as faulty because \pycode|float| has not been defined.
+  numbers. Pytropos flags the code as faulty because \pycode|float| has not been defined.
 
 \end{itemize}
 
@@ -383,7 +392,7 @@ The following are all the tests where Pytropos does not work as intended. It eit
 \subsection{Using Pytropos as a linter}
 
 Any time Pytropos detects an error in the interpretation, Pytropos logs the error in a
-structure to be latter printed out to the user.
+structure to be later printed out to the user.
 
 Writing a plugin to integrate Pytropos to any IDE is simple as Pytropos writes into console
 in a standard format. Pytropos outputs all warnings in the format:
@@ -393,12 +402,12 @@ file:col:line: ERRORCODE: Warning message
 \end{verbatim}
 
 A plugin in vimscript was written for Pytropos to use Pytropos as a linter for the text
-editor (Neo)Vim. As it can be seen in Figure~\ref{pytroposlinter}, the developer can get
-feedback on their code on realtime.
+editor (Neo)Vim. As can be seen in Figure~\ref{pytroposlinter}, the developer can get
+feedback on their code on real-time.
 
 \begin{figure}
 \includegraphics[width=\textwidth]{figures/neovim-linter.png}
-\caption{Example of warning message displayed in (Neo)Vim as a result of checking the code
+\caption{Example of a warning message displayed in (Neo)Vim as a result of checking the code
   with Pytropos.\label{pytroposlinter}}
 \end{figure}
 
@@ -442,9 +451,9 @@ The required steps to use Pytropos as a linter in (Neo)Vim are:
 
 \subsection*{Summary}
 
-Pytropos is still at a very early stage of development. Its repeirtoire of Python
-characteristics is still small (No support for \pycode|for| statement, custom classes and
-objects, exception handling and the lack of builtin definitions). Nonetheless, Pytropos
+Pytropos is still at a very early stage of development. Its repertoire of Python
+characteristics is still small: no support for \pycode|for| statement, custom classes and
+objects, exception handling and the lack of built-in definitions. Nonetheless, Pytropos
 can check for errors on operations between tensors and can be extended to work with more
 libraries.
 
@@ -452,5 +461,8 @@ Pytropos is able to check for the many common cases and mistakes that can be mad
 working with tensors. It is able to calculate the shape of tensors in a variety of
 circumstances and can handle tricky or complex methods as the function \pycode|array| from
 NumPy. The NumPy function \pycode|array| can evaluate almost anything as an array.
+Pytropos is able to calculate correctly the value of primitive Python values like
+integers and floats. It can join two values and states of appropriately. It is able to
+apply the widen operator in certain conditions.
 % Other libraries An example of why this is important can be seen in the library\todo{add
 % ref to numpy mypy lib}.

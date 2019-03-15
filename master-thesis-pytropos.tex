@@ -20,7 +20,7 @@
 
 % Based on: https://tex.stackexchange.com/a/17819
 \newif\ifdraft
-\drafttrue
+\draftfalse
 
 \PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
 \PassOptionsToPackage{hyphens}{url}
@@ -236,54 +236,87 @@ Application to Tensor Shape Analysis} % Your thesis title, this is used in the t
 \pagestyle{plain} % Default to the plain heading style until the thesis style is called for the body content
 
 %----------------------------------------------------------------------------------------
-% TITLE PAGE
+% TITLE PAGE 1
 %----------------------------------------------------------------------------------------
 
 \begin{titlepage}
 \begin{center}
 
 \vspace*{.06\textheight}
-\includegraphics[width=0.23\textwidth]{figures/escudo.png}\\
-{\scshape\LARGE \univname\par}\vspace{1.2cm} % University name
-\textsc{\Large Master thesis}\\[0.3cm] % Thesis type
+\includegraphics[width=0.15\textwidth]{figures/escudo.png}\\
+\includegraphics[width=0.20\textwidth]{figures/escudo_title.png}\\
+\vspace{2cm} % University name
 
 \HRule \\[0.4cm] % Horizontal line
 {\huge \bfseries \ttitle\par}\vspace{0.4cm} % Thesis title
-\HRule \\[8mm] % Horizontal line
+\HRule \\[2cm] % Horizontal line
 
-\begin{minipage}[t]{0.4\textwidth}
-\begin{flushleft} \large
-\emph{Author:}\\
-\authorname
-\end{flushleft}
-\end{minipage}
-\begin{minipage}[t]{0.4\textwidth}
-\begin{flushright} \large
-\emph{Supervisor:} \\
+{\Large \authorname}
+
+\vfill
+
+\begin{spanish}
+Universidad Nacional de Colombia\\
+Facultad de Ingeniería\\
+\deptname\\
+%\groupname\\
+Bogotá, Colombia\\
+2019
+\end{spanish}
+
+\end{center}
+\end{titlepage}
+
+
+\cleardoublepage
+
+%----------------------------------------------------------------------------------------
+% TITLE PAGE 2
+%----------------------------------------------------------------------------------------
+
+\begin{titlepage}
+\begin{center}
+
+\HRule \\[0.4cm] % Horizontal line
+{\huge \bfseries \ttitle\par}\vspace{0.4cm} % Thesis title
+\HRule \\[2cm] % Horizontal line
+
+{\Large \authorname}
+
+\vfill
+
+\begin{spanish}
+\textit{\large Tesis presentada como requisito parcial para optar por el título:} \\
+Magíster en Ingeniería de Sistemas y Computación\\[0.3cm] % University requirement text
+
+\vfill
+
+\emph{Director:} \\
 \supname
 \\[2mm]
-\emph{Co-supervisor:} \\
+\emph{Co-director:} \\
 \cosupname
 
-\end{flushright}
-\end{minipage}\\[8mm]
+\vfill
+
+\textit{\large Línea de Investigación:}\\
+Lenguajes de Programación
+\\[0.3cm] % University requirement text
+\textit{\large Grupos de Investigación:}\\
+\groupname%
+\end{spanish}
 
 \vfill
 
-\large \textit{
-  A thesis submitted in fulfillment of the requirements\\%
-  for the degree of \degreename%
-}\\[0.3cm] % University requirement text
-\textit{in the}\\[0.4cm]
-\groupname\\%
-\deptname\\[1.3cm] % Research group name and department name
+\begin{spanish}
+Universidad Nacional de Colombia\\
+Facultad de Ingeniería\\
+\deptname\\
+%\groupname\\
+Bogotá, Colombia\\
+2019
+\end{spanish}
 
-\vfill
-
-{\large \today}\\[8mm] % Date
-%\includegraphics{Logo} % University/department logo - uncomment to place it
-
-\vfill
 \end{center}
 \end{titlepage}
 
@@ -294,9 +327,9 @@ Application to Tensor Shape Analysis} % Your thesis title, this is used in the t
 % QUOTATION PAGE
 %----------------------------------------------------------------------------------------
 
-\ifdraft
-\inlinetodo{Should I add an epigraph? The first pages of this document are already pretty
-crowded with stuff so I'm not sure that it would be a good idea to do so}
+%\ifdraft
+% \inlinetodo{Should I add an epigraph? The first pages of this document are already pretty
+% crowded with stuff so I'm not sure that it would be a good idea to do so}
 
 \vspace*{0.2\textheight}
 
@@ -312,7 +345,13 @@ finding out what's actually going on are so absurdly remote that the only thing 
 is to say, \enquote{Hang the sense of it,} and keep yourself busy.}\bigbreak
 
 \hfill Douglas Adams, The Hitchhiker's Guide to the Galaxy
-\fi
+%\fi
+
+%----------------------------------------------------------------------------------------
+% DEDICATION
+%----------------------------------------------------------------------------------------
+
+\dedicatory{A mi mamá y a mi abuelita\\¡Gracias por todo lo que han hecho por mí!}
 
 %----------------------------------------------------------------------------------------
 % ABSTRACT PAGE
@@ -331,8 +370,8 @@ Research, the verb, is as any other skill, a thing that you develop only with ti
 practice. And boy, have I not been in a intensive camp for the last two years. Research is
 hard, but harder is to explain what you have done. One of the most useful and important
 parts of this journey has been writing everything down.  Research is not always fun,
-failing at it is depressing, and also it has those boring and ardous parts like state of
-the art paper search. Fortunately, I was not alone in this journey, I have been sorrounded
+failing at it is depressing, and also it has those boring and arduous parts like state of
+the art paper search. Fortunately, I was not alone in this journey, I have been surrounded
 by masters in the art and I would like to thank them.
 
 To my advisors:
@@ -352,10 +391,10 @@ To the staff and people at the university:
 \tightlist
 \item Jonatan Perdomo, who told me with years of anticipation what I should not be doing.
   His knowledge in what could be wrong has always been an inspiration to do better.
-\item Rodrigo, Oscar, and all the others for their support and company in the long and
-  ardous days at the university.
+\item Rodrigo, Oscar, and all others in the Mindlab group for their support and company in the long and
+  arduous days at the university.
 \item To all my students, who showed me how hard it is to actually program human heads.
-  Some are very succeptible others impossible to push.
+  Some are very susceptible others impossible to push.
 \end{itemize}
 
 No human being can live without others, we all need a social net, something to support
@@ -364,12 +403,12 @@ To my friends:
 
 \begin{itemize}
 \tightlist
-\item Sergio Dorado, who motivated me to do my best and find new goals. He contagied me--I
+\item Sergio Dorado, who motivated me to do my best and find new goals. He contaged me--I
   envy him--with his ideas and accomplishments.
-\item Helen, who, even at 8 thounsand kilometers away, was able to find time to chat
+\item Helen, who, even at 8 thousand kilometres away, was able to find time to chat
   with this Colombian guy.
 \item William, Solene and Vinicius for their time and memories.
-\item Vicky, whos perseverance I envy, and whos work and learning ethic I try to imitate.
+\item Vicky, whose perseverance I envy, and whose work and learning ethic I try to imitate.
 \end{itemize}
 
 To the external events that delayed or accelerated this thesis culmination:
@@ -378,7 +417,7 @@ To the external events that delayed or accelerated this thesis culmination:
 \tightlist
 \item To the \enquote{paro}, a students university strike, for giving me 3 extra months to
   write this document,  and
-\item To the sicknesses of my family members, which helped me center myself in what is
+\item To the sicknesses of my family members, which helped me centre myself in what is
   important.
 \end{itemize}
 
@@ -394,7 +433,7 @@ family:
 \tightlist
 \item Isabel Camacho, my mom, who has done all the boring tasks and to let me concentrate
   on the work, I owe her my life.
-\item María del Carmen Gordillo, my granma, who has alwalys been keen on my health and my
+\item María del Carmen Gordillo, my granma, who has always been keen on my health and my
   mom's.
 \item My cousins Paola, Laura, Danilo, Angie, Duvan, and Karol who have always given me
   some excuse to relax, and from whom I have learnt so much about.
@@ -416,12 +455,6 @@ To all, thank you for being there.
 
  % Prints the list of tables
 
-
-%----------------------------------------------------------------------------------------
-% DEDICATION
-%----------------------------------------------------------------------------------------
-
-\dedicatory{A mi mamá y a mi abuelita\\¡Gracias por todo lo que han hecho por mí!}
 
 %----------------------------------------------------------------------------------------
 % THESIS CONTENT - CHAPTERS

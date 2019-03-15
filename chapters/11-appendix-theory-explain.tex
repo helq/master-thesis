@@ -1,51 +1,37 @@
 \chapter{Python Static Analysis based on Abstract Interpretation}%
 \label{appendix-ai-theory}
 
-\ichange{I need to re-read the chapter and adapt it to work as an appendix}
+This appendix is divided into two parts: first, we present a reduced set of the Python
+syntax together with a (partial) operational semantics; second, we show the use of the
+formal semantic definition to define the abstract interpretation solution we implemented.
 
-This chapter is divided into two parts: first, I present a reduced set
-of Python syntax together with a (partial) formal definition of Python
-semantics, and later, I show the use of the formal semantic definition
-to define the abstract interpretation solution I implemented.
+This chapter is meant to explain the theory behind the Abstract Interpreter implemented.
+In Chapter~\ref{pytropos-analysis-implementation} an explanation on the implementation
+details is given.
 
-This chapter is meant to explain the theory behind the Abstract
-Interpreter implemented. In the next chapter an explanation of the
-implementation details is given\footnote{Opposed to how it looks like,
-  the implementation came first. The formalisation has only been written
-  specifically for this work.}.
+\section{Python (reduced) syntax and semantics}
 
-\section{Python (reduced) syntax and semantics}%
-\label{python-reduced-syntax-and-semantics}
-
-Python has no official formal semantics. The Python Software Foundation
+Python has no official small-step (formal) semantics. The Python Software Foundation
 defines a Reference Manual for the language
-\autocite{python_software_foundation_python_2019}, but they are explicit
-that the manual does not define a full specification for the language.
-Quote: \enquote{\ldots{} if you were coming from Mars and tried to
-re-implement Python from this document alone, you might have to guess
-things and in fact you would probably end up implementing quite a
-different language.}
+\autocite{python_software_foundation_python_2019}, but they are explicit that the manual
+does not define a full specification for the language. Quote: \enquote{\ldots{} if you
+were coming from Mars and tried to re-implement Python from this document alone, you might
+have to guess things and in fact, you would probably end up implementing quite a different
+language.}
 
-There have been a couple of formal specifications defined for Python
+There have been a couple of small-step semantics defined for Python
 \autocites{politz_python_2013}{fromherz_static_2018}{guth_formal_2013}{ranson_semantics_2008}.
-In this work we will define yet one more set of formal semantics for
-Python. I{\todo{ok, I really have no idea if everything should be
-written in third or first person, and if it can be written in both, when
-should the shift occur}} decided to define my own subset of Python
-because of my specific needs, some formalisations had more than what I
-needed and other lacked some aspect that I wanted.
+In this work, we define yet one more time small-step semantics for Python. We decided to
+define our small-step semantics for Python because of our specific needs.
 
-I got to admit that my formalisation resembles the most that of
-\textcite{fromherz_static_2018}. In fact my formalisation is loosely
-based on \textcite{fromherz_static_2018} althought the semantics of both
-are quiet different. As in \textcite{fromherz_static_2018}, we define
-each expression and statement step as a function from states of the
-program to states of the program, but opposed to them I do not include
-exception handling and breaking statements. My formalisation allows
-every single value in the language to be an object: functions,
-attributes, subscripts, and primitive values are all objects just as in
-regular Python. The following is valid in Python and in this
-formalisation:
+Our semantics definition resembles the most that of \textcite{fromherz_static_2018}. In
+fact, our
+definition is loosely based on \textcite{fromherz_static_2018}. As Fromherzet.~al, we
+define each expression and statement step as a function from states to states of the
+program, but opposed to them we do not include exception handling and breaking statements.
+Our definition allows every single value in the language to be an object: functions,
+attributes, subscripts, and primitive values are all objects just as in regular Python.
+The following is valid in Python and in our definition:
 
 \begin{pythoncode}
 a = []
@@ -55,16 +41,14 @@ a.append(2.0)
 print(a)  # prints: [3, 2.0]
 \end{pythoncode}
 
-In this sense, my formalisation is closer to that of
-\textcite{politz_python_2013}, where they also show how their
-formalisation is able to handle similarly complex examples.
+In this sense, our definition is closer to that of \textcite{politz_python_2013}, where
+they also show how their semantics are able to handle similarly complex examples.
 
 \subsection{(Reduced) Syntax}\label{reduced-syntax}
 
-A simplified version of Python's Syntax. Modified from AST's syntax
-below.
+A simplified version of Python's Syntax. Modified from AST's syntax below.
 
-{\inlinetodo{Translate into LaTeX equations}}
+% {\inlinetodo{Translate into LaTeX equations}}
 
 \begin{verbatim}
 mod = stmt*  -- A program. Starting point
@@ -101,13 +85,13 @@ alias = identifier | identifier as identifier
 identifier = string  -- with some restrictions
 \end{verbatim}
 
-The syntax above is a subset of the Python 3.6 syntax. CPython does not
-directly interpret code written in the syntax above. The usual steps of
-lexing and parsing into a more explicit representation are necessary. We
-will define the semantics of the language over a reduced parser syntax
-and not the syntax defined above, as it eases the semantic definition of
-the language. \footnote{Modified from the Python 3.6 syntax found at
-  https://github.com/python/typed\_ast/blob/89242344f18f94dc109823c0732325033264e22b/ast3/Parser/Python.asdl}
+The syntax above is a subset of the Python 3.6 syntax. CPython does not directly interpret
+code written in the syntax above. The usual steps of lexing and parsing into a more
+explicit representation are necessary. We will define the semantics of the language over a
+reduced parser syntax and not the aforementioned syntax. The reasoning behind it is that
+in this syntax it is easier to indicate the context in which an expression is being
+executed. \footnote{Modified from the Python 3.6 syntax found at
+\url{https://github.com/python/typed_ast/blob/89242344f18f94dc109823c0732325033264e22b/ast3/Parser/Python.asdl}}
 
 \begin{verbatim}
 mod = Module(stmt* body)
@@ -151,19 +135,17 @@ cmpop = Lt | LtE | Gt | GtE
 alias = (identifier, identifier?)
 \end{verbatim}
 
-Code written in our subset of Python gets translated into this
-\enquote{AST} representation, over which we define the semantics of the
-language. We will no describe the process of translation as it is a very
-well studied subject (parsing), but will explore some important examples
-to show why the translation aids into the definition of the formal
-semantics of the language:
+Code written in our subset of Python gets translated into this (AST) representation, over
+which we define the semantics of the language. We will no describe the process of
+translation (parsing), but we will explore some examples to show why the translation aids
+into the definition of the small-step semantics:
 
 \begin{itemize}
 \item
   \pycode|a + b| gets translated into
   \pycode|BinOp(Add, Name(a, Load), Name(b, Load))|. Notice the
   \pycode|Load| context, it indicates that we want to get the value of
-  the variable not a reference to it (if we wanted to alter it).
+  the variable, not a reference to it (if we wanted to alter it).
 \item
   \pycode|a = 3| gets translated into
   \pycode|Assign(Name(a, Store), Int(3))|. Notice the \pycode|Store|
@@ -172,25 +154,25 @@ semantics of the language:
 \item
   \pycode|del a| gets translated into \pycode|Delete(Name(a, Del))|.
   Notice the \pycode|Del| context, it tells us that we will get the
-  object where it was called from as well as it possition in the heap.
+  object where it was called from as well as its position in the heap.
 \item
   \pycode|a.b[3] + b.c| gets translated into
 
-\begin{verbatim}
+\begin{pythoncode}
 BinOp(Add,
   Subscript(Attribute(Name(a, Load), b), Int(3), Load),
   Attribute(Name(b, Load), c)
 )
-\end{verbatim}
+\end{pythoncode}
 \item
   \pycode|a.b[3] = 3| gets translated into
 
-\begin{verbatim}
+\begin{pythoncode}
 Assign(
   Subscript(Attribute(Name(a, Load), b), Int(3), Store),
   Int(3)
 )
-\end{verbatim}
+\end{pythoncode}
 
   Notice how we only get the \pycode|Store| context for the subscript
   and not for anything else, as we only want to know where the value of
@@ -198,39 +180,35 @@ Assign(
 \item
   \pycode|del a.b[3]| gets translated into
 
-\begin{verbatim}
+\begin{pythoncode}
 Delete(
   Subscript(Attribute(Name(a, Load), b), Int(3), Del)
 )
-\end{verbatim}
+\end{pythoncode}
 
   Notice how we only get the \pycode|Del| context for the subscript and
-  not for anything eles, as we only want where and whom belongs to the
+  not for anything else, as we only want where and who belongs to the
   subscript and nothing else.
 \end{itemize}
 
-We will see in a moment, but the semantics of a \pycode|del| require us
+The semantics of a \pycode|del| require us
 to know where the identifier or attribute is located (in an object or
-the store). Assigning a variable require us to know where to put a
-variable. Accessing to innexistant attribute
+the store). Assigning a variable requires us to know where to put a
+variable. Accessing to inexistent attribute
 (\pycode|class A(): ...; a = A(); a.length # error: attribute unknown|)
 it's not the same as to defining a new attribute
 (\pycode|class A(): ...; a = A(); a.length = 3 # works!|),
 thus we need a way to distinguish between this three different
-stament-dependent expressions.
+statement-dependent expressions.
 
-{\inlinetodo{damn, this needs a rewrite :S}}
-
-As you may have noticed already, my subset of Python does not have the
-ability to allow the definition of custom functions or classes. Despite
-the unability to define a custom function or class in the language, we
-want to be able to call a function and access to objects attributes. We
-have found that even though the amount of characteristics we support
-right now is small, we are able to capture some common errors caused
-when coding (e.g.~\pycode|5 \% 0| fails and we can capture it).
+Our subset of Python does not have the ability to allow the definition of custom functions
+or classes. Despite the inability to define a custom function or class in the language, we
+want to be able to call a function and access to objects attributes. We have found that
+even though the amount of characteristics we support right now is small, we are able to
+capture some common errors caused when coding (e.g.~\pycode|5 \% 0| fails and we can
+capture it).
 
 \subsection{Python (reduced) small step semantics}
-\label{python-reduced-small-step-semantics}
 
 There are two types of values (objects):
 
@@ -242,23 +220,22 @@ There are two types of values (objects):
   (\pycode|True| and \pycode|False|), and the lonely \pycode|None|
   value.
 \item
-  Mutable values: \pycode|Object|. An \pycode|Object| is a value that
+  Mutable values: \pycode|Object|. A \pycode|Object| is a value that
   holds a type, an address to where is located, and a
   \enquote{dictionary} pointing to other values.
 \end{itemize}
 
-Lists, Tuples, builtin Functions, builtin Modules, builtin Classes, and
-builtin Methods derive from \pycode|Object|. Mutable Values may not
-allow to change the value of their attributes, as in the case with
-Tuples, the name \enquote{Mutable Values} refers to their ability to
+Lists, Tuples, built-in Functions, built-in Modules, built-in Classes, and
+built-in Methods derive from \pycode|Object|. Mutable Values may not
+allow changing the value of their attributes, as in the case with
+Tuples. The name \enquote{Mutable Values} refers to their ability to
 point at other values (either Primitive and Mutable) and possibly change
 them.
 
-The \textbf{state of a Python program}, called the store of the program,
-is a tuple \pycode|(G, Heap)| where \pycode|G| is the \enquote{global
-scope} of variables, and \pycode|Heap| the heap (where all values are
-stored). Notice that we are ignoring the statements to execute in the
-state of the program.
+The \textbf{state of a Python program}--called the store of the program--is a tuple
+\pycode|(Global, Heap)| where \pycode|Global| is the \enquote{global scope} of variables,
+and \pycode|Heap| the heap (where all values are stored). Notice that we are ignoring the
+statements to execute in the state of the program.
 
 Putting all together we get:
 
@@ -269,7 +246,7 @@ Heap = Addr -> Val + Undefined   -- Heap
 Key = Iden + (string x (Iden + PrimVal))
 Type = List | Tuple | Module
 
-PrimVal = Int | Float | True | False | None | Undefined
+PrimVal = Int | Float | True | False | None
 Object = Type x Addr x (Key -> Addr + Undefined)
 Val = PrimVal | Object | <prim-callable>
 
@@ -277,35 +254,35 @@ Val = PrimVal | Object | <prim-callable>
 \end{verbatim}
 
 A \pycode|<prim-callable>| is a value that is
-builtin function in Python. The special value \pycode|Undefined| is used
+a built-in function in Python. The special value \pycode|Undefined| is used
 to signal unassigned values in \pycode|Heap|. If one tries to operate
-with an \pycode|Undefined| value the execution should halt, operating
+with a \pycode|Undefined| value the execution should halt, operating
 with \pycode|Undefined| values is forbidden as they never appear on
-Python (In Python, an \pycode|Undefined| value is an errorneous memory
-value, or an unassigned region of memory).
+Python. In Python, a \pycode|Undefined| value is an erroneous memory
+value or an unassigned region of memory.
 
-An \pycode|Iden| is a Python identifier. A Python identifier is a string
+A \pycode|Iden| is a Python identifier. A Python identifier is a string
 that can only contain letters, numbers, and the character \pycode|_|.
-An identifier cannot start with a number\footnote{I am simplifying here
-  for the sake of brevity. In fact Python 3 does allow a wide array of
+An identifier cannot start with a number\footnote{We are simplifying here
+  for the sake of brevity. In fact, Python 3 does allow a wide array of
   Unicode characters to construct an identifier.
   https://docs.python.org/3/reference/lexical\_analysis.html\#identifiers}.
 
-Notice how the index (\pycode|Key|) for the function that relates an
+Notice how the index (\pycode|Key|) for the function that relates a
 \pycode|Object| to its attributes can be one of two things. \pycode|Key|
-is either an \pycode|Iden| or a tuple \pycode|string x PrimVal|. The
+is either a \pycode|Iden| or a tuple \pycode|string x PrimVal|. The
 idea behind indexing an object with two separate kinds of keys is to be
-able to diffirenciate between a value that is inherit to the
-\pycode|Object| and other that the object simply points. Consider a
-list, an inherit, unmodifiable, value of a list is its size. The size of
+able to differentiate between a value that is inherent to the
+\pycode|Object| and others that the object simply points. Consider a
+list, an inherent, unmodifiable, value of a list is its size. The size of
 a list can only be modified if an element is added or removed from it.
 Now, consider the value at the index 2 of the list
 \pycode|[2, 54, [True], 6, 0.0]|, the value is another
-\pycode|Object|. Any object stored in a list is not an intrisic property
+\pycode|Object|. Any object stored in a list is not an intrinsic property
 of the list.
 
 A \pycode|Key| can be a tuple \pycode|string x PrimVal|. There are
-only two types of tuples in the current formalisation, either
+only two types of tuples in the current specification, either
 \pycode|('index', val)| or
 \pycode|('attr', val)|. A key of the
 form \pycode|('attr', val)| indicates
@@ -350,27 +327,29 @@ slightly easier to type and understand \pycode|{x: m, y: n}| than
 
 \subsubsection*{Semantics of Expressions}
 
-In the same manner as \textcite{fromherz_static_2018}, we define the
+In the same manner, as \textcite{fromherz_static_2018}, we define the
 semantics of an \pycode|E[expr]| as a function that
 takes a state and returns a state plus a value.
 
-An expression takes as inputs: * A Global Scope, and * A Heap
+An expression takes as inputs:
+
+\begin{itemize}
+\tightlist
+\item A Global Scope, and
+\item A Heap
+\end{itemize}
 
 and the result of executing an expression is:
 
 \begin{itemize}
 \tightlist
-\item
-  A new Global Scope,
-\item
-  A new Heap, and
-\item
-  One of three things: A \pycode|Val|, an \pycode|Addr| or
-  \pycode|(Object+None)xIden| if the context was \pycode|Load|,
-  \pycode|Store| or \pycode|Del|, respectively.
+\item A new Global Scope,
+\item A new Heap, and
+\item One of three things: A \pycode|Val|, an \pycode|Iden| or
+  \pycode|(Object+None)xIden|.
 \end{itemize}
 
-{\inlinetodo{check all equations, especially E{[}Call(\ldots{}){]}}}
+% {\inlinetodo{check all equations, especially E{[}Call(\ldots{}){]}}}
 
 \begin{verbatim}
 E[expr] : Global x Heap
@@ -478,26 +457,25 @@ E[Call(caller, vals)](G, H) :=
      ...
 \end{verbatim}
 
-\pycode|<Execution\ Halt>| is used in two ways in
+$\Halt$ is used in two ways in
 here. Either it means that we found an operation that throws an
-exception (which this formalisation does not handle), or it means that
+exception (which this specification does not handle), or it means that
 the AST is malformed and nothing can be further calculated (an example
 of this is using the wrong context, e.g.~\pycode|Load| when the value
 required a \pycode|Store| context).
 
-Note: Regarding the semi-casual notation used in here,
-\pycode|type(Something)| is meant to be a shorthand to expanding on the
-definition of \pycode|Something|. The porpuse is to make the code a
-little bit more intelligible.
+% Note: Regarding the semi-casual notation used in here,
+% \pycode|type(Something)| is meant to be a shorthand to expanding on the
+% definition of \pycode|Something|. The porpuse is to make the code a
+% little bit more intelligible.
 
-Notice that we make use of \pycode|get_prim_op| to find the appropiate
+Notice that we make use of \pycode|get_prim_op| to find the appropriate
 primitive function to operate two different values. Later, when we
 extend Python with NumPy arrays will extend \pycode|get_prim_op| to
 work with them.
 
 \begin{verbatim}
 get_prim_op :: Op x Val x Val -> Global x Heap -> Global x Heap x Val
--- Type can be Int, Float, List, ...
 
 get_prim_op(Add, t1, t2) :=
   match (type(v1), type(v2)) in
@@ -525,7 +503,7 @@ As an example, \pycode|<prim-+-int>| is defined as the function:
 \subsubsection*{Statements Semantics}
 
 The semantic of statements is a function between the state of the
-program, just like it was done with expressions. Unlike with expresions,
+program, just like it was done with expressions. Unlike with expressions,
 the semantics of statements do not return any kind of value, they just
 modify the state of the program.
 
@@ -621,164 +599,168 @@ the language, are evaluated and can modify the state of the program. For
 Python 4, it is planned that Type annotations will not modify the state
 of the program\footnote{Well, this is not strictly true. In both, Python
   3.6+ and Python 4, type annotations are stored in the special variable
-  \pycode|__annotations__|. {\inlinetodo{add ref to peps where this
-  is described}}} but must obey the syntax of Python {\todo{add ref to
-pep}}. In Python 3.7 a \pycode|__future__| import was added to
+  \pycode|__annotations__|.
+  %{\inlinetodo{add ref to peps where this is described}}
+}
+but must obey the syntax of Python.
+  %{\todo{add ref to pep}}
+In Python 3.7 a \pycode|__future__| import was added to
 modify the behaviour/semantics of Type Annotations for Python 3.7+. One
 can add \pycode|from __future__ import annotations|
 at the start of the file to forgo the evaluation of type annotations. We
 assume in this work that the type annotations do not alter the state,
-i.e.~we assume that the user implicitely or explicitely is using the
+i.e.~we assume that the user implicitly or explicitly is using the
 \pycode|annotations|' future statement.
 
-In this formalisation, the delete statement is only able to delete
+In this specification, the delete statement is only able to delete
 variables in the global scope, but cannot delete attributes of an
-object. This limitation comes from the fact that, the formalisation
+object. This limitation comes from the fact that the specification
 lacks the capacity to define user-defined classes. Future work will
 focus on extending the state model to include function variable scope,
 and the ability to define functions and classes.
-%
-% \subsection{NdArrays}\label{ndarrays}
-%
-% The purpose of the formalisation is to be able to construct from it an
-% Abstract Interpreter. To test the Abstract Interpreter abilities to find
-% bugs it should be able to handle NumPy array (tensors). In this
-% subchapter, I extend the formalisation with NumPy array and discuss some
-% of their semantics.
-%
-% The following are all the things to take into account when extending our
-% formalisation to handle a new type of \enquote{builtin} \pycode|Object|
-% type:
-%
-% \begin{enumerate}
-% \def\labelenumi{\arabic{enumi}.}
-% \item
-%   Extend the types of \pycode|Object|s to handle NumPy arrays.
-%
-% \begin{verbatim}
-% Type = List | Tuple | Module | NdArray
-% \end{verbatim}
-%
-%   As an example, consider the numpy array \pycode|np.zeros((4, 3))|, it
-%   can be expressed as:
-%
-% \begin{verbatim}
-% Object(NdArray,
-%  0xanumber,
-%  -- The shape of a NdArray is a tuple of integers
-%  { 'shape' -> Object(Tuple,
-%                0xothernum,
-%                { 'size' -> 2,
-%                  ('index', 0) -> 4,
-%                  ('index', 1) -> 3,
-%                }
-%               )
-%    ('index', 0) -> 0,
-%    ... -- all other indices, each one identified by an integer
-%  }
-% )
-% \end{verbatim}
-%
-%   Note: Remember that an \pycode|Object| is a triple of the form
-%   \pycode|Type x Addr x (Key -> Addr + Undefined)|.
-%   Also remember that example above is faulty as the codomain of the
-%   function defined above is \pycode|Val| not \pycode|Addr| as it should
-%   be.
-% \item
-%   Extend primitive functions with NumPy's primitive functions. The
-%   NumPy's primitive functions implemented in the Abstract Interpreter
-%   are: \pycode|array|, \pycode|zeros|, \pycode|dot|, \pycode|ones|,
-%   \pycode|abs| (and all other functions that don't alter the shape of
-%   the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
-%   \pycode|astype|, and \pycode|T|.
-%
-% \begin{verbatim}
-% <prim-callable> = ... (old operations) |
-%                   <prim-np-zeros> | <prim-np-dot> | <prim-np-abs> | ...
-% \end{verbatim}
-%
-%   Note: The values stored inside a NumPy array are consider irrelevant
-%   in this work. The Value Analysis built in this work considers only the
-%   shape of tensors, as tensors can be huge and their contents do not
-%   often influence their shape. Therefore, it would be wasteful to give a
-%   detailed formalisation of the NumPy library primitives.
-%
-%   Nonetheless, defining formaly each one of the NumPy functions above is
-%   fairly straightforward. Although, the hardest part of a formal
-%   defitinion of NumPy arrays is detailing how \pycode|array| works. To
-%   define the function \pycode|<np-array>| one
-%   must consider the many input cases it can handle, and it can handle
-%   almost any Python object\footnote{The NumPy function \pycode|array|
-%     takes almost anything as an input. \pycode|arrays| tries to
-%     interpret its input as an array in any way it can. There is no
-%     formal definition of how the values are interpreted althought its
-%     semantics can be extracted by looking at its C implementation:
-%     https://stackoverflow.com/a/40380014}.
-%
-%   Once the \pycode|<np-array>| function is
-%   implemented all other functions are much simpler to define. As an
-%   example, the implementation of the function \pycode|size| is:
-%
-% \begin{verbatim}
-% <prim-np-size>(val)(G, H) :=
-%    -- We know that `<prim-array>` always returns an NdArray
-%    let (G, H, (NdArray, addr, arr)) := <prim-array>(val)(G, H)
-%    -- We know that a NdArray has a special value called `shape`
-%        (Tuple, addrtup, tup) := arr('shape')
-%    in  tup('size')
-% \end{verbatim}
-% \item
-%   Extend the cases that \pycode|get_prim_op| handles to cover NumPy
-%   arrays. All operations defined in NumPy handle broadcasting.
-%   {\todo{Explain what broadcasting is}} For example:
-%
-% \begin{verbatim}
-% get_prim_op(Add, v1, v2) :=
-%   match (type(v1), type(v2)) in
-%     ... -- old cases
-%     case (NdArray, t1) ->
-%       \(G, H)->
-%         let (G1, H1, ndarr) := <prim-array>(v2)(G, H)
-%         in  <prim-+-ndarray>(v1, ndarr, G1, H1)
-%     case (t1, NdArray) ->
-%       \(G, H)->
-%         let (G1, H1, ndarr) := <prim-array>(v1)(G, H)
-%         in  <prim-+-ndarray>(ndarr, v2, G1, H1)
-%     case otherwise -> <Execution Halt>
-% \end{verbatim}
-% \item
-%   The NumPy module holding all operations is defined:
-%
-% \begin{verbatim}
-% <numpy-mod> := Object(Module,
-%  -1,  -- This value will be changed once it is imported
-%  { ('attr', 'array') -> <prim-array>,
-%    ('attr', 'dot')   -> <prim-dot>,
-%    ('attr', 'zeros') -> <prim-zeros>,
-%    ('attr', 'ones')  -> <prim-ones>,
-%    ...
-%  }
-% )
-% \end{verbatim}
-% \item
-%   And finally, \pycode|S[Import(name)]| is extended (now it handles
-%   a single library):
-%
-% \begin{verbatim}
-% S[Import(name)](G, H) :=
-%   match name in
-%     ("numpy",) ->
-%       let (Module, arr, mod) := <numpy-mod>
-%           freeaddr := get_free_addr(H)
-%       in  (G['numpy'->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
-%     ("numpy", alias) ->
-%       let (Module, arr, mod) := <numpy-mod>
-%           freeaddr := get_free_addr(H)
-%       in  (G[alias->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
-%
-%     otherwise -> <Execution Halt>
-% \end{verbatim}
-% \end{enumerate}
+
+\subsection{NdArrays}\label{ndarrays}
+
+The purpose of the specification is to be able to construct from it an
+Abstract Interpreter. To test the Abstract Interpreter abilities to find
+bugs it should be able to handle NumPy array (tensors). In this
+subchapter, we extend the specification with NumPy array and discuss some
+of their semantics.
+
+The following are all the things to take into account when extending our
+specification to handle a new type of \enquote{built-in} \pycode|Object|
+type:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  Extend the types of \pycode|Object|s to handle NumPy arrays.
+
+\begin{verbatim}
+Type = List | Tuple | Module | NdArray
+\end{verbatim}
+
+  As an example, consider the numpy array \pycode|np.zeros((4, 3))|, it
+  can be expressed as:
+
+\begin{verbatim}
+Object(NdArray,
+ 0xanumber,
+ -- The shape of a NdArray is a tuple of integers
+ { 'shape' -> Object(Tuple,
+               0xothernum,
+               { 'size' -> 2,
+                 ('index', 0) -> 4,
+                 ('index', 1) -> 3,
+               }
+              )
+   ('index', 0) -> 0,
+   ... -- all other indices, each one identified by an integer
+ }
+)
+\end{verbatim}
+
+  Note: Remember that an \pycode|Object| is a triple of the form
+  \pycode|Type x Addr x (Key -> Addr + Undefined)|.
+  Also, remember that example above is faulty as the codomain of the
+  function defined above is \pycode|Val| not \pycode|Addr| as it should
+  be.
+\item
+  Extend primitive functions with NumPy's primitive functions. The
+  NumPy's primitive functions implemented in the Abstract Interpreter
+  are: \pycode|array|, \pycode|zeros|, \pycode|dot|, \pycode|ones|,
+  \pycode|abs| (and all other functions that don't alter the shape of
+  the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
+  \pycode|astype|, and \pycode|T|.
+
+\begin{verbatim}
+<prim-callable> = ... (old operations) |
+                  <prim-np-zeros> | <prim-np-dot> | <prim-np-abs> | ...
+\end{verbatim}
+
+Note: The values stored inside a NumPy array are considered irrelevant
+  in this work. The Value Analysis built in this work considers only the
+  shape of tensors, as tensors can be huge and their contents do not
+  often influence their shape. Therefore, it would be wasteful to give a
+  detailed specification of the NumPy library primitives.
+
+  Nonetheless, defining formally each one of the NumPy functions above is
+  fairly straightforward. Although, the hardest part of a formal
+  definition of NumPy arrays is detailing how \pycode|array| works. To
+  define the function \pycode|<np-array>| one
+  must consider the many input cases it can handle, and it can handle
+  almost any Python object\footnote{The NumPy function \pycode|array|
+    takes almost anything as an input. \pycode|array| tries to
+    interpret its input as an array in any way it can. There is no
+    formal definition of how the values are interpreted although its
+    semantics can be extracted by looking at its C implementation:
+    https://stackoverflow.com/a/40380014}.
+
+  Once the \pycode|<np-array>| function is
+  implemented all other functions are much simpler to define. As an
+  example, the implementation of the function \pycode|size| is:
+
+\begin{verbatim}
+<prim-np-size>(val)(G, H) :=
+   -- We know that `<prim-array>` always returns an NdArray
+   let (G, H, (NdArray, addr, arr)) := <prim-array>(val)(G, H)
+   -- We know that a NdArray has a special value called `shape`
+       (Tuple, addrtup, tup) := arr('shape')
+   in  tup('size')
+\end{verbatim}
+\item
+  Extend the cases that \pycode|get_prim_op| handles to cover NumPy
+  arrays. All operations defined in NumPy handle broadcasting.
+  %{\todo{Explain what broadcasting is}}
+  For example:
+
+\begin{verbatim}
+get_prim_op(Add, v1, v2) :=
+  match (type(v1), type(v2)) in
+    ... -- old cases
+    case (NdArray, t1) ->
+      \(G, H)->
+        let (G1, H1, ndarr) := <prim-array>(v2)(G, H)
+        in  <prim-+-ndarray>(v1, ndarr, G1, H1)
+    case (t1, NdArray) ->
+      \(G, H)->
+        let (G1, H1, ndarr) := <prim-array>(v1)(G, H)
+        in  <prim-+-ndarray>(ndarr, v2, G1, H1)
+    case otherwise -> <Execution Halt>
+\end{verbatim}
+\item
+  The NumPy module holding all operations is defined:
+
+\begin{verbatim}
+<numpy-mod> := Object(Module,
+ -1,  -- This value will be changed once it is imported
+ { ('attr', 'array') -> <prim-array>,
+   ('attr', 'dot')   -> <prim-dot>,
+   ('attr', 'zeros') -> <prim-zeros>,
+   ('attr', 'ones')  -> <prim-ones>,
+   ...
+ }
+)
+\end{verbatim}
+\item
+  And finally, \pycode|S[Import(name)]| is extended (now it handles
+  a single library):
+
+\begin{verbatim}
+S[Import(name)](G, H) :=
+  match name in
+    ("numpy",) ->
+      let (Module, arr, mod) := <numpy-mod>
+          freeaddr := get_free_addr(H)
+      in  (G['numpy'->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+    ("numpy", alias) ->
+      let (Module, arr, mod) := <numpy-mod>
+          freeaddr := get_free_addr(H)
+      in  (G[alias->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+
+    otherwise -> <Execution Halt>
+\end{verbatim}
+\end{enumerate}
 
 \section{Abstract Interpreter}\label{abstract-interpreter}
 
@@ -824,10 +806,10 @@ Domain}{PrimVal Abstract Domain}}\label{primval-abstract-domain}
 Domains\footnote{A relational Abstract Domain is an Abstract Domain
   where the value of variables is not assumed to be independent of each
   other. For more information on relational Abstract Domains look at
-  {\inlinetodo{add ref to octagons thesis}}. All Abstract Domains used
+  \textcite{mine_weakly_2004}. All Abstract Domains used
   in this work are non-relational Abstract Domains as they are simpler
   to understand and implement. Future work will include extending the
-  arange of Abstract Domains to use to some relational Abstract Domains.}
+  arrange of Abstract Domains to use to some relational Abstract Domains.}
 (AD) for each of the types.
 
 The simplest of all AD is that of \pycode|NoneType|. \pycode|None| is
@@ -840,7 +822,7 @@ A little bit more interesting is the AD for \pycode|bool|. \pycode|bool|
 is inhabited only by \pycode|True| and \pycode|False|. We define the
 following order:
 
-{\inlinetodo{translate figure to latex}}
+% {\inlinetodo{translate figure to latex}}
 
 \begin{verbatim}
     Top_{Bool#}
@@ -867,16 +849,15 @@ Notice how our previous two Abstract Domains do not require us to define
 widening or narrowing operators because none of them has a
 
 For \pycode|int| and \pycode|float| there a plenty different different
-options. For some of them take a look at {\todo{add ref to octagons
-thesis}}. We are going to use here, probably, the simplest AD for number
-systems there is Constant Propagation {\todo{add ref to Kil73 (from
-octagons thesis)}}.
+options. For some of them take a look at \textcite{mine_weakly_2004}.
+We are going to use here, probably, the simplest AD for number
+systems there is Constant Propagation \autocite{kildall_unified_1973}.
 
 Constant Propagation is very simple, in fact both \pycode|None#| and
 \pycode|Bool#| are Constant Propagation Abstract Domains. We define
 \pycode|int|'s AD as:
 
-{\inlinetodo{translate figure to latex}}
+%{\inlinetodo{translate figure to latex}}
 
 \begin{verbatim}
                   Top^Int
@@ -923,7 +904,7 @@ construct an AD for \pycode|PrimVal|. The idea is simple, as shown in
 the image below we just define an Abstract Domain that groups them all
 together and puts a value on top and one below all of them:
 
-{\inlinetodo{translate figure to latex}}
+%{\inlinetodo{translate figure to latex}}
 
 \begin{verbatim}
                   Top_primvals
@@ -944,7 +925,7 @@ together and puts a value on top and one below all of them:
 The formal definition is quite simple, let's consider only the Galois
 connection as everything is quite straightforward:
 
-{\inlinetodo{finish writing equation}}
+%{\inlinetodo{finish writing equation}}
 
 \begin{align*}
   \alpha^{\text{PrimVal}} \colon \mathcal{P}(\text{PrimVal}) &\to \text{PrimVal}^{\#} \\
@@ -955,12 +936,11 @@ connection as everything is quite straightforward:
 \end{align*}
 
 This is not the only way to define an Abstract Domain out of other
-Abstract Domains. In fact there are many ways, on of which is to define
+Abstract Domains. In fact, there are many ways, one of which is to define
 an Abstract Domain where each is extended with \pycode|Undef| and they
-are all packed into a tuple {\todo{add ref to Python AI by mile}}.
+are all packed into a tuple \autocite{fromherz_static_2018}.
 
-{\todo{this is lacking a proper proof of the Galois connection
-property}}
+%{\todo{this is lacking a proper proof of the Galois connection property}}
 
 \subsubsection*{\texorpdfstring{\pycode|Val|s Abstract
 Domain}{Vals Abstract Domain}}\label{vals-abstract-domain}
@@ -1061,7 +1041,7 @@ Notice that a \pycode|Val#| requires a Heap to work! Just as
 Notice that we can represent any valid value \((a, H^\#)\) as a graph
 with \(a\) as root:
 
-{\inlinetodo{convert nodes below into latex figures}}
+%{\inlinetodo{convert nodes below into latex figures}}
 
 \begin{verbatim}
 ({1}, {1: 3}, {(1,1): Undefined}, 1)
@@ -1128,8 +1108,8 @@ Domain. The ingredients left are:
 
 \subsubsection*{\(\cup^{\text{Val}^\#}\) definition}
 
-We will start by the defining the \emph{join} operation and the
-rationale behind its innerworkings. All other operations and functions
+We will start by defining the \emph{join} operation and the
+rationale behind its inner workings. All other operations and functions
 are constructed in a very similar way as \emph{join} is defined.
 
 \begin{verbatim}
@@ -1181,13 +1161,13 @@ follow the following sensible rules:
   Joining \pycode|PrimVal#|s should use \pycode|UPrimVal#|.
 \item
   Joining \pycode|Object#|s should take into account the recursive
-  nature of the defitinion of \pycode|Val#|s and \pycode|Object#|s.
+  nature of the definition of \pycode|Val#|s and \pycode|Object#|s.
 \end{itemize}
 
-Notice tha it is \pycode|joinVal| where the whole magic of this Abstract
-Domain lies. \pycode|joinVal| is meant walk through both graphs
+Notice that it is \pycode|joinVal| where the whole magic of this Abstract
+Domain lies. \pycode|joinVal| is meant to walk through both graphs
 simultaneously, find the similarities, implode the differences between
-the graphs and preserve the equaly looking parts.
+the graphs and preserve the equally looking parts.
 
 The definition of \pycode|joinVal| requires the help of the function
 \pycode|joinObjectFn| which joins the values to which an
@@ -1204,10 +1184,10 @@ joinVal((n,H1#), (m, H2#), joined, H_new#) :=
   let joined_left := {l \in Addr | E r \in Addr : joined(l,r) != Undefined}
       joined_right := {r \in Addr | E l \in Addr : joined(l,r) != Undefined}
 
-   in if n in joined_left or m in joined left -- n or m has alredy been visited
+   in if n in joined_left or m in joined left -- n or m has already been visited
       then  if joined(n, m) != Undefined -- an address for the new Object# has already been defined
             then (joined(n,m), joined, H_new#)
-            -- either n or m had already been joined to other object, every variable they
+            -- either n or m had already been joined to another object, every variable they
             -- can reach should be Top_Val because the paths to reach them are different
             -- in the two states
             else let (joined', H_new'#) := makeallreachabletop((n, H1#), (m, H2#), joined, H_new#)
@@ -1300,8 +1280,8 @@ joinObjectFn((fn, H1#), (fm, H2#), joined, H_new#) :=
     in foldl(helper, (fn_emtpy, joined, H_new#), PreIm(fn) U PreIm(fm))
 \end{verbatim}
 
-{\inlinetodo{there are a couple of functions missing, one of them is
-\pycode|makealltop|}}
+% {\inlinetodo{there are a couple of functions missing, one of them is
+% \pycode|makealltop|}}
 
 \pycode|joined| is a function that stores the similarities between nodes
 (values), and \pycode|Hnew#| stores the values of each new value. The
@@ -1312,12 +1292,12 @@ new value). The new value to which a heap can point to is
 \pycode|InConstruction| and it is meant to be a wildcard value while the
 graph is being constructed.
 
-{\inlinetodo{Reconsider eliminating the whole paragraph from below: We
-will never see a Bottom value in Pytropos, as the only way for it to
-appear would be to \emph{merge} two values, but that is never going to
-happen as \emph{merge} was not defined because there is never a use for
-it (the only way to use \emph{merge} would be by incoporating backward
-assignment, which is out of the scope of Pytropos)}}
+% {\inlinetodo{Reconsider eliminating the whole paragraph from below: We
+% will never see a Bottom value in Pytropos, as the only way for it to
+% appear would be to \emph{merge} two values, but that is never going to
+% happen as \emph{merge} was not defined because there is never a use for
+% it (the only way to use \emph{merge} would be by incoporating backward
+% assignment, which is out of the scope of Pytropos)}}
 
 One last function, that was not explained before is
 \pycode|removeallInConstruction|. It is in charge of looking in the Heap
@@ -1329,25 +1309,25 @@ walk will be only those which appeared when joining some node to a
 heaps into the new heap.
 
 Because the \enquote{code} describing how to \emph{join} to abstract
-values can be rather coarsed, we present to you the algorithm working in
+values can be rather coarse, we present to you the algorithm working in
 a couple of examples. The two graphs at the left represent the two
 values to join, on the right the resulting new value is defined.
 
-{\inlinetodo{show six examples of uniting different values, they can be
-as complicated as possible. \texttt{1 U 2},
-\texttt{[1,2]\ U\ [1,3]},
-\texttt{a = [2, 3]; a.append(a)} (extract three more examples
-from tests)}}
+% {\inlinetodo{show six examples of uniting different values, they can be
+% as complicated as possible. \texttt{1 U 2},
+% \texttt{[1,2]\ U\ [1,3]},
+% \texttt{a = [2, 3]; a.append(a)} (extract three more examples
+% from tests)}}
 
-{\inlinetodo{Add note saying that this scheme of Abstract Domain is
-general enough to let us switch between different non-relation AD for
-the PrimVals. There are probably some tweaks necessary to allow this AD
-to work with relational ADs for the PrimVals}}
+% {\inlinetodo{Add note saying that this scheme of Abstract Domain is
+% general enough to let us switch between different non-relation AD for
+% the PrimVals. There are probably some tweaks necessary to allow this AD
+% to work with relational ADs for the PrimVals}}
 
 \subsubsection*{\(Val^\#\) Order definition}
 
 Now that we have defined the \emph{join} function, we can move to the
-function that defines a lattice a lattice.
+function that defines a lattice.
 
 We define \(\le{}\) as \(a \le b \iff b = a \sqcup b\). This definition
 follows from the definition of \emph{join} (based on the order): given
@@ -1363,10 +1343,10 @@ relation or a proper \emph{join} operation. We leave the proof that
 
 \subsubsection*{Other definitions}
 
-My goal is not to present in detail all functions and operations
+Our goal is not to present in detail all functions and operations
 necessary to define the AD for \texttt{Val\#}s. That would require three
-times the space already used in this document, and would be tedious.
-What I wanted to show here is the rationale behind the implementation to
+times the space already used in this document and would be tedious.
+What we wanted to show here is the rationale behind the implementation to
 give it a little more formal depth.
 
 The \emph{merge} operation is defined as it was \emph{join}. The main
@@ -1408,15 +1388,15 @@ UState: (Global#, Heap#) x (Global#, Heap#) -> (Global#, Heap#)
    in (Gnew#, Hnew#)
 \end{verbatim}
 
-Similarly all other functions and operations can be defined as a special
+Similarly, all other functions and operations can be defined as a special
 case of the Value Abstract Domain.
 
 \subsection{Abstract Semantics}\label{abstract-semantics-1}
 
-In this section, I present some examples of the abstract semantics.
-Notice that we do not need the abstraction and concretatisation
+In this section, we present some examples of the abstract semantics.
+Notice that we do not need the abstraction and concretisation
 functions as the State and State Abstract Domains are quite similar. It
-is left for future work to proof that the definitions stated in here are
+is left for future work to prove that the definitions stated in here are
 in fact derived from the Galois connection.
 
 As examples, consider the semantics of expressions:

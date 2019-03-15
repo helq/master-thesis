@@ -1,16 +1,33 @@
 \chapter{Conclusions}\label{conclusions}
 
 In this work, we have presented the definition and implementation of an Abstract
-Interpreter for Python focused on the analysis of tensor shapes. In brief, the work done
-includes:
+Interpreter for Python focused on the analysis of tensor shapes.
+
+We showed how can Abstract Interpretation be applied to a dynamically typed programming
+language like Python with the goal of defining a Static Value Analysis. To make this
+possible, first, we specified small-step (concrete) semantics for Python taking into
+account Python dynamically typed variables and aliasing. To build the Abstract Interpreter
+we defined an apt Abstract Domain for all values in the language, an Abstract Domain for a
+state of a program with aliasing, and abstract semantics. Our approach to build the
+Abstract Interpreter is easily extendable to check for more than built-in values as we
+showed by extending the syntax and semantics of Python to handle the shape of NumPy arrays
+(tensors). The Abstract Interpreter is able to use type annotations from the user to get
+more precision on the values it is able to analyse.
+
+We presented a working implementation of the Abstract Interpreter, Pytropos, which is able
+to analyse the shape of tensors in a variety of scenarios. The interpreter can work as a
+linter for IDEs catching potential errors as the developer codes.
+
+In brief, the work done includes:
 
 \begin{itemize}
 \tightlist
-\item A formalisation of a subset of Python 3.6 (Syntax and small-step semantics)
+\item A specification of a subset of Python 3.6 (Syntax and small-step semantics)
 \item An Abstract Domain for Python Values
 \item An Abstract Domain for Python program states
 \item The semantics of an Abstract Interpreter for Python
-\item The implementation of the Abstract Interpreter
+\item The implementation of the Abstract Interpreter, Pytropos\footnote{Available at:
+    \url{https://github.com/helq/pytropos}}
 \item An application for the Abstract Interpreter to statically analyse the shapes of
   tensors and tensor operations
 \item A series of tests showcasing the abilities of the Abstract Interpreter and its
@@ -35,11 +52,11 @@ semantics.
 
 Testing showed that the Pytropos, the implementation of the Abstract Interpreter, is able
 to actually check many common shape mismatches. The biggest problem of the implementation
-is on the lack of support for builtin functions and values.
+is on the lack of support for built-in functions and values.
 
-When the Abstract Interpreter cannot compute the correct tensor shape, the user help the
+When the Abstract Interpreter cannot compute the correct tensor shape, the user helps
 the Abstract Interpreter with Type Annotations. If the user gives a type annotation that
-does not improve the precision of the value, the intepreter will warn the user of his
+does not improve the precision of the value, the interpreter will warn the user of his
 mistake.
 
 \section{Future Work}\label{future-work}
@@ -67,9 +84,9 @@ Interpreter:
   \pycode|break| and \pycode|return|). \textcite{fromherz_static_2018} also present a way
   to handle breaking control statement in Python.
 \item Extend the global scope to handle local and nonlocal scopes. The scope rules of
-  Python are middly complex with four different variable scopes: global, local, nonlocal,
+  Python are mildly complex with four different variable scopes: global, local, nonlocal,
   and class. Something to take into account is the ability of CPython to statically
-  analyse the use of local and non local variables before interpreting the code (at
+  analyse the use of local and non-local variables before interpreting the code (at
   \pycode|compile|-ation time)
 \item Extend the possible values to allow user-defined functions and objects.  Once the
   interpreter handles user-defined functions properly, extending the interpreter to work

@@ -4,7 +4,7 @@ In this chapter, an Abstract Interpreter for Python is proposed. The chapter is 
 into five parts: definition of semantics, concrete semantics for Value Analysis of Python
 code, abstract semantics from the concrete semantics, an extension to abstract semantics
 to work with NumPy arrays, and the abstract semantics of type annotations. This chapter is
-intended as a guide on how was the Abstract Interpreter built. A deeper look on the gory
+intended as a guide on how was the Abstract Interpreter built. A deeper look at the gory
 details of the concrete and abstract semantics are given in
 Appendix~\ref{appendix-ai-theory}.
 
@@ -12,7 +12,7 @@ Appendix~\ref{appendix-ai-theory}.
 
 In Mathematics, the word \enquote{semantics} refers to the meaning of sentences in formal
 languages \autocite{gunter_semantics_1992}. The semantics of programming languages
-consist in what a piece of code means, how to interpret it, and how to analyse it.
+consist of what a piece of code means, how to interpret it, and how to analyse it.
 
 % \todo{find a better reference for the classification categories}
 
@@ -50,11 +50,11 @@ for tree={
 \end{figure}
 
 On the one hand, denotational semantics must not provide a way to determine an implementation.
-On the other hand, an implementation can be easily build from operational semantics.
+On the other hand, an implementation can be easily built from operational semantics.
 Small-step semantics, one kind of operational semantics, define what the program does by
 describing a set of rules over the syntax of the language. The meaning of the program is
-given by the application of the rules. The set of rules is often a formalisation of what a
-compiler does. Thus, it is not surprising that all efforts to define formal semantics for
+given by the application of the rules. The set of rules is often a specification of what a
+compiler does. Thus, it is not surprising that all efforts to define a formal semantics for
 Python have been small-step semantics as it is easy to define rules from the translation
 process from code to \enquote{binary}
 \autocites{ranson_semantics_2008}{guth_formal_2013}{politz_python_2013}{fromherz_static_2018}.
@@ -110,6 +110,8 @@ We intentionally omit any details related to the spacing of blocks in Python, as
 focus is the meaning of Python values and not how blocks of statements are defined in the
 language.
 
+We follow the same approach taken by \autocite{fromherz_static_2018} and define the state
+of the program with a global scope and a heap.
 Python memory is represented as a function from memory positions ($\mathbf{Addr}$) to
 python values ($\mathbf{Val}$). The global scope is defined as a function from identifiers
 ($\mathbf{Iden}$) to memory positions ($\mathbf{Addr}$).
@@ -119,7 +121,7 @@ $$\begin{array}{rcl}
   \mathbf{Heap}  &:=& \mathbf{Addr} \to \mathbf{Val} \cup \{\undefm\} \\
 \end{array}$$
 
-In Python everything is an object: numbers, lists, classes and even functions. We separate
+In Python, everything is an object: numbers, lists, classes and even functions. We separate
 python values into three categories: primitive values, like numbers, booleans and
 \pycode+None+; \verb+Object+s, like lists and tuples; and, primitive functions, like
 \pycode+int.__add__+.
@@ -165,8 +167,7 @@ from Figure~\ref{smallstep1} define the small-step semantics.
 \end{minipage}%
 \hfill%
 \begin{minipage}{.46\textwidth}
-\[\Ctx{S}{stmt} : \mathbf{Global} \times \mathbf{Heap} \to \mathbf{Global} \times \mathbf{Heap} \\\]
-
+\[\Ctx{S}{stmt} : \mathbf{Global} \times \mathbf{Heap} \to \mathbf{Global} \times \mathbf{Heap}\]
 \[
   \begin{array}{l}
     \Ctx{S}{stmt_1\texttt{; } stmt_2}\left(\Glo, \Hea\right) := \\
@@ -221,14 +222,14 @@ from Figure~\ref{smallstep1} define the small-step semantics.
 % \end{verbatim}
 
 The construction $\Halt$ indicates that the evaluation cannot go any further, i.e. the
-interpreter will stop and throw an exception. For example, accessing to a variable that
+interpreter will stop and throw an exception. For example, accessing a variable that
 has not yet been defined is considered an error (Python will throw an exception if this
 happens).
 
 The meaning of our program is given by the function $\Ctx{S}{stmt}$ with type
 $\mathbf{State} \to \mathbf{State}$ (where $\mathbf{State} := \mathbf{Global} \times \mathbf{Heap}$).
 In this work, we are interested on the values that result from the application of the
-fuction $\Ctx{S}{stmt}$ on a clean state, which is a state that has only builtin variables
+fuction $\Ctx{S}{stmt}$ on a clean state, which is a state that has only built-in variables
 defined.  Statements modify the state of the program while expressions modify the state of
 the program and return a python value as result, e.g. the expression \pycode+ls.pop()+
 removes the last element in the list \pycode+ls+ and returns the value contained. This is
@@ -404,9 +405,9 @@ This is telling us that the variables \pycode+a+ and \pycode+b+ hold the values
 
 Notice that we have not yet defined the semantics for the general case
 $\Ctx{S}{expr_1 = expr_2}$ but only for the case $\Ctx{S}{identifier = expr}$.
-Defining the small-step semantics on the syntax presented before is inconvinient. To see
-why working with this syntax is inconvinient, observe that the delete statement,
-$\texttt{del } expr$, does not expect a value from the evalueation of the expression
+Defining the small-step semantics on the syntax presented before is inconvenient. To see
+why working with this syntax is inconvenient, observe that the delete statement,
+$\texttt{del } expr$, does not expect a value from the evaluation of the expression
 $expr$ but a name or position in memory.  Both \pycode|del a| and \pycode|ls = [1,9,4,5];
 del ls[2]| are valid python statements, but their semantics vary depending on the
 expression being evaluated. Inversely, the return value of evaluating expressions depends
@@ -419,7 +420,7 @@ where \pycode|ls[2]| can be called.
 
 How could an expression like \pycode|ls[2]| know the context where it is going to be used?
 We opted to follow what CPython does. CPython extends the syntax of expressions to allow
-them know the context from where they are being called. The new (extended) sytax can be
+them to know the context from where they are being called. The new (extended) syntax can be
 seen in Figure~\ref{syntaxPython2}.
 
 \begin{figure}
@@ -484,9 +485,9 @@ The following is the informal meaning of each context:
 \end{itemize}
 
 In CPython, the expressions \pycode|Attribute|, \pycode|Subscript| and \pycode|Name| have a
-context as part of their definition. In our formalisation only \pycode|Subscript| and
+context as part of their definition. In our specification, only \pycode|Subscript| and
 \pycode|Name| have a context as we are not interested in modifying or deleting the value
-of any attribute. No attribute for builtin functions and objects can be modified or
+of any attribute. No attribute for built-in functions and objects can be modified or
 deleted. For example, given the list \pycode|a = [2,3]|, the statements
 \pycode|del a.insert| and \pycode|a.insert = 3| are erroneous in Python, thus we have no
 need to allow \pycode|Attribute|s to be deleted or modified.
@@ -589,11 +590,11 @@ context the expression is called and how is it accessed:
 
 \begin{itemize}
 \tightlist
-\item[\textbf{Val}] is returned when the expressions \pycode|Subscript| and \pycode|Name|
+\item \textbf{Val}: is returned when the expressions \pycode|Subscript| and \pycode|Name|
   have context \verb|Load|. All other expressions return only \verb|Val|s.
-\item[\textbf{Iden}] is returned when the expression \pycode|Name| has context \verb|Del|
+\item \textbf{Iden}: is returned when the expression \pycode|Name| has context \verb|Del|
   or \verb|Store|.
-\item[\textbf{Object x (string x Val)}] is returned when the expression \pycode|Subscript|
+\item \textbf{Object $\times$ (string $\times$ Val)}: is returned when the expression \pycode|Subscript|
   has context \verb|Del| or \verb|Store|.
 \end{itemize}
 
@@ -732,7 +733,7 @@ Now that we have defined our abstract state, we can define the abstract semantic
 
 \subsection{Semantics for the Abstract State}
 
-Defining the abstract semantics is quite straightforward. All we need to do is to modify
+Defining abstract semantics is quite straightforward. All we need to do is to modify
 the concrete semantics to work with new values:
 
 \begin{verbatim}
@@ -824,13 +825,13 @@ The state result of evaluating the function \verb|S#[b = 2 + d; a = b < 3]| is:
 
 \section{NdArrays}
 
-The purpose of the formalisation is to be able to construct from it an Abstract
+The purpose of the specification is to be able to construct from it an Abstract
 Interpreter. To test the Abstract Interpreter abilities to find bugs it should be able to
 handle NumPy array (tensors). In this section, I extend the concrete semantics with NumPy
 arrays.
 
-The following are all the things to take into account when extending our formalisation to
-handle a new type of \enquote{builtin} \pycode|Object| type:
+The following are all the things to take into account when extending our specification to
+handle a new type of \enquote{built-in} \pycode|Object| type:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
@@ -863,7 +864,7 @@ Object(NdArray,
 
   Note: Remember that an \pycode|Object| is a triple of the form
   \pycode|Type x Addr x (Key -> Addr + Undefined)|.
-  Also remember that example above is faulty as the codomain of the
+  Also, remember that the example above is faulty as the codomain of the
   function defined above is \pycode|Val| not \pycode|Addr| as it should
   be.
 \item
@@ -879,21 +880,21 @@ Object(NdArray,
                   <prim-np-zeros> | <prim-np-dot> | <prim-np-abs> | ...
 \end{verbatim}
 
-  Note: The values stored inside a NumPy array are consider irrelevant
+  Note: The values stored inside a NumPy array are considered irrelevant
   in this work. The Value Analysis built in this work considers only the
   shape of tensors, as tensors can be huge and their contents do not
   often influence their shape. Therefore, it would be wasteful to give a
-  detailed formalisation of the NumPy library primitives.
+  detailed specification of the NumPy library primitives.
 
-  Nonetheless, defining formaly each one of the NumPy functions above is
+  Nonetheless, defining formally each one of the NumPy functions above is
   fairly straightforward. Although, the hardest part of a formal
-  defitinion of NumPy arrays is detailing how \pycode|array| works. To
+  definition of NumPy arrays is detailing how \pycode|array| works. To
   define the function \pycode|<np-array>| one
   must consider the many input cases it can handle, and it can handle
   almost any Python object\footnote{The NumPy function \pycode|array|
-    takes almost anything as an input. \pycode|arrays| tries to
+    takes almost anything as an input. \pycode|array| tries to
     interpret its input as an array in any way it can. There is no
-    formal definition of how the values are interpreted althought its
+    formal definition of how the values are interpreted although its
     semantics can be extracted by looking at its C implementation:
     \url{https://stackoverflow.com/a/40380014}}.
 
@@ -1010,6 +1011,6 @@ S[AnnAssign(var, hint, val)](G, H) :=
 \end{verbatim}
 
 Notice that we determine the \enquote{precision} of a hint with respect to the variable
-with the comparision between values, the order \verb|Val#|!
+with the comparison between values, the order \verb|Val#|!
 
 Further details on the concrete and abstract semantics are given in Appendix~\ref{appendix-ai-theory}.

@@ -7,7 +7,7 @@ Python and Ruby have risen in popularity over the last two decades. Their simple
 ease of use, out-of-the-box REPLs\footnote{Read-eval-print loop}, dynamic type systems,
 and their great number of libraries have been the main factors to this rise. Indeed,
 developers can  write, execute and see results immediately in fast development cycles,
-especially at the initial stages. However, their simple syntax and dynamic typing makes
+especially at the initial stages. However, their simple syntax and dynamic typing make
 them particularly difficult to analyse as the more rigid the language, the easier to
 analyse it is. Most efforts on static analysis for Python have focused on assuming some
 restrictions on the language. For example, MyPy \autocite{lehtosalo2016mypy} assumes the
@@ -34,7 +34,7 @@ of variables, e.g.~from the previous example, it detects that \pycode/other/ is 
 \pycode/float/ and \pycode/myvar/ of type \pycode/str/.
 
 Python dynamic nature makes Python extraordinarily hard to statically analyse. In fact,
-due to Python introspection capabilities, it is impossible to warranty the behaviour of a
+due to Python introspection capabilities, it is impossible to guarantee the behaviour of a
 piece of Python code without assuming some fixed basic semantics in the interpreter.  MyPy
 tackles the undecidability problem of Python dynamic nature by restricting the number
 of valid Python programs to those that conform to a static type system\footnotemark.
@@ -43,13 +43,13 @@ of valid Python programs to those that conform to a static type system\footnotem
   such an amazing tool. I do not know how many hours they saved me from endless
   frustration at debugging. All Python code I write now is full of typing annotations to
   allow MyPy check for any faulty. What I like about MyPy is that it alerts me of faulty
-  code as I write. It feels remarkably similar to writing code in language with a
+  code as I write. It feels remarkably similar to writing code in a language with a
   stronger static type system (e.g.~Haskell).}
 
 Even with some assumptions in place, the inference ability of MyPy infers the type of
 variables, but not the type of functions. MyPy allows optionally to add type annotations
 to the code, to either variables or functions. Type annotations allow more restrictive and
-precise types, and help MyPy to catch more potential bugs.
+precise types, and they help MyPy to catch more potential bugs.
 
 Although MyPy is capable of checking the correctness of code, its assumptions limit it from a whole class of valid and correct
 Python code\footnotemark. There are many scenarios where even with type annotations, MyPy
@@ -58,7 +58,7 @@ code:%\footnotemark:
 
 \footnotetext{For example, there is no way (currently) to make MyPy happy about the
   function \pycode/def addtwice(x, y): return x + y + y; addtwice(3,2); addtwice('a','b')/.
-  If no type annotations is given, MyPy alerts the user on the usage of non-typed
+  If no type annotations are given, MyPy alerts the user on the usage of non-typed
   functions. But no type can satisfy the assertion because of the \enquote{polymorphisity}
   of the \pycode/+/ operation.}
 
@@ -78,7 +78,7 @@ any other library with support for tensors and tensor operators. Tensors are a
 generalisation of vectors and arrays.  An array of size \texttt{n}, or a tensor with shape
 \texttt{(n,)}, contains exactly \(n\) elements. A matrix of size \(n \times m\),
 alternatively, a tensor with shape \texttt{(n,\ m)}, is a structure that holds
-\(n \cdot m\) elements. Notice that a shape is any tuple of natural number and a tensor is
+\(n \cdot m\) elements. Notice that a shape is any tuple of natural numbers and a tensor is
 a structure with a shape. For example, the shape \texttt{(2,\ 5,\ 6)} indicates us a
 tensor with \(2 \cdot 5 \cdot 6 = 60\) elements.
 
@@ -155,7 +155,7 @@ of Python as a starting point. Unfortunately, Python does not have any
 official formal semantics defined. Some attempts to define a formal
 semantics for Python have been done
 \autocites{politz_python_2013}{fromherz_static_2018}{guth_formal_2013}{ranson_semantics_2008}
-but none of them take into account type annotations.
+but none of them takes into account type annotations.
 
 \textbf{Problem:} Building an Abstract Interpreter for Python to
 Statically Value-Analyse tensor operations.
@@ -196,8 +196,8 @@ calls \texttt{runme.py}:
 \end{pythoncode}
 
 From now on, we will assume that any piece of code written in Python will be called from
-the interpreter directly without changing the behaviour of any builtin function or
-variable (this includes the behaviour of variables and functions from non-builtin
+the interpreter directly without changing the behaviour of any built-in function or
+variable (this includes the behaviour of variables and functions from non-built-in
 libraries as NumPy), i.e.~we assume that the code will be run from a blank state with no
 global variables defined.
 
@@ -208,10 +208,10 @@ from here onwards that we want the Tensor Analysis to flag only errors that are 
 happen if the code is run, i.e.~we want only true positives not maybe positives (as a lack
 of a better word).
 
-Although, TensorFlow \autocite{abadi_tensorflow_2016}, PyTorch
+Although TensorFlow \autocite{abadi_tensorflow_2016}, PyTorch
 \autocite{paszke2017pytorch} and other libraries would benefit from the development of a
-tool targeted to check them, we chosed to check NumPy's tensor operations. NumPy is the
-standard library for computing with tensors and it is used as backend on most tensor
+tool targeted to check them, we chose to check NumPy's tensor operations. NumPy is the
+standard library for computing with tensors and it is used as back-end on most tensor
 projects.
 
 Implementing an Abstract Interpreter, or any Static Analysis, for a language like Python
@@ -223,7 +223,7 @@ current document are:
 \begin{itemize}
 \tightlist
 \item
-  Builtin primitive variables: \pycode|int|, \pycode|float|, \pycode|bool|, \pycode|None|,
+  Built-in primitive variables: \pycode|int|, \pycode|float|, \pycode|bool|, \pycode|None|,
   \pycode|list|, \pycode|tuple|
 \item
   Primitive functions: \pycode|int|, \pycode|print|, \pycode|input|,
@@ -233,7 +233,7 @@ current document are:
   \pycode|\%|, \pycode|**|, \pycode+<<+, \pycode|>>|, \pycode|//|, \pycode+<+,
   \pycode|<=|, \pycode+>+ and \pycode+>=+
 \item
-  \pycode|if| and \pycode|while| staments
+  \pycode|if| and \pycode|while| statements
 \item
   Import statement (limited only to the \pycode|numpy| library)
 \item
@@ -253,7 +253,7 @@ print(i)
 
 The variable \pycode|i| can be either an \pycode|int| or a \pycode|str|,
 thus the type of \pycode|i| should be \pycode|Union[int,str]|. If
-the type of a variable is an \pycode|Union| type then we need to build
+the type of a variable is a \pycode|Union| type then we need to build
 an Abstract Interpreter (actually, an Abstract Domain) aware of unions.
 Building an Abstract Interpreter aware of \pycode|Union| types is not
 considered part of this work, therefore if a variable holds more than
@@ -298,7 +298,7 @@ To recapitulate, the assumptions and scope of the thesis are:
 \begin{itemize}
 \tightlist
 \item
-  The behaviour of builtins and imported variables and functions is
+  The behaviour of built-ins and imported variables and functions is
   always the same and is determined by the Python reference manual or
   the library's author, e.g.~\pycode+input+ is a function that returns
   a \pycode+str+.
@@ -337,7 +337,7 @@ in Python to support early detection of potential bugs before execution.
   to analyse the shapes of tensors for Python code.
 \item
   To implement a tool that flags the bugs inferred by the abstract
-  interprete.
+  interpreter.
 \item
   To empirically evaluate the developed static analysis in a set of
   representative test cases.
@@ -350,20 +350,22 @@ The contributions of this work are the following:
 \begin{itemize}
 \tightlist
 \item Specification of an operational semantics for a subset of Python using a methodology
-  similar to \autocite{fromherz_static_2018}. This specification includes a subset of the
+  similar to \textcite{fromherz_static_2018}. This specification includes a subset of the
   Python syntax, an AST representation of the syntax more malleable to work with, and the
   semantics of the subset of the Python Language.
 \item Definition of an Abstract Domain for variables in Python.
 \item Definition of an aliasing-aware Abstract Domain for the state of a Python program.
 \item Derivation of an operational semantics from the Abstract Domain, i.e.~an Abstract
   Interpreter for Python.
-\item A working, open source implementation of the Abstract Interpreter nicknamed Pytropos
-  with a plugin for (Neo)Vim to work as a linter.
+\item A working, open source implementation of the Abstract Interpreter nicknamed
+  Pytropos\footnotemark{} with a plugin for (Neo)Vim to work as a linter.
 \end{itemize}
+
+\footnotetext{Homepage: \url{https://github.com/helq/pytropos}}
 
 \section{Thesis Structure}\label{thesis-structure}
 
-The remaining parts of this document are organized as follows:
+The remaining parts of this document are organised as follows:
 
 \begin{itemize}
 \tightlist
