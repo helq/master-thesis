@@ -7,7 +7,7 @@ development of the Static Value Analysis presented in Chapter~\ref{ai-for-python
 
 Static Analysis and Dynamic Analysis are two disciplines whose ideal is to ensure some
 property holds on a piece of code. Static Analysis checks the code without the need to run
-the code, while Dynamic Analysis checks the code as it is executed.
+it, while Dynamic Analysis checks the code as it is executed.
 
 Static Analysis is often associated with compiled Programming Languages. Compiled
 Programming Languages require to know how to precisely translate the operations of the
@@ -33,37 +33,30 @@ Languages allow the programmer to forgo the usually expensive step of compiling 
 Dynamically Typed Interpreted Programming Languages (Dynamically Typed Languages) are
 excellent tools for prototyping as they let the developer test their code without waiting
 for it to compile. However, writing big pieces of software in a Dynamically Typed Language
-is often a challenging task as the type warranties that hold are not as strong as in
+is often a challenging task as the type warranties that they hold are not as strong as in
 compiled programming languages.
 
-Developers are more prone to make a mistake that will only appear once
-the code is executed in a Dynamically Typed Languages opposed to
-Statically Typed (Compiled) Languages. Dynamic Typing is not ideal for
-code that needs to warranty a high degree of reliability. Reliability
-defined as the certainty that the code will never fail due to type
-mismatches.
+Developers are more prone to make a mistake that will only appear once the code is
+executed in a Dynamically Typed Language opposed to Statically Typed (Compiled) Language.
+Dynamic Typing is not ideal for code that needs to warranty a high degree of reliability.
+Reliability defined as the certainty that the code will never fail due to type mismatches.
 
-Traditional Static Typing can be applied to Dynamically Typed Languages
-to acquire the same level of confidence of Statically Typed Languages.
-Unfortunately, the restrictions Static Typing induces in the code often
-make them to much of a hassle for developers of Dynamic Typed Languages.
+Traditional Static Typing can be applied to Dynamically Typed Languages to acquire the
+same level of confidence of Statically Typed Languages.  Unfortunately, the restrictions
+Static Typing induces in the code often make them too much of a hassle for developers of
+Dynamically Typed Languages.
 
 Several proposals to make Dynamic Type Systems more robust have appeared
 in recent years. Some notable proposals and implementations include:
 
 \begin{itemize}
 \tightlist
-\item
-  Gradual types for python, Mypy \autocite{lehtosalo2016mypy},
-\item
-  Gradual types for Javascript, Typescript
-  \autocites{bierman2014understanding}{hejlsberg2012introducing} and
-  Flow \autocite{chaudhuri2016flow},
-\item
-  Gradual types for ruby, using the library rubydust
-  \autocite{an_dynamic_2011}, and
-\item
-  Refinement types for Ruby \autocite{kazerounian_refinement_2017}.
+\item Gradual types for Python, Mypy \autocite{lehtosalo2016mypy},
+\item Gradual types for Javascript, Typescript
+  \autocites{bierman2014understanding}{hejlsberg2012introducing} and Flow
+  \autocite{chaudhuri2016flow},
+\item Gradual types for Ruby, using the library rubydust \autocite{an_dynamic_2011}, and
+\item Refinement types for Ruby \autocite{kazerounian_refinement_2017}.
 \end{itemize}
 
 Gradual Typing \autocite{siek_gradual_2006} was proposed as a way to
@@ -90,18 +83,15 @@ checked by SAT or SMT Solvers.
 
 \section{Python Type Annotations}\label{python-type-annotations}
 
-Since Python 3.5 \autocite{pep484} functions inputs and output can be
-annotated with types. Since Python 3.6 \autocite{pep526} variables can
-be type annotated too. Type annotations do no modify the type of the
-variable they are attached to. Their purpose is only to provide a way to
-annotate the type the user believes the variable has. Type annotations
-are used by external libraries as MyPy \autocite{lehtosalo2016mypy} and
-Enforce \footnote{GitHub project accessible on
-  \url{https://github.com/RussBaz/enforce}} to check for correctness of
-the code. The Python \pycode+typing+ library offers a built-in arrange of
-variables to type annotate variables. For an in-depth explanation on the
-goal of Type Annotations and how are they used in Python refer to
-\autocite{pep483}.
+Since Python 3.5 \autocite{pep484}, the inputs and output of a function can be annotated
+with types. Since Python 3.6 \autocite{pep526} variables can be type annotated too. Type
+annotations do no modify the type of the variable they are attached to. Their purpose is
+only to provide a way to annotate the type the user believes the variable has. Type
+annotations are used by external libraries as MyPy \autocite{lehtosalo2016mypy} and
+Enforce \footnote{GitHub project accessible on \url{https://github.com/RussBaz/enforce}}
+to check for correctness of the code. The Python \pycode+typing+ library offers a built-in
+arrange of variables to type annotate variables. For an in-depth explanation on the goal
+of Type Annotations and how are they used in Python refer to \textcite{pep483}.
 
 \section{Machine Learning and Python}%
 \label{machine-learning-and-python}
@@ -129,19 +119,20 @@ PyTorch \autocite{paszke2017pytorch}, (the now defunct) Theano
 \autocite{bergstra2011theano}, and pycaffe \autocite[as part of the
 Caffe framework]{jia2014caffe}.
 
-Python has become just the right tool for prototyping models, and
-therefore, Python (and other Dynamic Typed Languages like Lua) has been
-the primordial playground for DL enthusiasts in the last couple of
-years.
+Python has become just the right tool for prototyping models, and therefore, Python (and
+other Dynamic Typed Languages like Lua) has become the primordial playground for DL
+enthusiasts in the last couple of years.
 
 \section{Tensors}\label{tensors}
 
-Array computation is a convenient abstraction to write code that
-requires the manipulation blocks of variables. The NumPy library
-presents an example of what can be done with it. Notice how the two
-pieces of code below perform the same operation (\enquote{normalization}
-of the values in the matrix) but NumPy does it in just fewer lines:
+Array computation is a convenient abstraction to write code that requires the manipulation
+of blocks of variables. The NumPy library presents an example of what can be done with it.
+Notice how the two pieces of code below perform the same operation
+(\enquote{normalization} of the values in the matrix) but NumPy does it in just fewer
+lines:
 
+\noindent%
+\begin{minipage}[t]{.48\textwidth}
 \begin{pythoncode}
 import numpy as np
 A = np.array([
@@ -152,7 +143,9 @@ A = np.array([
 
 A /= np.max(A)
 \end{pythoncode}
-
+\end{minipage}%
+\hfill%
+\begin{minipage}[t]{.48\textwidth}
 \begin{pythoncode}
 A = [
   [1., 2., 4.],
@@ -165,12 +158,12 @@ for i in range(3):
   for j in range(3):
     A[i][j] /= m
 \end{pythoncode}
+\end{minipage}\\[.7em]
 
-Multidimensional arrays, arrays which are indexed by not one but two
-integers, are often called tensors. We take in this work the same
-approach of calling all--arrays, matrices and tensors--the same way,
-tensors. If a tensor has one dimension it is equivalent to an array, and
-if it has two dimensions it is equivalent to a matrix.
+Multidimensional arrays, arrays which are indexed not by one but by $n$ integers, are
+often called tensors. We take in this work the same approach of calling all--arrays,
+matrices and tensors--the same way, tensors. If a tensor has one dimension it is
+equivalent to an array, and if it has two dimensions it is equivalent to a matrix.
 
 Operating with tensors is often syntactically simpler than using looping
 structures to operate with blocks of memory, i.e.~writing \pycode|a+b|,
@@ -183,11 +176,9 @@ Besides, \pycode|a+b| even works for tensors with different (but compatible) sha
 \section{NumPy: Library for tensor computation}
 \label{numpy-library-for-tensor-computation}
 
-The primary purpose of this work is to build a Static Value Analysis to
-check for tensors and tensors operations. NumPy
-\autocite{oliphant2006guide} is a very widely used library to operate
-with tensors and arrays, in fact, many other libraries are built on top
-of NumPy.
+The primary purpose of this work is to build a Static Value Analysis to check for tensors
+and tensor operations. NumPy \autocite{oliphant2006guide} is a very widely used library to
+operate with tensors and arrays, in fact, many other libraries are built on top of NumPy.
 
 NumPy tensors are called arrays. An array can be created out of almost
 anything, almost any type of value can be interpreted into an array by
@@ -196,7 +187,7 @@ NumPy\footnote{Notice that this represents a challenge for Static Type
   contents of the variable. Fortunately calculating the contents of a
   variable is what Abstract Interpretation does. An Abstract Interpreter
   allows us to implement/replicate the whole semantics of a library in a
-  similar way at how it is defined in the original library}. For
+  similar way at how it is defined in the original library.}. For
 example, all of the following variables hold a valid NumPy array:
 
 \begin{pythoncode}
@@ -204,7 +195,7 @@ a = np.array("some text")       # array of chars (8-bit numbers)
 b = np.array([[1, 2], [2, 4]])  # array of ints of shape (2, 2)
 c = np.array([[1, 2], [2]])     # array of objects of shape (2,)
 d = np.array([(1, 2), [2, 5]])  # array of ints of shape (2, 2)
-e = np.array([[1, 2], {2, 5}])     # array of objects of shape (2,)
+e = np.array([[1, 2], {2, 5}])  # array of objects of shape (2,)
 \end{pythoncode}
 
 The shape of a NumPy array can be changed without changing its contents:
@@ -231,14 +222,14 @@ c = a * b
 
 Notice that the code is valid and evaluates in Python. The shape of
 \pycode|a| is \pycode|(10, 3, 4)| because adding an array of any shape
-to a \pycode|int| gives us back an array with the same shape, i.e.~we
+to an \pycode|int| gives us back an array with the same shape, i.e.~we
 have added a scalar to every element of a tensor. \pycode|b| has a shape
-of \pycode|(3,\ 1)| and the shape of \pycode|c| is
-\pycode|(10,\ 3,\ 4)|. Broadcasting \enquote{generalises} the rule of
+of \pycode|(3, 1)| and the shape of \pycode|c| is
+\pycode|(10, 3, 4)|. Broadcasting \enquote{generalises} the rule of
 operating with a scalar (as it is done in the first line). The rule
 works by extending with \pycode|1|'s the left side of the smaller shape
 until both are equal, and then checking if the dimensions of both shapes
-are compatible. Two dimensions are compatible if are the same or one of
+are compatible. Two dimensions are compatible if they are the same or one of
 them is \pycode|1|. For a deeper explanation on broadcasting take a look
 at \url{https://docs.scipy.org/doc/numpy/user/basics.broadcasting.html}.
 
@@ -261,8 +252,8 @@ or the codes terminates (given some restrictions
 Abstract Interpretation was conceived \autocite{cousot_abstract_1977} as
 a way to approximate the result of all possible executions of a
 computation. Specifically, Abstract Interpretation computes an
-\textbf{over}approximation of some property of the program. To explain
-what an overapproximation is consider the following piece of code:
+\textbf{over}approximation of some property of a program. To explain
+what an overapproximation is, consider the following piece of code:
 
 \begin{pythoncode}
 a = int(input())
@@ -296,7 +287,7 @@ How is the overapproximation calculated and which tools do we have at
 our disposal to compute it? The following subsections present briefly
 the important concepts behind Abstract Interpretation. For an in-depth
 explanation of Abstract Interpretation refer to
-\autocites[Chapters 1 and 4]{nielson2015principles}%
+\textcites[Chapters 1 and 4]{nielson2015principles}%
 {cousot_abstract_1977}%
 {nipkow_abstract_2014}.
 
@@ -307,11 +298,10 @@ Before we start we need some groundwork. First of all, as always in
 Programming Languages, we need a language to analyse together with its
 formal semantics. We also need a property we want to analyse.
 
-Specific for this work, the property to analyse will be the value of
-variables throughout the execution of the program. i.e.~Value Analysis.
-Abstract Interpretation can be used to analyse any other property of
-programs, some examples include memory consumption, functional
-properties, thread safety, computation traces, and termination.
+For this work, the property to analyse will be the value of variables throughout the
+execution of the program. i.e.~Value Analysis.  Abstract Interpretation can be used to
+analyse any other property of programs, some examples include memory consumption,
+functional properties, thread safety, computation traces, and termination.
 
 Before we can analyse a piece of code, we require to know the language
 to analyse. For Value Analysis we require the following description of
@@ -374,15 +364,13 @@ else:
   b = 9
 \end{pythoncode}
 
-After running the code, we know that \pycode|a| \(\in \{0, 1, 2\}\) and
-\pycode|b| \(\in \{6, 9, 20\}\). Now, if we want to compute \pycode|a+b|
-we must compute all possible results of computing with the values from
-\pycode|a| and \pycode|b|, which results in \pycode|a+b|
-\(\in \{6, 9, 20, 7, 10, 21, 8, 11, 22\}\). Notice how the result of
-calculating \pycode|a+b| overapproximates the real values \pycode|a+b|
-can take, i.e. \pycode|a| and \pycode|b| are assumed to be independent
-of each other so we get way more possible values for \pycode|a+b| than
-can actually be computed (we overapproximate).
+After running the code, we know that \pycode|a| \(\in \{0, 1, 2\}\) and \pycode|b| \(\in
+  \{6, 9, 20\}\). Now, if we want to compute \pycode|a+b| we must compute all possible
+results of computing with the values from \pycode|a| and \pycode|b|, which results in
+\pycode|a+b| \(\in \{6, 9, 20, 7, 10, 21, 8, 11, 22\}\). Notice how the result of
+calculating \pycode|a+b| overapproximates the real values \pycode|a+b| can take, i.e.
+\pycode|a| and \pycode|b| are assumed to be independent of each other so we get way more
+possible values for \pycode|a+b| than can actually be computed.
 
 It is clear that computing with sets of values is expensive, even
 impossible at times, e.g.~the set \(\{a \in \mathbb{N} | a \leq 0\}\)
@@ -396,10 +384,9 @@ we get:
 \pycode|a| \(\in \left[0, 2\right]\), \pycode|b|
 \(\in \left[6, 20\right]\), and \pycode|a+b| \(\in \left[6, 22\right]\)
 
-Which can be easily stored and manipulated (we only require two numbers
-to encode an interval). Notice how any abstraction will make us lose
-some precision. This is the inherent trade-off of computing using
-Abstract Interpretation, we lose precision.
+Which can be easily stored and manipulated (we only require two numbers to encode an
+interval). Notice how any abstraction will make us lose some precision. This is the
+inherent trade-off of computing using Abstract Interpretation. We lose precision.
 
 Notice that overapproximating the value of variables can lead us often
 to think that a piece of code may be erroneous even if it does not.
@@ -418,26 +405,21 @@ else:
 c = a / b  # c is either -2 or 2
 \end{pythoncode}
 
-It is simple for us to run this example in all possible inputs, as there
-are only two, an notice that the code never fails. If \pycode|b| is
-\pycode|True|, then we know that \pycode|c| is \pycode|-2|, and if
-\pycode|b| is \pycode|False|, then we know that \pycode|c| is
-\pycode|2|. We know that no matter the input, the code will never fail!
-But when we abstractly interpret the code using intervals as an
-overapproximation, we get that \pycode|a| \(\in [2,6]\) and \pycode|b|
-\(\in [-1,3]\), so when we try to run \pycode|a\ /\ b| we are alerted
-that we may be dividing by zero\footnote{dividing by zero throws an
-  Exception in Python}.
+It is easy for us to run this example in all possible inputs, as there are only two. If
+\pycode|b| is \pycode|True|, then we know that \pycode|c| is \pycode|-2|, and if
+\pycode|b| is \pycode|False|, then we know that \pycode|c| is \pycode|2|. We know that no
+matter the input, the code will never fail!  But when we abstractly interpret the code
+using intervals as an overapproximation, we get that \pycode|a| \(\in [2,6]\) and
+\pycode|b| \(\in [-1,3]\), so when we try to run \pycode|a / b| we are alerted that we may
+be dividing by zero\footnote{Dividing by zero throws an Exception in Python.}.
 
-When we abstractly interpret a piece of code and get an error, the error
-may not exist.
+When we abstractly interpret a piece of code and get an error, the error may not exist.
 
-On the other hand, if we abstractly interpret a piece of code and find
-no error in it, we can be sure that the code will never fail because we
-have tested the code on an \textbf{over}approximation of all possible
-values\footnote{assuming no built-in value has been changed prior to the
-  execution of the code}. This property is called \emph{soundness} and
-it is central to verification and other areas of Static Analysis.
+On the other hand, if we abstractly interpret a piece of code and find no error in it, we
+can be sure that the code will never fail because we have tested the code on an
+\textbf{over}approximation of all possible values\footnote{Assuming no built-in value has
+  been changed prior to the execution of the code.}. This property is called
+\emph{soundness} and it is central to verification and other areas of Static Analysis.
 
 Notice that we do not care about soundness in this work. Our goal is to
 build a tool that does not overwhelm the common developer but helps them
@@ -496,12 +478,12 @@ Given two lattices,
 and
 \((L{}_2, \le{}_{L_2}, \sqcap{}_{L_2}, \sqcup{}_{L_2}, \top{}_{L_2}, \bot{}_{L_2})\),
 % a Galois connection is a
- we can define \alpha and \gamma, where:
+we can define \(\alpha\) and \(\gamma\), where:
 
 \begin{itemize}
 \tightlist
-\item \(\alpha : L_1 \rightarrow L_2\). \(\alpha\) is called the abstraction function.
-\item \(\gamma : L_2 \rightarrow L_1\). \(\gamma\) is called the concretisation function.
+\item \(\alpha : L_1 \rightarrow L_2\) called the abstraction function.
+\item \(\gamma : L_2 \rightarrow L_1\) called the concretisation function.
 % \item
 %   \(\forall a \in L_1, b \in L_2 : \alpha(a) \le{}_{L_2} b \iff a \le{}_{L_1} \gamma{b}\).
 \end{itemize}
@@ -510,33 +492,35 @@ and
 this work, the Concrete Domain will always be defined as the power set of the values in
 the language with \(\in\) as the order operator.
 
-\emph{Notation}: It is customary to use the symbol \(\#\) to refer to
+\begin{quote}
+\textbf{Notation}: It is customary to use the symbol \(\sharp\) to refer to
 the functions and semantics associated with the Abstract Domain, and the
 lack of it as the functions and semantics of the Concrete Domain. For
-example, if \(Int\) is the set of all integers then \(Int^{\#}\) is an
-Abstract Domain for \(Int\), e.g.~given the Concrete Domain
-\((\mathcal{P}(Int), \subseteq, \cap, \cup, Int, \emptyset)\) we define
+example, if \(\text{Int}\) is the set of all integers then \(\text{Int}^{\sharp}\) is an
+Abstract Domain for \(\text{Int}\), e.g.~given the Concrete Domain
+\((\mathcal{P}(\text{Int}), \subseteq, \cap, \cup, \text{Int}, \emptyset)\) we define
 the Abstract Domain
-\((Int^{\#}, \le^{\#}, \sqcap^{\#}, \sqcup^{\#}, \top^{\#}, \bot^{\#}, \alpha, \gamma)\),
-where \(\alpha : Int \rightarrow Int^{\#}\) and
-\(\gamma : Int^{\#} \rightarrow Int\).
+\((\text{Int}^{\sharp}, \le^{\sharp}, \sqcap^{\sharp}, \sqcup^{\sharp}, \top^{\sharp}, \bot^{\sharp}, \alpha, \gamma)\),
+where \(\alpha : \text{Int} \rightarrow \text{Int}^{\sharp}\) and
+\(\gamma : \text{Int}^{\sharp} \rightarrow \text{Int}\).
+\end{quote}
 
 Coming back to the intervals example from before. Given the Concrete
 Domain of integers
-\((\mathcal{P}(Int), \subseteq, \cap, \cup, Int, \emptyset)\), we can
-define the Intervals Abstract Domain \(\text{Int}^{\#}\) as
-\((\text{Int}^{\#}, \le^{\#}, \sqcap^{\#}, \sqcup^{\#}, [-\infty,\infty], \emptyset, \alpha, \gamma)\)
+\((\mathcal{P}(\text{Int}), \subseteq, \cap, \cup, \text{Int}, \emptyset)\), we can
+define the Intervals Abstract Domain \(\text{Int}^{\sharp}\) as
+\((\text{Int}^{\sharp}, \le^{\sharp}, \sqcap^{\sharp}, \sqcup^{\sharp}, [-\infty,\infty], \emptyset, \alpha, \gamma)\)
 where:
 
 \begin{itemize}
 \tightlist
-\item Every element of \(\text{Int}^{\#}\) is an interval \([a, b]\) with
-  \(a, b \in Int \cup \{-\infty,\infty\}\).
-\item \([a, b] \le^{\#} [c, d] \iff c \le a \wedge b \le d\).
-\item \([a, b] \sqcap^{\#} [c, d] = [max(a,c), min(b, d)]\).
-\item \([a, b] \sqcup^{\#} [c, d] = [min(a,c), max(b, d)]\).
-\item \(\alpha(I) = [min(I), max(I)]\) (Remember that \(I\) is a set of integers).
-\item \(\gamma([a, b]) = \{i \in Int : a \le i \le b\}\).
+\item Every element of \(\text{Int}^{\sharp}\) is an interval \([a, b]\) with
+  \(a, b \in \text{Int} \cup \{-\infty,\infty\}\).
+\item \([a, b] \le^{\sharp} [c, d] \iff c \le a \wedge b \le d\).
+\item \([a, b] \sqcap^{\sharp} [c, d] = [max(a,c), min(b, d)]\).
+\item \([a, b] \sqcup^{\sharp} [c, d] = [min(a,c), max(b, d)]\).
+\item \(\alpha(I) = [min(I), max(I)]\) where \(I\) is a set of integers.
+\item \(\gamma([a, b]) = \{i \in \text{Int} : a \le i \le b\}\).
 \end{itemize}
 
 % The goal of an Abstract Domain is to give us a very powerful tool, the
@@ -558,13 +542,10 @@ else:
 a -= 6
 \end{pythoncode}
 
-We know that the value of \pycode|a| in the \emph{then} branch of the
-\emph{if} statement is equal to \pycode|[2,2]| and
-\pycode|[4,4]| in the \emph{else} branch. The value of \pycode|a|
-after the execution of the \emph{if} statement will be
-\pycode|[2,2]| \(\cup{}\) \pycode|[4,4]| \(=\)
-\pycode|[2,4]|. At the end of the execution, the value of \pycode|a|
-lies inside the interval \pycode|[-4,-2]|.
+We know that the value of \pycode|a| in the \emph{then} branch of the \emph{if} statement
+is equal to \([2,2]\), and \([4,4]\) in the \emph{else} branch. The value of \pycode|a|
+after the execution of the \emph{if} statement will be \([2,2] \cup [4,4] = [2,4]\). At
+the end of the execution, the value of \pycode|a| lies inside the interval \([-4,-2]\).
 
 Notice that with a (Value) Abstract Domain, we can overapproximate the
 value of a single variable but we cannot warranty \textbf{termination}
@@ -596,28 +577,23 @@ any other integer. An Abstract Interpreter is an interpreter and
 therefore will run the body of the while loop forever if we do not do
 something to terminate it.
 
-Applying a series of operations (the body of the while loop) over and
-over may never terminate. Thus we have the need a mechanism that allows
-us to ensure the evaluation of a loop will eventually terminate.
-Introduce the \emph{widening} operator.
+It is not possible to warranty to find a fixed point by just evaluating a piece of code
+over and over (the body of the while loop). Thus, we have the need of finding a mechanism
+that allows us to ensure that the evaluation of a loop will eventually terminate. Introduce
+the \emph{widening} operator.
 
 The idea of a widening operator is to make a series of ascending values
 reach a fixed point in a finite amount of time.
 
-Consider the (increasing) sequence from before\footnote{Notice that:
-$[4,4]$ \(\le\) $[4,7]$ \(\le\) $[4,11]$}:
+Consider the (increasing) sequence from before\footnote{Notice that: \([4,4] \le [4,7] \le [4,11]\)}:
 
-\begin{verbatim}
-[4,4] [4,7] [4,10] [4,13] [4,16] [4,19] [4,22] [4,25] ...
-\end{verbatim}
+\[[4,4] [4,7] [4,10] [4,13] [4,16] [4,19] [4,22] [4,25] \cdots\]
 
-A widening operator is an operator, \(\phi{}\), that takes two
-intervals, \(a\) and \(b\), and outputs a new interval,
-\(c = a \phi b\), such that the new interval contains the old intervals
-\(a, b \le c\). The widening operator must warranty that when applied
-over and over an increasing sequence gives us a sequence that will,
-after a finite amount of steps, find a fixed point (stabilizes). Take
-for example the following widening operator:
+A widening operator is an operator, \(\phi\), that takes two intervals, \(a\) and \(b\),
+and outputs a new interval, \(c = a \phi b\), such that the new interval contains the old
+intervals \(a, b \le c\). The widening operator must warranty that when applied over and
+over on an increasing sequence it will, after a finite amount of steps, find a fixed point
+(it stabilizes). Take for example the following widening operator:
 
 \[[a, b] \phi [c, d] =
      \begin{cases}
@@ -627,54 +603,46 @@ for example the following widening operator:
 
 Applying the operator over our sequence over an over we will get:
 
-\begin{verbatim}
-[4,7] [4,10] [4,13] [4,16] [4,inf] [4,inf] [4,inf] ...
-\end{verbatim}
+\[[4,7] [4,10] [4,13] [4,16] [4,\infty] [4,\infty] [4,\infty] \cdots\]
 
-And we found a fixed point, namely, $[4,inf]$. We have
-arrived now at the top of the latter.
+Notice that we found a fixed point, namely, $[4,inf]$. We have arrived now at the top of
+the latter.
 
-Notice how the cutoff of the sequence must be defined beforehand (in our
-case any interval with a value bigger than \pycode|15| defaults to
-\(\infty\)). This is a little bit annoying as one would like for the
-Abstract Interpreter to work under any condition, but this is the price
-to pay for termination, we need to set some parameters by hand.
+Notice how the cutoff of the sequence must be defined beforehand (in our case any interval
+with a value bigger than \(15\) defaults to \(\infty\)). This is a little bit annoying as
+one would like for the Abstract Interpreter to work under any condition, but this is the
+price to pay for termination. We need to set some parameters by hand.
 
-There is another operator called the narrowing operator. Its purpose is
-to climb down the latter and get a more precise approximation. Notice
-that not all Abstract Domains require the definition of widening and
-narrowing operators as not all of them have infinite increasing or
-decreasing sequences. And it is the case in this work that none of them
-applies, there are no infinite increasing or decreasing sequences in the
-Abstract Interpreter defined in this work.
+There is another operator called the narrowing operator. Its purpose is to climb down the
+latter and get a more precise approximation. Notice that not all Abstract Domains require
+the definition of widening and narrowing operators as not all of them have infinite
+increasing or decreasing sequences. This is the case for this work, no single Abstract
+Domain defined in here requires widening and narrowing operators, there are no infinite
+increasing or decreasing sequences in the Abstract Interpreter defined in this work.
 
 For a deeper discussion on all numerical Abstract Domains available see
 \textcite{mine_weakly_2004}.
 
 \subsection{State Abstract Domain}\label{state-abstract-domain}
 
-The Abstract Domains presented before lets us analyse one variable at
+The Abstract Domains presented before let us analyse one variable at
 the time. To analyse the state of the program we define an Abstract
 Domain for the state of the program. How to do this? Well, if we assume
 that the language allows no aliasing, then we can build the State
 Abstract Domain as:
 
-\begin{verbatim}
-State: Var -> Val
-State#: Var -> Val#
-\end{verbatim}
+\[State: Var \to Val\]
+\[State^\sharp: Var \to Val^\sharp\]
 
-If the \pycode|State| of the program is defined as a function from
-\pycode|Var|s into their values (\verb|Var -> Val|),
-and \pycode|Val#| is the Abstract Domain for values in the languages,
-then the function \verb|Var -> Val#| is an Abstract
-Domain\footnote{For a deeper look and a proof on this statement see
-  \textcite{nielson2015principles}, Subchapter 4.4.} for the state of
-the program.
+If the \pycode|State| of the program is defined as a function from \(Var\)s into their
+values (\(State: Var \to Val\)), and \(Val^\sharp\) is the Abstract Domain for values in
+the languages, then the function \(State^\sharp: Var \to Val^\sharp\) is an Abstract
+Domain\footnote{For a deeper look and a proof of this statement see
+  \textcite{nielson2015principles}, Subchapter 4.4.} for the state of the program.
 
 As an example consider:
 
-\begin{minted}{cpp}
+\begin{minted}[linenos, numbersep=5pt, frame=single, framesep=2mm]{cpp}
 int main() {
   int cond1, cond2, a, b, c;
   std::cin >> cond1 >> cond2;
@@ -703,43 +671,42 @@ Suppose that the State Abstract Domain for this piece of code is a
 function from the set \(\{cond1, cond2, a, b, c\}\) to the Interval
 Abstract Domain. If we evaluate the code line by line we will get:
 
-\begin{minted}{cpp}
+\begin{minted}[linenos, numbersep=5pt, frame=single, framesep=2mm, mathescape]{cpp}
 // T: means Top
 int main() {
   int cond1, cond2, a, b, c;
-  // {'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T}
+  // {'cond1': $\top$, 'cond2': $\top$, 'a': $\top$, 'b': $\top$, 'c': $\top$}
   std::cin >> cond1 >> cond2;
-  // {'cond': T, 'cond2': T, 'a': T, 'b': T, 'c': T}
+  // {'cond1': $\top$, 'cond2': $\top$, 'a': $\top$, 'b': $\top$, 'c': $\top$}
 
   if (cond1) {
-    a = 0
-    // {'cond': T, 'cond2': T, 'a': 0, 'b': T, 'c': T}
-    b = 20
-    // {'cond': T, 'cond2': T, 'a': 0, 'b': 20, 'c': T}
+    a = 0;
+    // {'cond1': $\top$, 'cond2': $\top$, 'a': $0$, 'b': $\top$, 'c': $\top$}
+    b = 20;
+    // {'cond1': $\top$, 'cond2': $\top$, 'a': $0$, 'b': $20$, 'c': $\top$}
   } else {
     if (cond2) {
-      a = 2
-      // {'cond': T, 'cond2': T, 'a': 2, 'b': T, 'c': T}
-      b = 6
-      // {'cond': T, 'cond2': T, 'a': 2, 'b': 6, 'c': T}
+      a = 2;
+      // {'cond1': $0$, 'cond2': $\top$, 'a': $2$, 'b': $\top$, 'c': $\top$}
+      b = 6;
+      // {'cond1': $0$, 'cond2': $\top$, 'a': $2$, 'b': $6$, 'c': $\top$}
     } else {
-      a = 1
-      // {'cond': T, 'cond2': T, 'a': 1, 'b': T, 'c': T}
-      b = 9
-      // {'cond': T, 'cond2': T, 'a': 1, 'b': 9, 'c': T}
+      a = 1;
+      // {'cond1': $0$, 'cond2': $0$, 'a': $1$, 'b': $\top$, 'c': $\top$}
+      b = 9;
+      // {'cond1': $0$, 'cond2': $0$, 'a': $1$, 'b': $9$, 'c': $\top$}
     }
-    // {'cond': T, 'cond2': T, 'a': [1,2], 'b': [6,9], 'c': T}
+    // {'cond1': $0$, 'cond2': $\top$, 'a': $[1,2]$, 'b': $[6,9]$, 'c': $\top$}
   }
-  // {'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': T}
+  // {'cond1': $\top$, 'cond2': $\top$, 'a': $[0,2]$, 'b': $[6,20]$, 'c': $\top$}
   c = a + b;
-  // {'cond': T, 'cond2': T, 'a': [0,2], 'b': [6,20], 'c': [6,22]}
+  // {'cond1': $\top$, 'cond2': $\top$, 'a': $[0,2]$, 'b': $[6,20]$, 'c': $[6,22]$}
   return 0;
 }
 \end{minted}
 
-Excellent! We have done it! We have the idea of how to build an Abstract
-Interpreter for a language with only one type of variable, a global
-scope, and no aliasing.
+Excellent! We have done it! We have an idea of how to build an Abstract Interpreter for a
+language with only one type of variable, a global scope, and no aliasing.
 
 \subsection{Abstract Semantics}\label{abstract-semantics}
 
@@ -749,16 +716,17 @@ scope, and no aliasing.
 
 Abstract Semantics is the name that is given to the semantics that operate with abstract
 values (from the Abstract Domain), as opposed to Concrete Semantics that work with the
-original (concrete) values. To define these semantics are require the original
-semantics and the Abstract values. The process involves applying the concretisation and
-abstraction functions on to the semantic rules we want to transform.
+original (concrete) values. To define these semantics the original (concrete) semantics
+and the Abstract values are required. The process of defining the abstract semantics
+involves applying the concretisation and abstraction functions onto the semantic rules we
+want to transform.
 
 Often, this process is straightforward and no need to use the abstraction or
 concretisation functions is necessary, all that is needed is to understand how each
 operation from the Concrete Domain translates to the new Domain. For example, the
-abstract operation $+$ between two (interval) integer numbers is defined as:
+abstract operation \(+\) between two (interval) integer numbers is defined as:
 
-\[[a, b] +^{\#} [c, d] := [a+c, b+d]\]
+\[[a, b] +^{\sharp} [c, d] := [a+c, b+d]\]
 
 The semantics of interval arithmetics are well studied and can be easily implemented from
 theory \autocite{hayes_interval_2003}.
@@ -771,13 +739,13 @@ theory \autocite{hayes_interval_2003}.
 % functions. We can infer the abstract semantics with the following little
 % formula:
 %
-% \[f^\# = \alpha \cdot f \cdot \gamma\]
+% \[f^\sharp = \alpha \cdot f \cdot \gamma\]
 %
 % where \(f\) is a function (a rule) in the semantics of the language.
 %
 % The idea is simple, if \(f\) is defined properly defined then we can
 % compose it with the abstraction and concretisation functions and we will
-% get a function \(f^\#\) which operates over the State Abstract Domain.
+% get a function \(f^\sharp\) which operates over the State Abstract Domain.
 %
 % This step is important if we want to prove the Abstract Interpreter to
 % be sound and work as expected. For a deeper discussion on how to infer
@@ -794,29 +762,28 @@ possible values a variable may have when it enters an \emph{if}
 statement. Consider the following piece of C++ (\pycode|a| and
 \pycode|b| are integers):
 
-\begin{pythoncode}
-// {'a': [2,4], 'b': Top}
+\begin{minted}[linenos, numbersep=5pt, frame=single, framesep=2mm, mathescape]{cpp}
+// {'a': $[2,4]$, 'b': $\top$}
 if (a < 3) {
-  // Appling backward assignment. `a<3 and a in [2,4]`
-  // {'a': 2, 'b': Top}
+  // Appling backward assignment: $a<3$
+  // {'a': $2$, 'b': $\top$}
   b = a;
-  // {'a': 2, 'b': 2}
+  // {'a': $2$, 'b': $2$}
 } else {
-  // Appling backward assignment. `a>=3 and a in [2,4]`
-  // {'a': [3,4], 'b': Top}
+  // Appling backward assignment: $a \ge 3$
+  // {'a': $[3,4]$, 'b': $\top$}
   b = a - 2;
-  // {'a': [3,4], 'b': [1,2]}
+  // {'a': $[3,4]$, 'b': $[1,2]$}
 }
-// {'a': [2,4], 'b': [1,2]}
-\end{pythoncode}
+// {'a': $[2,4]$, 'b': $[1,2]$}
+\end{minted}
 
-Notice that if we ignore backward assignment the interval for \pycode|b|
-is \pycode|[0,4]|. Backward assignment lets us narrow down the
-overapproximation, which means that we can have a tighter
-overapproximation and consequently less false positives.
+Notice that if we ignore backward assignment the interval for \pycode|b| is \([0,4]\).
+Backward assignment lets us narrow down the overapproximation, which means that we can
+have a tighter overapproximation and consequently less false positives.
 
-In this work, we make use of only non-relational Abstract Domains. A
-relational Abstract Domain keeps some of the relationships between
-variables, they are more expensive than non-relational Abstract Domains
-but they allow even tighter overapproximations. See more
-\textcite{mine_weakly_2004}.
+Another characteristic that will not be used in this work is relational Abstract Domains.
+A relational Abstract Domain keeps some of the relationships between variables which means
+that their overapproximations are tighter than those of non-relational overapproximations.
+We will only use non-relational Abstract Domains. For a detailed explanation on relational
+and non-relational Abstract Domais see \textcite{mine_weakly_2004}.

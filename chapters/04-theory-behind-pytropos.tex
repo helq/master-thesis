@@ -18,7 +18,7 @@ consist of what a piece of code means, how to interpret it, and how to analyse i
 
 \textcite{mitchell1996foundations} classifies programming languages semantics into three
 categories: axiomatic, denotational, and operational. Axiomatic semantics describe the
-behaviour of code with mathematical logic. Denotational semantics goal is to find a
+behaviour of code with mathematical logic. The goal of denotational semantics is to find a
 mathematical \enquote{object} that represents what a program does. The program meaning is
 given by the object properties or lack of thereof. Operational semantics are concerned
 with rules that tell how to interpret or execute a piece of code. No meaning is given to
@@ -59,11 +59,11 @@ Python have been small-step semantics as it is easy to define rules from the tra
 process from code to \enquote{binary}
 \autocites{ranson_semantics_2008}{guth_formal_2013}{politz_python_2013}{fromherz_static_2018}.
 
-We also define some small-steps semantics for Python. We define them from the execution
-model of CPython, that is, the official implementation of the Python language. In the
-following two sections, we define the small-step semantics of a portion of Python, our
-concrete semantics for the problem; and, based on them we will define some abstract
-semantics for Python.
+For this reason, we define in this work some small-steps semantics for Python. We define
+them from the execution model of CPython, that is, the official implementation of the
+Python language. In the following two sections, we define the small-step semantics of a
+portion of Python, our concrete semantics for the problem; and, based on them we will
+define some abstract semantics for Python.
 
 \section{Concrete Semantics of Python}
 
@@ -88,9 +88,9 @@ study in this work.
   stmt &:=& \texttt{del } expr  & \textit{delete} \\
      &\alt& expr = expr         & \textit{assignment} \\
      &\alt& expr~op\hspace{-0.35em}\texttt{ = } expr       & \textit{augmented assignment} \\
-     &\alt& expr\texttt{: } expr \texttt{ = } expr   & \textit{type annotation} \\
-     &\alt& \texttt{while } expr\texttt{: } stmt^+   & \textit{loop} \\
-     &\alt& \texttt{if } expr\texttt{: } stmt^+   & \textit{if} \\
+     &\alt& expr\texttt{: } expr \texttt{ = } expr         & \textit{type annotation} \\
+     &\alt& \texttt{while } expr\texttt{: } stmt^+         & \textit{loop} \\
+     &\alt& \texttt{if } expr\texttt{: } stmt^+ \texttt{ else: } stmt^+  & \textit{if-else} \\
      &\alt& \texttt{import } alias^+
      \alt \texttt{from } identifier \texttt{ import } alias^+   & \textit{import library} \\
      &\alt& expr & \\
@@ -103,7 +103,7 @@ study in this work.
 
   %identifier &:=& str  & \\
 \end{array}\]
-\caption{Reduced python syntax used throughout this work.\label{syntaxPython}}
+\caption{Reduced Python syntax used throughout this work.\label{syntaxPython}}
 \end{figure}
 
 We intentionally omit any details related to the spacing of blocks in Python, as our main
@@ -128,8 +128,9 @@ python values into three categories: primitive values, like numbers, booleans an
 
 $$\begin{array}{rcl}
   \mathbf{Val} &:=& \mathbf{PrimVal} \alt \mathbf{Object} \alt \textbf{\texttt{<prim-callable>}} \\
+         &\alt& \mathbf{Addr} \times \textbf{\texttt{<prim-callable>}} \quad \textit{function associated to value} \\
   \mathbf{PrimVal} &:=& i \in \mathbb{Z} \alt j \in \texttt{float} \alt \texttt{True} \alt \texttt{False} \alt \texttt{None} \\
-  \mathbf{Object} &:=& \mathbf{Type} \times \mathbf{Addr} \left(\mathbf{Key} \to \mathbf{Addr} \cup \{\undefm\}\right) \\
+  \mathbf{Object} &:=& \mathbf{Type} \times \mathbf{Addr} \times \left(\mathbf{Key} \to \mathbf{Addr} \cup \{\undefm\}\right) \\
   \mathbf{Type} &:=& \texttt{List} \alt \texttt{Tuple} \\
   \mathbf{Key} &:=& \mathbf{Iden} + \left(\textsf{string} \times \mathbf{Val}\right) \\
 \end{array}$$
@@ -174,13 +175,13 @@ from Figure~\ref{smallstep1} define the small-step semantics.
     \quad \letm \left(\Glo_1, \Hea_1\right) := \Ctx{S}{stmt_1}\left(\Glo, \Hea\right) \\
     \quad \inm \Ctx{S}{stmt_2}\left(\Glo_1, \Hea_1\right) \\
     \\
-    \Ctx{S}{identifier = expr}\left(\Glo, \Hea\right) := \\
+    \Ctx{S}{id = expr}\left(\Glo, \Hea\right) := \\
     \quad \letm
     \begin{aligned}[t]
       \left(\Glo_1, \Hea_1, val\right) &:= \Ctx{E}{expr}\left(\Glo, \Hea\right) \\
       adnew &:= get\_free\_addr(\Hea_1) \\
     \end{aligned}\\
-    \quad \inm \left(\Glo_1[identifier \to adnew], \Hea_1[adnew \to val]\right) \\
+    \quad \inm \left(\Glo_1[id \to adnew], \Hea_1[adnew \to val]\right) \\
   \end{array}
 \]
 \[
@@ -222,14 +223,14 @@ from Figure~\ref{smallstep1} define the small-step semantics.
 % \end{verbatim}
 
 The construction $\Halt$ indicates that the evaluation cannot go any further, i.e. the
-interpreter will stop and throw an exception. For example, accessing a variable that
+interpreter will stop and throw an exception. For example, accessing to a variable that
 has not yet been defined is considered an error (Python will throw an exception if this
 happens).
 
 The meaning of our program is given by the function $\Ctx{S}{stmt}$ with type
 $\mathbf{State} \to \mathbf{State}$ (where $\mathbf{State} := \mathbf{Global} \times \mathbf{Heap}$).
 In this work, we are interested on the values that result from the application of the
-fuction $\Ctx{S}{stmt}$ on a clean state, which is a state that has only built-in variables
+function $\Ctx{S}{stmt}$ on a clean state, which is a state that has only built-in variables
 defined.  Statements modify the state of the program while expressions modify the state of
 the program and return a python value as result, e.g. the expression \pycode+ls.pop()+
 removes the last element in the list \pycode+ls+ and returns the value contained. This is
@@ -301,24 +302,24 @@ Figure~\ref{evaluatingprog} presents the step by step of the evaluation.
     \\
     \quad\eqdef
     \begin{aligned}[t]
-      \letm
+      &\letm
         \begin{aligned}[t]
           \left(\Glo_1, \Hea_1, val\right) &:= \Ctx{E}{b \texttt{ + } 3}\left([b \to 0], [0 \to 2]\right) \\
           adnew &:= get\_free\_addr(\Hea_1) \\
         \end{aligned}\\
-      \quad \inm \left(\Glo_1[a \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
+      &\inm \left(\Glo_1[a \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
     \end{aligned}\\
     \\
     \quad= \cdots = \\
     \\
     \quad=
     \begin{aligned}[t]
-      \letm
+      &\letm
         \begin{aligned}[t]
           \left(\Glo_1, \Hea_1, val\right) &:= \left([b \mapsto 0], [0 \mapsto 2], 5\right) \\
           adnew &:= get\_free\_addr(\Hea_1) \\
         \end{aligned}\\
-      \quad \inm \left(\Glo_1[a \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
+      &\inm \left(\Glo_1[a \mapsto adnew], \Hea_1[adnew \mapsto val]\right) \\
     \end{aligned}\\
     \quad=
     \begin{aligned}[t]
@@ -409,7 +410,7 @@ Defining the small-step semantics on the syntax presented before is inconvenient
 why working with this syntax is inconvenient, observe that the delete statement,
 $\texttt{del } expr$, does not expect a value from the evaluation of the expression
 $expr$ but a name or position in memory.  Both \pycode|del a| and \pycode|ls = [1,9,4,5];
-del ls[2]| are valid python statements, but their semantics vary depending on the
+del ls[2]| are valid python statements, but their semantics depend on the
 expression being evaluated. Inversely, the return value of evaluating expressions depends
 on the context they are being called, the expression \pycode|ls[2]| returns a value or a
 position in memory depending on the context is being used. \pycode|4 + ls[2]|,
@@ -444,9 +445,9 @@ seen in Figure~\ref{syntaxPython2}.
      &\alt& \SLit{AugAssign}{expr, op, expr}       & \textit{augmented assignment} \\
      &\alt& \SLit{AnnAssign}{expr, expr, expr}     & \textit{type annotation} \\
      &\alt& \SLit{While}{expr, stmt^+}             & \textit{loop} \\
-     &\alt& \SLit{If}{expr, stmt^+}                & \textit{if} \\
-     &\alt& \SLit{Import}{alias^+}                 & \textit{if} \\
-     &\alt& \SLit{ImportFrom}{identifier, alias^+} & \textit{import library} \\
+     &\alt& \SLit{If}{expr, stmt^+, stmt^+}        & \textit{if} \\
+     &\alt& \SLit{Import}{alias^+}                 & \textit{import library} \\
+     &\alt& \SLit{ImportFrom}{identifier, alias^+} & \textit{import from} \\
      &\alt& \SLit{Expr}{expr}                      & \\
 
   expr\_context &:=& \SLoad \alt \SStore \alt \SDel  & \\
@@ -467,7 +468,7 @@ This is the same syntax that is used by the parser implemented by CPython
 \autocite{van2007python}. The developer is not supposed to write in this new syntax. The
 parser takes code written in the first syntax and defines a proper context (\verb|Load|,
 \verb|Store|, or \verb|Del|) for the expressions \pycode+Name+ and \pycode+Subscript+. All
-other expressions are considered \verb|Load| by default.
+other expressions are considered to have context \verb|Load| by default.
 
 The following is the informal meaning of each context:
 
@@ -476,7 +477,7 @@ The following is the informal meaning of each context:
 \item[\textbf{Load}] indicates that the result of evaluating the expression will be used
   in further computations. For example, the result of evaluating the expression \pycode|b|
   in \pycode|b + 2| is a value.
-\item[\textbf{Store}] indicates that we want to save to the expression a value. For
+\item[\textbf{Store}] indicates that we want to save a value into the expression. For
   example, the result of evaluating the expression \pycode|b| in \pycode|b = 2| is the
   location of \pycode|b| in the global scope.
 \item[\textbf{Del}] indicates that we want to delete the expression from where it is stored.
@@ -559,7 +560,7 @@ In Figure~\ref{smallstep2}, the small-step semantics for the new syntax are pres
     \\
     \Ctx{S}{\SLit{Assign}{var, val}}\left(\Glo, \Hea\right) := \\
     \quad \letm
-       \begin{array}[t]{cl}
+       \begin{array}[t]{rl}
           \left(\Glo_1, \Hea_1, ass\right) &:= \Ctx{E}{var}\left(\Glo, \Hea\right) \\
           \left(\Glo_2, \Hea_2, rightval\right) &:= \Ctx{E}{val}\left(\Glo_1, \Hea_1\right) \\
           rval &:= \ifm is\_value(rightval) \;\thenm val \;\elsem \Halt \\
@@ -578,15 +579,14 @@ In Figure~\ref{smallstep2}, the small-step semantics for the new syntax are pres
 \end{figure}
 
 % The increase in complexity of the semantics is required to handle all the
-Notice that the number of \verb+<Execution Halt>+s in the semantics have increased. The
-new \verb+<Execution Halt>+s are the result of an incorrect return value by an expression.
-These new \verb+<Execution Halt>+s are considered the result of a failure by the parser.
-The Abstract Interpreter will also fail if there is a failure in the parser, we suppose
-that the parser works as intended.
+Notice the increase in the number of \(\Halt\)s in the semantics. These increase is due to
+all possible errors a parser may make. The Abstract Interpreter will also fail if there
+is a failure in the parser, we suppose that the parser works as intended.
 
 Expressions return one of three different values
-\verb|(Val + (Object x (string x Val)) + Iden)|. The value returned depends on the
-context the expression is called and how is it accessed:
+\(\mathbf{Val}\), \(\mathbf{Object} \times (\textsf{string} \times \mathbf{Val})\) or
+\(\mathbf{Iden}\). The value returned depends on the context the expression is called and
+how is it accessed:
 
 \begin{itemize}
 \tightlist
@@ -606,37 +606,35 @@ context the expression is called and how is it accessed:
 \section{Abstract Semantics}
 
 In this section, we will define the abstract semantics of the language. To define them, we
-need to define first an Abstract Domain for the state of the program. Concrete semantics
-work on Python values (numbers, constants, functions, lists, etc) and abstract semantics
-work on Abstract Python values.
+need to define first an Abstract Domain for the state of the program. Recall that Concrete
+semantics work on Python values (numbers, constants, functions, lists, etc) and abstract
+semantics work on Abstract Python values.
 
-First, we will define the Abstract Python values, the Abstract Domain propose. Finally, we
-will show the new semantics, the abstract semantics.
+First, we will define the Abstract Python values. At last, we will show the new semantics,
+the abstract semantics.
 
 \subsection{State Abstract Domain}
 
-Before we define the Abstract Domain for a state of the program, \verb+Global x Heap+, we
-will define the Abstract Domain for a primitive value in the language. Concrete
-primitive values are defined as
+Before we define the Abstract Domain for a state of the program,
+\(\mathbf{Global} \times \mathbf{Heap}\), we will define the Abstract Domain for a
+primitive value in the language. Concrete primitive values are defined as
 
-\begin{verbatim}
-PrimVal = Int | Float | True | False | None | Undefined
-\end{verbatim}
+\[\mathbf{PrimVal}^\sharp := \text{Int}^\sharp \alt \text{Float}^\sharp \alt \text{Bool}^\sharp \alt \text{None}^\sharp \alt \Top{PrimVal} \alt \Bot{PrimVal} \]
 
 The Abstract Domain for primitive values is constructed from individual Abstract Domains,
-one Abstract Domain per each one of the types of values that \verb+PrimVal+ holds as it
-can be seen in Figure~\ref{latticevals}.
+one Abstract Domain per each one of the types of values that \(\mathbf{PrimVal}\) holds as
+it can be seen in Figure~\ref{latticevals}.
 
 \begin{figure}
   \begin{center}
-  \input{figures/latice-primvals}
+  \input{figures/lattice-primvals}
   \end{center}
   \caption{Lattice/Abstract Domain for primitive values.\label{latticevals}}
 \end{figure}
 
-In this Abstract Domain, joining any two differing values gives us a $\top$. If both
-values are of the same "type", e.g. both are \pycode+Int+s, then the $\top$ will "be" of
-that type. For example, $5 \cup 6 = \top_{\text{Int}}$ and $5 \cup 6.2 = \top$.
+In this Abstract Domain, joining any two differing values gives us a $\top$ value. If both
+values are of the same "type", e.g. both are \pycode+Int+s, then the $\top$ will be of
+that type. For example, $5 \cup 6 = \Top{Int}$ and $5 \cup 6.2 = \Top{PrimVal}$.
 
 The selected Abstract Domains for integers and floating point numbers are the simplest
 Abstract Domains for numbers that work for Value Analysis. We do not use more complex
@@ -645,24 +643,21 @@ of tensors.
 
 Recall that the semantics of a program work on states, thus we need to define an abstract
 value for the abstract semantics to work with. Remember that the state of a program is a
-value of type \verb+Global x Heap+. The abstract state of a program is defined as
-\verb+Global# x Heap#+, where:
+value of type \(\mathbf{Global} \times \mathbf{Heap}\). The abstract state of a program is defined as
+\(\mathbf{Global}^\sharp \times \mathbf{Heap}^\sharp\), where:
 
-\begin{verbatim}
-Global# = Iden -> Addr + Undefined  -- Abstract Global Scope
-Heap# = Addr -> Val# + Undefined    -- Abstract Heap
-
-PrimVal# = Int# | Float# | True# | False# | None | Undefined
-Object# = Type x Addr x ((Key -> Addr + Undefined) + ImTop + ImBot)
-Val# = PrimVal# | Object# | <prim-callable># | Top_Val | Bot_Val
-
-<prim-callable> = <prim-append># | <prim-+-int># | <prim-+-float># | <prim-*-int># | ...
-\end{verbatim}
+\[\begin{array}{rcl}
+   \mathbf{Val}^\sharp &:=& \mathbf{PrimVal}^\sharp \alt \mathbf{Object}^\sharp \alt \textbf{\texttt{<prim-callable>}}^\sharp \\
+   \mathbf{PrimVal}^\sharp &:=& \text{Int}^\sharp \alt \text{Float}^\sharp \alt \text{Bool}^\sharp \alt \text{None}^\sharp \alt \Top{PrimVal} \alt \Bot{PrimVal}\\
+   \mathbf{Object}^\sharp &:=& \mathbf{Type} \times \mathbf{Addr} \times \left(\mathbf{Key} \to \mathbf{Addr} \cup \{\undefm\}\right) \\
+   \mathbf{Type} &:=& \texttt{List} \alt \texttt{Tuple} \\
+   \mathbf{Key} &:=& \mathbf{Iden} + \left(\textsf{string} \times \mathbf{Val}^\sharp\right) \\
+\end{array}\]
 
 Explaining in detail how is the Abstract Domain for the state defined is out of the scope
-of this chapter. A throughout explanation on the construction of the Abstract Domain can be
-seen in Appendix~\ref{appendix-ai-theory}. We will dedicate the rest of this section
-to show the motivation to define an Abstract Domain for states.
+of this chapter. A throughout explanation on the construction of the Abstract Domain can
+be seen in Appendix~\ref{appendix-ai-theory}. We will dedicate the rest of this section to
+motivate why has been this representation chosen.
 
 Consider the following piece of code:
 
@@ -686,114 +681,274 @@ overapproximation of the states is what we built an Abstract Domain for. The
 \textit{join} ($\cup^{\text{State}}$) operation of an Abstract Domain tells us the
 smallest common overapproximation between the two states.
 
-We know that the state at the end of the \enquote{then} branch is \verb|(G1, H1)|, and the
-state at the end of the \enquote{else} branch is \verb|(G2, H2)|, where:
+We know that the state at the end of the \enquote{then} branch is \((\Glo_1, \Hea_1)\), and the
+state at the end of the \enquote{else} branch is \((\Glo_2, \Hea_2)\), where:
+\\[.4em]
 
-\begin{verbatim}
-G1 := {'s'-> 0, 'a'-> 1: 'b'-> 2: 'c'-> 3}  G2 := {'s'-> 0, 'a'-> 1: 'b'-> 2: 'c'-> 3}
-H1 := {                                     H2 := {
-  0 -> Top,                                   0 -> Top,
-  1 -> 2,                                     1 -> 3,
-  2 -> 5,                                     2 -> 5,
-  3 -> (List, 3, {                            3 -> (List, 3, {
-    'size' -> 4,                                'size' -> 4,
-    ('index', 0) -> 5,                          ('index', 0) -> 5,
-    ('index', 1) -> 6,                          ('index', 1) -> 6,
-    ('index', 2) -> 7,                          ('index', 2) -> 7,
-  }),                                         }),
-  4 -> 3,                                     4 -> 3,
-  5 -> 0.0,                                   5 -> 1,
-  6 -> 2,                                     6 -> 3,
-  7 -> 5,                                     7 -> 5,
-}                                           }
-\end{verbatim}
+\begin{minipage}{0.45\textwidth}
+  \[\Glo_1(i) = \left\{
+    \begin{array}{ll}
+      0 & \text{if } i = \texttt{'s'} \\
+      1 & \text{if } i = \texttt{'a'} \\
+      2 & \text{if } i = \texttt{'b'} \\
+      3 & \text{if } i = \texttt{'c'} \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  \[\Hea_1(n) = \left\{
+    \begin{array}{lcl}
+      \Top{Val} & \text{if } n = 0 \\
+      2 & \text{if } n = 1 \\
+      5 & \text{if } n = 2 \\
+      (\texttt{List}, 3, l_1) & \text{if } n = 3 \\
+      3 & \text{if } n = 4 \\
+      0.0 & \text{if } n = 5 \\
+      2 & \text{if } n = 6 \\
+      5 & \text{if } n = 7 \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  \[l_1(i) = \left\{
+    \begin{array}{ll}
+      4 & \text{if } i = \texttt{'size'} \\
+      5 & \text{if } i = (\texttt{'index'}, 0) \\
+      6 & \text{if } i = (\texttt{'index'}, 1) \\
+      7 & \text{if } i = (\texttt{'index'}, 2) \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill%
+\begin{minipage}{0.45\textwidth}
+  \[\Glo_2(i) = \left\{
+    \begin{array}{ll}
+      0 & \text{if } i = \texttt{'s'} \\
+      1 & \text{if } i = \texttt{'a'} \\
+      2 & \text{if } i = \texttt{'b'} \\
+      3 & \text{if } i = \texttt{'c'} \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  \[\Hea_2(n) = \left\{
+    \begin{array}{lcl}
+      \Top{Val} & \text{if } n = 0 \\
+      3 & \text{if } n = 1 \\
+      5 & \text{if } n = 2 \\
+      (\texttt{List}, 3, l_2) & \text{if } n = 3 \\
+      3 & \text{if } n = 4 \\
+      1 & \text{if } n = 5 \\
+      3 & \text{if } n = 6 \\
+      5 & \text{if } n = 7 \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  \[l_2(i) = \left\{
+    \begin{array}{ll}
+      4 & \text{if } i = \texttt{'size'} \\
+      5 & \text{if } i = (\texttt{'index'}, 0) \\
+      6 & \text{if } i = (\texttt{'index'}, 1) \\
+      7 & \text{if } i = (\texttt{'index'}, 2) \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill\\[0.4em]
 
-The result of joining the two states is \verb+(Gnew, Hnew)+, where:
+%\begin{verbatim}
+%G1 := {'s'-> 0, 'a'-> 1, 'b'-> 2, 'c'-> 3}  G2 := {'s'-> 0, 'a'-> 1, 'b'-> 2, 'c'-> 3}
+%H1 := {                                     H2 := {
+%  0 -> Top,                                   0 -> Top,
+%  1 -> 2,                                     1 -> 3,
+%  2 -> 5,                                     2 -> 5,
+%  3 -> (List, 3, {                            3 -> (List, 3, {
+%    'size' -> 4,                                'size' -> 4,
+%    ('index', 0) -> 5,                          ('index', 0) -> 5,
+%    ('index', 1) -> 6,                          ('index', 1) -> 6,
+%    ('index', 2) -> 7,                          ('index', 2) -> 7,
+%  }),                                         }),
+%  4 -> 3,                                     4 -> 3,
+%  5 -> 0.0,                                   5 -> 1,
+%  6 -> 2,                                     6 -> 3,
+%  7 -> 5,                                     7 -> 5,
+%}                                           }
+%\end{verbatim}
 
-\begin{verbatim}
-Gnew := {'s'-> 0, 'a'-> 1: 'b'-> 2: 'c'-> 3}
-Hnew := {
-  0 -> Top,
-  1 -> Top_Int,
-  2 -> 5,
-  3 -> (List, 3, {
-    'size' -> 4,
-    ('index', 0) -> 5,
-    ('index', 1) -> 6,
-    ('index', 2) -> 7,
-  }),
-  4 -> 3,
-  5 -> Top,
-  6 -> Top_Int,
-  7 -> 5,
-}
-\end{verbatim}
+The result of joining the two states is \((\Glo_{new}, \Hea_{new})\), where:
+\\[.4em]
+
+\begin{minipage}{0.45\textwidth}
+  \[\Glo_{new}(i) = \left\{
+    \begin{array}{ll}
+      0 & \text{if } i = \texttt{'s'} \\
+      1 & \text{if } i = \texttt{'a'} \\
+      2 & \text{if } i = \texttt{'b'} \\
+      3 & \text{if } i = \texttt{'c'} \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  \[l_{new}(i) = \left\{
+    \begin{array}{ll}
+      4 & \text{if } i = \texttt{'size'} \\
+      5 & \text{if } i = (\texttt{'index'}, 0) \\
+      6 & \text{if } i = (\texttt{'index'}, 1) \\
+      7 & \text{if } i = (\texttt{'index'}, 2) \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill%
+\begin{minipage}{0.45\textwidth}
+  \[\Hea_{new}(n) = \left\{
+    \begin{array}{lcl}
+      \Top{Val} & \text{if } n = 0 \\
+      \Top{Int} & \text{if } n = 1 \\
+      5 & \text{if } n = 2 \\
+      (\texttt{List}, 3, l_{new}) & \text{if } n = 3 \\
+      3 & \text{if } n = 4 \\
+      \Top{PrimVal} & \text{if } n = 5 \\
+      \Top{Int} & \text{if } n = 6 \\
+      5 & \text{if } n = 7 \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill\\[0.4em]
+
+%\begin{verbatim}
+%Gnew := {'s'-> 0, 'a'-> 1, 'b'-> 2, 'c'-> 3}
+%Hnew := {
+%  0 -> Top,
+%  1 -> Top_Int,
+%  2 -> 5,
+%  3 -> (List, 3, {
+%    'size' -> 4,
+%    ('index', 0) -> 5,
+%    ('index', 1) -> 6,
+%    ('index', 2) -> 7,
+%  }),
+%  4 -> 3,
+%  5 -> Top,
+%  6 -> Top_Int,
+%  7 -> 5,
+%}
+%\end{verbatim}
 
 Now that we have defined our abstract state, we can define the abstract semantics.
 
 \subsection{Semantics for the Abstract State}
 
-Defining abstract semantics is quite straightforward. All we need to do is to modify
-the concrete semantics to work with new values:
+Once we have defined the concrete semantics and Abstract State, defining abstract
+semantics is straightforward. All we need to do is to modify the concrete semantics to
+work with new values, see Figure~\ref{abssmallstep}.
 
-\begin{verbatim}
-E#[expr] : Global# x Heap#
-         -> Global#
-          x Heap#
-          x (Val# + (Object# x (string x Val#)) + Iden)
+\begin{figure}
+\[\begin{array}{rl}
+  \Ctx{E^\sharp}{expr} :& \mathbf{Global}^\sharp \times \mathbf{Heap}^\sharp \\
+  &\to \mathbf{Global}^\sharp \\
+  &\times \mathbf{Heap}^\sharp \\
+  &\times \left( \mathbf{Val}^\sharp \cup (\mathbf{Object}^\sharp \times (\textsf{string} \times \mathbf{Val}^\sharp)) \cup \mathbf{Iden} \right) \\
+  \\
+  \Ctx{S^\sharp}{expr} :& \mathbf{Global}^\sharp \times \mathbf{Heap}^\sharp \to \mathbf{Global}^\sharp \times \mathbf{Heap}^\sharp \\
+\end{array}\]
+\[\arraycolsep=1.4pt
+  \begin{array}[t]{l}
+    \Ctx{E^\sharp}{\SLit{Name}{id}}\left(\Glo^\sharp, \Hea^\sharp\right) := \\
+    \quad \matchm{ctx} \\
+    \qquad \begin{array}[t]{lclr}
+      \casem{\SLoad} &\to&
+         \begin{array}[t]{l}
+            \ifm \Glo^\sharp(id) = \undefm \\
+            \thenm
+               \begin{array}[t]{l}
+                  \ifm isbuiltin(id) \\
+                  \thenm \left(\Glo^\sharp, \Hea^\sharp, \texttt{<builtin-val>}(id)\right) \\
+                  \elsem
+                    \begin{array}[t]{rl}
+                      \letm& ad := freeaddr(\Hea^\sharp) \\
+                      \inm&  \left(\Glo^\sharp[id\mapsto ad], \Hea^\sharp[ad \mapsto \Top{Val}], \Top{Val} \right) \\
+                    \end{array} \\
+               \end{array} \\
+            \elsem \left(\Glo^\sharp, \Hea^\sharp, \Hea^\sharp\left(\Glo^\sharp\left(id\right)\right)\right) \\
+         \end{array} \\
+      \casem{\SStore} &\to& \left(\Glo^\sharp, \Hea^\sharp, id\right) \quad \textit{to be assigned} \\
+      \casem{\SDel}   &\to& \left(\Glo^\sharp, \Hea^\sharp, id\right) \quad \textit{to be deleted} \\
+    \end{array}\\
+    \\
+    \Ctx{E^\sharp}{\SLit{Int}{n}}\left(\Glo^\sharp, \Hea^\sharp\right) := \left(\Glo^\sharp, \Hea^\sharp, n\right) \\
+    \\
+    \Ctx{S^\sharp}{\SLit{Assign}{var, val}}\left(\Glo, \Hea\right) := \\
+    \quad \letm
+       \begin{array}[t]{rl}
+          \left(\Glo_1^\sharp, \Hea_1^\sharp, ass\right) &:= \Ctx{E^\sharp}{var}\left(\Glo^\sharp, \Hea^\sharp\right) \\
+          \left(\Glo_2^\sharp, \Hea_2^\sharp, rightval\right) &:= \Ctx{E^\sharp}{val}\left(\Glo_1\sharp, \Hea_1\sharp\right) \\
+          rval &:= \ifm is\_value^\sharp(rightval) \;\thenm val \;\elsem \Halt \\
+       \end{array} \\
+    \quad \inm \matchm{ass} \\
+    \qquad \casem{\_: \mathbf{Val}} \to \left(\Glo_2^\sharp[ass \mapsto rval], \Hea_2^\sharp\right) \\
+    \qquad \casem{((t, addr, o): \mathbf{Object}, (\texttt{'index'}, val: \mathbf{Val}^\sharp))} \to \\
+    \qquad\quad\begin{array}[t]{rl}
+            \letm& setindex^\sharp := get\_prim\_set\_index^\sharp(t) \\
+             \inm& setindex^\sharp\left(\Glo_2^\sharp, \Hea_2^\sharp, o, val, addr, rval\right) \\
+    \end{array} \\
+    \qquad \casem{\textsf{otherwise}} \to \Halt \\
+  \end{array}\]
+\caption{Excerpt of small-step abstract semantics for Python.\label{abssmallstep}}
+\end{figure}
 
-E#[Name(id, ctx)](G#, H#) :=
-  match ctx in
-    case Load  -> if G#(id) = Undefined
-                  -- the variable `id` has not been defined then we "set" it in the global
-                  -- scope and return `Top_Val`
-                  then let ad := freeaddr(H#)
-                        in (G#[id->ad], H#[ad->Top_Val], Top_Val)
-                  else (G#, H#, G#(id))
-    case Store -> (G, H, id)
-    case Del   -> (G, H, id)
-
-E#[Int(n)](G, H) := (G, H, n)
-
-get_prim_op : Op x Val# x Val# -> Global x Heap -> Global x Heap x Val#
-
-get_prim_op#(Add, v1, v2) :=
-  match (type(v1), type(v2)) in
-    case (Int, Int) -> \(G#, H#) -> <prim-+-int>#(v1, v2, G#, H#)
-    case (Float, Float) -> \(G#, H#) -> <prim-+-float>#(v1, v2, G#, H#)
-    case (Int, Bool) -> \(G#, H#)-> <prim-+-int>#(v1, Int(v2), G#, H#)
-    case (Bool, Int) -> \(G#, H#)-> <prim-+-int>#(Int(v1), v2, G#, H#)
-    case (Float, a) -> if a = Bool or a = Int
-                       then \(G#, H#)-> <prim-+-float>#(v1, Float(v2), G#, H#)
-                       else <prim-ret-top>#
-    case (a, Float) -> if a = Bool or a = Int
-                       then \(G#, H#)-> <prim-+-float>#(Float(v1), v2, G#, H#)
-                       else <prim-ret-top>#
-    case otherwise -> <prim-op-top>#
-
-<prim-op-top># : Global# x Heap#
-<prim-op-top>#(G#, H#) := (G#, H#, Top_Val)
-
-
-S#[stmt] : Global# x Heap# -> Global# x Heap#
-
-S#[Assign(var, val)](G#, H#) :=
-  let (G1#, H1#, ass) := E[var](G#, H#)
-      (G2#, H2#, rightval) := E[val](G1#, H1#)
-      rval := if is_value#(rightval) then val else <Execution Halt>
-   in
-      match ass in
-        case Iden -> (G2#[ass->rval], H2#)
-
-        case ((t, addr, o): Object#, ('index', val: PrimVal#)) ->
-          let setindex# := get_prim_set_index#(t)
-          in setindex#(G2#, H2#, o, val, addr, rval)
-
-        otherwise -> <Execution Halt>
-\end{verbatim}
+%\begin{verbatim}
+%E#[expr] : Global# x Heap#
+%         -> Global#
+%          x Heap#
+%          x (Val# + (Object# x (string x Val#)) + Iden)
+%
+%E#[Name(id, ctx)](G#, H#) :=
+%  match ctx in
+%    case Load  -> if G#(id) = Undefined
+%                  -- the variable `id` has not been defined then we "set" it in the global
+%                  -- scope and return `Top_Val`
+%                  then let ad := freeaddr(H#)
+%                        in (G#[id->ad], H#[ad->Top_Val], Top_Val)
+%                  else (G#, H#, G#(id))
+%    case Store -> (G, H, id)
+%    case Del   -> (G, H, id)
+%
+%E#[Int(n)](G, H) := (G, H, n)
+%
+%get_prim_op : Op x Val# x Val# -> Global x Heap -> Global x Heap x Val#
+%
+%get_prim_op#(Add, v1, v2) :=
+%  match (type(v1), type(v2)) in
+%    case (Int, Int) -> \(G#, H#) -> <prim-+-int>#(v1, v2, G#, H#)
+%    case (Float, Float) -> \(G#, H#) -> <prim-+-float>#(v1, v2, G#, H#)
+%    case (Int, Bool) -> \(G#, H#)-> <prim-+-int>#(v1, Int(v2), G#, H#)
+%    case (Bool, Int) -> \(G#, H#)-> <prim-+-int>#(Int(v1), v2, G#, H#)
+%    case (Float, a) -> if a = Bool or a = Int
+%                       then \(G#, H#)-> <prim-+-float>#(v1, Float(v2), G#, H#)
+%                       else <prim-ret-top>#
+%    case (a, Float) -> if a = Bool or a = Int
+%                       then \(G#, H#)-> <prim-+-float>#(Float(v1), v2, G#, H#)
+%                       else <prim-ret-top>#
+%    case otherwise -> <prim-op-top>#
+%
+%<prim-op-top># : Global# x Heap#
+%<prim-op-top>#(G#, H#) := (G#, H#, Top_Val)
+%
+%
+%S#[stmt] : Global# x Heap# -> Global# x Heap#
+%
+%S#[Assign(var, val)](G#, H#) :=
+%  let (G1#, H1#, ass) := E[var](G#, H#)
+%      (G2#, H2#, rightval) := E[val](G1#, H1#)
+%      rval := if is_value#(rightval) then val else <Execution Halt>
+%   in
+%      match ass in
+%        case Iden -> (G2#[ass->rval], H2#)
+%
+%        case ((t, addr, o): Object#, ('index', val: PrimVal#)) ->
+%          let setindex# := get_prim_set_index#(t)
+%          in setindex#(G2#, H2#, o, val, addr, rval)
+%
+%        otherwise -> <Execution Halt>
+%\end{verbatim}
 
 In the process of defining the new semantics, we can notice that the number of
-\verb+<Execution Halt>+ expressions have reduced. Every \verb+<Execution Halt>+ that is
+\(\Halt\) expressions have reduced. Every \(\Halt\) that is
 not the result of a parser error is caused by a type mismatch between values being
 operated. An example of an execution halt caused by a type mismatch is \pycode|5 + None|
 because no integer can be added to a \pycode|None|.
@@ -808,20 +963,43 @@ else:
   a = 5-1+1
 \end{pythoncode}
 
-The state result of evaluating the function \verb|S#[b = 2 + d; a = b < 3]| is:
+The state result of evaluating the function
+\(\Ctx{S^\sharp}{b \texttt{ = } 2 \texttt{ + } d \texttt{; } a \texttt{ = } b \texttt{ < } 3)}\)
+is:\\[.4em]
 
-\begin{verbatim}
-  G# := {
-    d -> 0,
-    b -> 1,
-    a -> 2,
-  }
-  H# := {
-    0 -> Top,
-    1 -> Top,
-    2 -> 5
-  }
-\end{verbatim}
+\begin{minipage}{0.45\textwidth}
+  \[\Glo^\sharp(i) = \left\{
+    \begin{array}{ll}
+      0 & \text{if } i = \texttt{'d'} \\
+      1 & \text{if } i = \texttt{'b'} \\
+      2 & \text{if } i = \texttt{'a'} \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill%
+\begin{minipage}{0.45\textwidth}
+  \[\Hea^\sharp(n) = \left\{
+    \begin{array}{lcl}
+      \Top{Val} & \text{if } n = 0 \\
+      \Top{Val} & \text{if } n = 1 \\
+      5 & \text{if } n = 2 \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill\\[0.4em]
+
+%\begin{verbatim}
+%  G# := {
+%    d -> 0,
+%    b -> 1,
+%    a -> 2,
+%  }
+%  H# := {
+%    0 -> Top,
+%    1 -> Top,
+%    2 -> 5
+%  }
+%\end{verbatim}
 
 \section{NdArrays}
 
@@ -831,60 +1009,90 @@ handle NumPy array (tensors). In this section, I extend the concrete semantics w
 arrays.
 
 The following are all the things to take into account when extending our specification to
-handle a new type of \enquote{built-in} \pycode|Object| type:
+handle a new type of \enquote{built-in} \(\mathbf{Object}\) type:
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  Extend the types of \pycode|Object|s to handle NumPy arrays.
+  Extend the types of \(\mathbf{Object}\)s to handle NumPy arrays.
 
-\begin{verbatim}
-Type = List | Tuple | Module | NdArray
-\end{verbatim}
+\[\mathbf{Type} := \texttt{List} \alt \texttt{Tuple} \alt \texttt{Module} \alt \texttt{NdArray}\]
 
   As an example, consider the numpy array \pycode|np.zeros((4, 3))|, it
   can be expressed as:
 
-\begin{verbatim}
-Object(NdArray,
- 0xanumber,
- -- The shape of a NdArray is a tuple of integers
- { 'shape' -> Object(Tuple,
-               0xothernum,
-               { 'size' -> 2,
-                 ('index', 0) -> 4,
-                 ('index', 1) -> 3,
-               }
-              )
-   ('index', 0) -> 0,
-   ... -- all other indices, each one identified by an integer
- }
-)
-\end{verbatim}
+  \[\left(\texttt{NdArray}, n, s\right)\]
 
-  Note: Remember that an \pycode|Object| is a triple of the form
-  \pycode|Type x Addr x (Key -> Addr + Undefined)|.
-  Also, remember that the example above is faulty as the codomain of the
-  function defined above is \pycode|Val| not \pycode|Addr| as it should
-  be.
-\item
-  Extend primitive functions with NumPy's primitive functions. The
-  NumPy's primitive functions implemented in the Abstract Interpreter
-  are: \pycode|array|, \pycode|zeros|, \pycode|dot|, \pycode|ones|,
-  \pycode|abs| (and all other functions that don't alter the shape of
-  the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
+  where \(n \in \mathbb{Z}\), and
+
+  \[s(i) = \left\{
+    \begin{array}{ll}
+      n + 1          & \text{if } i = \texttt{'shape'} \\
+      n + 5 + m + 3o & \text{if } i = (\texttt{'index'}, m, o) \quad \forall m \in [0, 3], o \in [0, 2] \\
+      \undefm        & \text{otherwise} \\
+    \end{array}
+  \right.\]
+
+  %\begin{minipage}{.47\textwidth}
+  \[t(i) = \left\{
+    \begin{array}{ll}
+      n + 2   & \text{if } i = \texttt{'size'} \\
+      n + 3   & \text{if } i = (\texttt{'index'}, 0) \\
+      n + 4   & \text{if } i = (\texttt{'index'}, 1) \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  %\end{minipage}\hfill%
+  %\begin{minipage}{.47\textwidth}
+
+  \[\Hea(m) = \left\{
+    \begin{array}{ll}
+      (\texttt{NdArray}, n, s) & \text{if } m = n \\
+      (\texttt{Tuple}, n+1, t) & \text{if } m = n + 1 \\
+      2 & \text{if } m = n + 2 \\
+      4 & \text{if } m = n + 3 \\
+      3 & \text{if } m = n + 4 \\
+      0 & \text{if } m = n + 5 + o \quad \forall o \in [0, 11] \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  %\end{minipage}\hfill\\[.4em]
+
+%\begin{verbatim}
+%Object(NdArray,
+% 0xanumber,
+% -- The shape of a NdArray is a tuple of integers
+% { 'shape' -> Object(Tuple,
+%               0xothernum,
+%               { 'size' -> 2,
+%                 ('index', 0) -> 4,
+%                 ('index', 1) -> 3,
+%               }
+%              )
+%   ('index', 0) -> 0,
+%   ... -- all other indices, each one identified by an integer
+% }
+%)
+%\end{verbatim}
+
+  Note: Remember that an \(\mathbf{Object}^\sharp\) is a triple of the form
+  \(\mathbf{Type} \times \mathbf{Addr} \times \left(\mathbf{Key} \to \mathbf{Addr} \cup \{\undefm\}\right)\).
+
+\item Extend primitive functions with NumPy's primitive functions. The NumPy's primitive
+  functions implemented in the Abstract Interpreter are: \pycode|array|, \pycode|zeros|,
+  \pycode|dot|, \pycode|ones|, \pycode|abs| (and all other functions that don't alter the
+  shape of the tensor they take), \pycode|arange|, \pycode|size|, \pycode|ndim|,
   \pycode|astype|, and \pycode|T|.
 
-\begin{verbatim}
-<prim-callable> = ... (old operations) |
-                  <prim-np-zeros> | <prim-np-dot> | <prim-np-abs> | ...
-\end{verbatim}
+  \vspace*{-1.3em}
+  \[\texttt{<prim-callable>} = \cdots \textit{(old operations)} \alt
+                  \texttt{<prim-np-zeros>} \alt \texttt{<prim-np-dot>} \alt
+                  \texttt{<prim-np-abs>} \alt \cdots\]
 
-  Note: The values stored inside a NumPy array are considered irrelevant
-  in this work. The Value Analysis built in this work considers only the
-  shape of tensors, as tensors can be huge and their contents do not
-  often influence their shape. Therefore, it would be wasteful to give a
-  detailed specification of the NumPy library primitives.
+  Note: The values stored inside a NumPy array are considered irrelevant in this work. The
+  Value Analysis built in this work considers only the shape of tensors, as tensors can be
+  huge and their contents do not often influence their shape. Therefore, it would be
+  wasteful to give a detailed specification of the NumPy library primitives.
 
   Nonetheless, defining formally each one of the NumPy functions above is
   fairly straightforward. Although, the hardest part of a formal
@@ -902,14 +1110,27 @@ Object(NdArray,
   implemented all other functions are much simpler to define. As an
   example, the implementation of the function \pycode|size| is:
 
-\begin{verbatim}
-<prim-np-size>(val)(G, H) :=
-   -- We know that `<prim-array>` always returns an NdArray
-   let (G, H, (NdArray, addr, arr)) := <prim-array>(val)(G, H)
-   -- We know that a NdArray has a special value called `shape`
-       (Tuple, addrtup, tup) := arr('shape')
-   in  tup('size')
-\end{verbatim}
+\[
+\begin{array}[t]{l}
+\texttt{<prim-np-size>}\left(\Glo^\sharp, \Hea^\sharp\right) := \\
+\quad \letm
+  \begin{array}[t]{rl}
+    \left(\Glo_1^\sharp, \Hea_1^\sharp, (\texttt{NdArray}, addr, arr)\right) &:= \texttt{<prim-array>}\left(val\right)\left(\Glo^\sharp, \Hea^\sharp\right) \\
+      (\texttt{Tuple}, addrtup, tup) &:= arr(\texttt{'shape'})
+  \end{array} \\
+\quad \inm tup(\texttt{'size'})
+\end{array}
+\]
+
+%\begin{verbatim}
+%<prim-np-size>(val)(G, H) :=
+%   -- We know that `<prim-array>` always returns an NdArray
+%   let (G, H, (NdArray, addr, arr)) := <prim-array>(val)(G, H)
+%   -- We know that a NdArray has a special value called `shape`
+%       (Tuple, addrtup, tup) := arr('shape')
+%   in  tup('size')
+%\end{verbatim}
+
 % \item
 %   Extend the cases that \pycode|get_prim_op| handles to cover NumPy
 %   arrays. All operations defined in NumPy handle broadcasting.
@@ -930,44 +1151,85 @@ Object(NdArray,
 %         in  <prim-+-ndarray>(ndarr, v2, G1, H1)
 %     case otherwise -> <Execution Halt>
 % \end{verbatim}
-\item
-  The NumPy module holding all operations is defined:
+\item The NumPy module holding all operations is defined:
 
-\begin{verbatim}
-<numpy-mod> := Object(Module,
- -1,  -- This value will be changed once it is imported
- { ('attr', 'array') -> <prim-array>,
-   ('attr', 'dot')   -> <prim-dot>,
-   ('attr', 'zeros') -> <prim-zeros>,
-   ('attr', 'ones')  -> <prim-ones>,
-   ...
- }
-)
-\end{verbatim}
-\item
-  And finally, \pycode|S[Import(name)]| is extended (now it handles
-  a single library):
+\[\texttt{<numpy-mod>} := \left(\texttt{Module}, -1, f_{\textit{numpy}}\right)\]
 
-\begin{verbatim}
-S[Import(name)](G, H) :=
-  match name in
-    ("numpy",) ->
-      let (Module, arr, mod) := <numpy-mod>
-          freeaddr := get_free_addr(H)
-      in  (G['numpy'->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
-    ("numpy", alias) ->
-      let (Module, arr, mod) := <numpy-mod>
-          freeaddr := get_free_addr(H)
-      in  (G[alias->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+where \(-1\) indicates that the address is to be set only when the module is imported, and
 
-    otherwise -> <Execution Halt>
-\end{verbatim}
+\[f_{\textit{numpy}}(s) = \left\{
+  \begin{array}{ll}
+    \texttt{<prim-array>} & \text{if } s = \left(\texttt{'attr'}, \texttt{'array'}\right) \\
+    \texttt{<prim-dot>}   & \text{if } s = \left(\texttt{'attr'}, \texttt{'dot'}\right)   \\
+    \texttt{<prim-zeros>} & \text{if } s = \left(\texttt{'attr'}, \texttt{'zeros'}\right) \\
+    \texttt{<prim-ones>}  & \text{if } s = \left(\texttt{'attr'}, \texttt{'ones'}\right)  \\
+    \dots & \\
+    \undefm & \text{otherwise} \\
+  \end{array}
+\right.\]
+
+%\begin{verbatim}
+%<numpy-mod> := Object(Module,
+% -1,  -- This value will be changed once it is imported
+% { ('attr', 'array') -> <prim-array>,
+%   ('attr', 'dot')   -> <prim-dot>,
+%   ('attr', 'zeros') -> <prim-zeros>,
+%   ('attr', 'ones')  -> <prim-ones>,
+%   ...
+% }
+%)
+%\end{verbatim}
+
+\item And finally, \pycode|S[Import(name)]| is extended (now it handles a single library):
+
+\[\arraycolsep=1.4pt
+  \begin{array}[t]{l}
+    \Ctx{S^\sharp}{\SLit{Import}{name}}\left(\Glo^\sharp, \Hea^\sharp\right) := \\
+    \quad \matchm{name} \\
+    \quad \casem{\left(\texttt{"numpy"},\right)} \to \\
+    \quad\qquad\begin{array}[t]{rl}
+            \letm&
+              \begin{array}[t]{rl}
+                 (\texttt{Module}, arr, mod) := <numpy-mod> \\
+                 freeaddr := get\_free\_addr(\Hea^\sharp) \\
+              \end{array} \\
+             \inm& \left( \Glo^\sharp[\texttt{'numpy'} \mapsto freeaddr],
+                      \Hea^\sharp\left[freeaddr \mapsto (\texttt{Module}, freeaddr, mod)\right]
+                   \right) \\
+    \end{array} \\
+    \quad \casem{\left(\texttt{"numpy"}, alias\right)} \to \\
+    \quad\qquad\begin{array}[t]{rl}
+            \letm&
+              \begin{array}[t]{rl}
+                 (\texttt{Module}, arr, mod) := <numpy-mod> \\
+                 freeaddr := get\_free\_addr(\Hea^\sharp) \\
+              \end{array} \\
+             \inm& \left( \Glo^\sharp[alias \mapsto freeaddr],
+                      \Hea^\sharp\left[freeaddr \mapsto (\texttt{Module}, freeaddr, mod)\right]
+                   \right) \\
+    \end{array} \\
+  \end{array}\]
+
+%\begin{verbatim}
+%S[Import(name)](G, H) :=
+%  match name in
+%    ("numpy",) ->
+%      let (Module, arr, mod) := <numpy-mod>
+%          freeaddr := get_free_addr(H)
+%      in  (G['numpy'->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+%    ("numpy", alias) ->
+%      let (Module, arr, mod) := <numpy-mod>
+%          freeaddr := get_free_addr(H)
+%      in  (G[alias->freeaddr], H[freeaddr->(Module, freeaddr, mod)])
+%
+%    otherwise -> <Execution Halt>
+%\end{verbatim}
 \end{enumerate}
 
 
 \section{Type Annotations}
 
-Notice that we have not yet talked about the abstract semantics of \pycode|AnnAssign|.
+Notice that we have not yet talked about the abstract semantics of \texttt{AnnAssign}.
 The idea of type annotations is that they let us refine the value/type of a variable when
 the Abstract Interpreter is unable to define a precise value.
 
@@ -984,33 +1246,54 @@ newmat = newmat.dot(np.ones((8, 21)))  # Error! Matrix multiplication, 7!=8
 
 When one imports an arbitrary library like \pycode|mypreciouslib| it is
 impossible to know what we may have imported so every variable imported
-is a \verb|Top_Val|, i.e.~anything. By adding an annotation to
+is a \(\Top{Val}\), i.e.~anything. By adding an annotation to
 \pycode|mat|, we are telling the abstract interpreter that we know, and
 are sure, of the shape of the NumPy array.
 
 The semantics for \texttt{AnnAssign} are:
 
-\begin{verbatim}
-S[AnnAssign(var, hint, val)](G, H) :=
-  let (G1, H1, evaluatedhint) := E[hint](G, H)
-      (G2, H2, evaluatedhint) := E[hint](G1, H1)
-      hintval := if isvalue#(evaluatedhint) then evaluatedhint else <Execution Halt>
+\[\begin{array}{l}
+    \Ctx{S}{\SLit{AnnAssign}{var, hint, val}}\left(\Glo, \Hea\right) := \\
+    \quad \letm
+       \begin{array}[t]{ll}
+          \left(\Glo_1, \Hea_1, ass\right) &:= \Ctx{E}{var}\left(\Glo, \Hea\right) \\
+          \left(\Glo_2, \Hea_2, rightval\right) &:= \Ctx{E}{val}\left(\Glo_1, \Hea_1\right) \\
+          compval &:= \ifm is\_value(rightval) \;\thenm val \;\elsem \Halt \\
+          \left(\Glo_3, \Hea_3, hintevaled\right) &:= \Ctx{E}{hint}\left(\Glo_2, \Hea_2\right) \\
+          hintval &:= \ifm is\_value(rightval) \;\thenm val \;\elsem \Halt \\
+          \\
+          rval &:= \ifm hintval < compval \;\thenm hintval \;\elsem compval \\
+       \end{array} \\
+    \quad \inm
+      \begin{array}[t]{l}
+       \matchm{ass} \\
+       \quad \casem{id: \mathbf{Val}} \to \left(\Glo_3[ass \mapsto rval], \Hea_3\right) \\
+       \quad \casem{((t, addr, o): \mathbf{Object}, (\texttt{'index'}, val: \mathbf{Val}))} \to \\
+       \quad\quad\begin{array}[t]{rl}
+               \letm& setindex := get\_prim\_set\_index(t) \\
+                \inm& setindex\left(\Glo_3, \Hea_3, o, val, addr, rval\right) \\
+       \end{array} \\
+       \quad \casem{\textsf{otherwise}} \to \Halt \\
+      \end{array} \\
+  \end{array}\]
 
-   in S[Assign(var, val)](G1, H1)
-
-  let (G1, H1, ass) := E[var](G, H)
-      (G2, H2, evaledhint) := E[hint](G1, H1)
-      (G3, H3, rightval) := E[val](G2, H2)
-      compval := if is_value(rightval) then val else <Execution Halt>
-      hintval := if isvalue#(evaledhint) then evaledhint else <Execution Halt>
-
-      -- if `hintval` is more precise than `compval` we replace it
-      rval := if hintval < compval then hintval else compval
-   in
-      ... -- Continue as in S[Assign(...)]
-\end{verbatim}
+%\begin{verbatim}
+%S[AnnAssign(var, hint, val)](G, H) :=
+%  let (G1, H1, ass) := E[var](G, H)
+%      (G2, H2, evaledhint) := E[hint](G1, H1)
+%      (G3, H3, rightval) := E[val](G2, H2)
+%      compval := if is_value(rightval) then val else <Execution Halt>
+%      hintval := if is_value(evaledhint) then evaledhint else <Execution Halt>
+%
+%      -- if `hintval` is more precise than `compval` we replace it
+%      rval := if hintval < compval then hintval else compval
+%   in
+%      ... -- Continue as in S[Assign(...)]
+%\end{verbatim}
 
 Notice that we determine the \enquote{precision} of a hint with respect to the variable
-with the comparison between values, the order \verb|Val#|!
+with the comparison between values, the order operation for the Abstract Domain
+\(\mathbf{Val}^\sharp\)!
 
-Further details on the concrete and abstract semantics are given in Appendix~\ref{appendix-ai-theory}.
+Further details on the concrete and abstract semantics are given in
+Appendix~\ref{appendix-ai-theory}.

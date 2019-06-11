@@ -26,39 +26,39 @@ consider the following piece of Python code:
 
 The code is syntactically correct, but it fails to execute. Python will interpret the first
 two lines and will stop in the third, where it will throw an exception because strings
-and numbers cannot be added.
+and numbers cannot be added together in Python.
 
 A Static Type Analysis tool, such as MyPy \autocite{lehtosalo2016mypy}, is able to detect
 type mismatches without ever executing the code.  MyPy has the ability to infer the type
-of variables, e.g.~from the previous example, it detects that \pycode/other/ is of type
+of variables, e.g.~it detects in the piece of code from above that \pycode/other/ is of type
 \pycode/float/ and \pycode/myvar/ of type \pycode/str/.
 
-Python dynamic nature makes Python extraordinarily hard to statically analyse. In fact,
+Python dynamic nature makes it extraordinarily hard to statically analyse. In fact,
 due to Python introspection capabilities, it is impossible to guarantee the behaviour of a
-piece of Python code without assuming some fixed basic semantics in the interpreter.  MyPy
+piece of Python code without assuming some fixed basic semantics by the interpreter.  MyPy
 tackles the undecidability problem of Python dynamic nature by restricting the number
 of valid Python programs to those that conform to a static type system\footnotemark.
 
 \footnotetext{I would like to express my immense gratitude to the MyPy team for writing
   such an amazing tool. I do not know how many hours they saved me from endless
   frustration at debugging. All Python code I write now is full of typing annotations to
-  allow MyPy check for any faulty. What I like about MyPy is that it alerts me of faulty
-  code as I write. It feels remarkably similar to writing code in a language with a
+  allow MyPy to check for any inconistency. What I like about MyPy is that it alerts me of
+  faulty code as I write. It feels remarkably similar to writing code in a language with a
   stronger static type system (e.g.~Haskell).}
 
-Even with some assumptions in place, the inference ability of MyPy infers the type of
-variables, but not the type of functions. MyPy allows optionally to add type annotations
-to the code, to either variables or functions. Type annotations allow more restrictive and
-precise types, and they help MyPy to catch more potential bugs.
+The inference power of MyPy is limited in several ways, one of them being it impossible to
+infer the type of a function. MyPy allows developers to optionally add type annotations
+into the code. Type annotations allow more restrictive and precise types, and they help
+MyPy to catch more potential bugs.
 
-Although MyPy is capable of checking the correctness of code, its assumptions limit it from a whole class of valid and correct
-Python code\footnotemark. There are many scenarios where even with type annotations, MyPy
-cannot detect a bug in the code. For example, consider the following piece of python
-code:%\footnotemark:
+Although MyPy is capable of checking for type mismatches, its assumptions limit it
+from a whole class of valid and correct Python code\footnotemark. There are many scenarios
+where even with type annotations, MyPy cannot detect a bug in the code. For example,
+consider the following piece of python code:%\footnotemark:
 
 \footnotetext{For example, there is no way (currently) to make MyPy happy about the
   function \pycode/def addtwice(x, y): return x + y + y; addtwice(3,2); addtwice('a','b')/.
-  If no type annotations are given, MyPy alerts the user on the usage of non-typed
+  If no type annotation is given, MyPy alerts the user on the usage of non-typed
   functions. But no type can satisfy the assertion because of the \enquote{polymorphisity}
   of the \pycode/+/ operation.}
 
@@ -75,18 +75,19 @@ code:%\footnotemark:
 In this example, we are using NumPy \autocite{oliphant2006guide}, which is a well known
 Python library, but it could also have been TensorFlow \autocite{abadi_tensorflow_2016} or
 any other library with support for tensors and tensor operators. Tensors are a
-generalisation of vectors and arrays.  An array of size \texttt{n}, or a tensor with shape
-\texttt{(n,)}, contains exactly \(n\) elements. A matrix of size \(n \times m\),
-alternatively, a tensor with shape \texttt{(n,\ m)}, is a structure that holds
-\(n \cdot m\) elements. Notice that a shape is any tuple of natural numbers and a tensor is
-a structure with a shape. For example, the shape \texttt{(2,\ 5,\ 6)} indicates us a
-tensor with \(2 \cdot 5 \cdot 6 = 60\) elements.
+generalisation of vectors and arrays, a homogeneous container which can be indexed by one
+natural number or a list of natural numbers. As an example consider a tensor of only one
+dimension, an array of size \texttt{n}, which contains exactly \(n\) elements. A matrix of
+size \(n \times m\), alternatively, a tensor with shape \texttt{(n,\ m)}, is a structure
+that holds \(n \cdot m\) elements. Notice that a shape is any tuple of natural numbers and
+a tensor is a structure with a shape. For example, the shape \texttt{(2,\ 5,\ 6)}
+tells us that the tensor has \(2 \cdot 5 \cdot 6 = 60\) elements.
 
 The example above will fail to run as it hits an erroneous condition at the last line. Two
 arrays/tensors are created, \texttt{x} and \texttt{y} with shapes \texttt{(2,\ 3)} and
 \texttt{(4,\ 1)}, respectively. Then, a matrix multiplication with both tensors tries to
 be performed, but it fails because the shapes of the two matrices are incompatible
-(\(3\ne4\)). The call to \texttt{np.dot} fails, but the developer will not be warned about
+(\(3 \ne 4\)). The call to \texttt{np.dot} fails, but the developer will not be warned about
 it and will only notice it when executing the code. To summarise, the aforementioned piece
 of code type checks in MyPy even though it fails to run.
 
@@ -97,72 +98,65 @@ them in MyPy.
 
 Tensors allow writing computations more concisely. Tensor operations are also highly
 optimisable and can be run in parallel. With the advent of Deep Learning, tensors have
-become a central figure in developers toolkit.  Tensor operations fail if the tensors are
-not of the right shape. To statically analyse if operations between tensors are valid, the
-shape of tensors must be computed. To compute the shape of tensors, we require to compute
-also the value of every other variable in the language. The type of static analysis that
-is focused on finding out the value of variables is called Static Value Analysis.
+become a central figure in the developers' toolkit. Tensor operations fail if the tensors
+are not of the right shape. To statically analyse if operations between tensors are valid,
+the shape of tensors must be computed. To compute the shape of tensors, we require to
+also compute the value of every other variable in the language. The kind of static
+analysis that is focused on finding out the value of variables is called \textbf{Static
+Value Analysis}.
 
 \section{Problem Definition}\label{problem-definition}
 
-Tensors are becoming an essential abstraction in the toolkit of
-developers. Tools tailored to work with or based on tensors have been
-popping out in recent years. It is therefore imperative to develop
-analysis tools to verify and flag potential bugs. A Static Value
-Analysis tool focused on tensor shape analysis could aid developers in
-their work, as it could be able to flag potential bugs related to the
-shapes of tensors as the developer writes code.
+Tensors are becoming an essential abstraction in the toolkit of developers. Tools tailored
+to work with or based on tensors have been popping out in recent years. It is therefore
+imperative to develop analysis tools to verify and flag potential bugs using tensors and
+tensor operations. A Static Value Analysis tool focused on tensor shape analysis could aid
+developers in their work.
 
-All of the theoretical approaches that tackle the problem focus on type
-checking tensors and tensor operations. \textcite{griffioen_type_2015},
-\textcite{slepak_array-oriented_2014}, and \textcite{rink_modeling_2018}
-define a type system extended with tensors and tensor operations. The
-principal idea of these type systems is to encode the restrictions that
-the operations on tensors require, a tensor operation is valid if the
-restriction checks with the tensors.
+All of the theoretical approaches that tackle the problem focus on type checking tensors
+and tensor operations. \textcite{griffioen_type_2015},
+\textcite{slepak_array-oriented_2014}, and \textcite{rink_modeling_2018} define a type
+system extended with tensors and tensor operations. The principal idea of these type
+systems is to encode the restrictions that the operations on tensors require. A tensor
+operation is valid if the restriction checks with the tensors.
 
-Practical attempts have been mainly focused on languages with strong
-type systems, and recently some in Python
-\autocites{fromherz_static_2018}{monat_static_2018}.
-\textcite{chen_typesafe_2017} (in Scala) and
-\textcite{eaton_statically_2006} (in Haskell) have tried to annotate
-tensors' types with their shapes, leaving the compiler's type check
-inference system to check the shapes. At the time
-\textcite{eaton_statically_2006} proposed his methodology to extend
-types with additional data, GHC (Glasgow Haskell Compiler), the by
-default Haskell compiler, didn't have many capabilities to work with
-data at the type level, resulting in some rather complicated code to
-read and write. A recent approach to type check tensors in Haskell has
-been shown in a library written by \textcite{elkin_haskell_2018}, which
-uses the updated Dependent Type System of Haskell to code and enforce
-type shapes.
+Practical attempts to check for tensor shapes have been mainly focused on languages with strong
+type systems. \textcite{chen_typesafe_2017} (in Scala) and
+\textcite{eaton_statically_2006} (in Haskell) have tried to annotate tensors' types with
+their shapes, leaving the compiler's type check inference system to check the shapes. At
+the time \textcite{eaton_statically_2006} proposed his methodology to extend types with
+additional data, GHC (Glasgow Haskell Compiler), the by default Haskell compiler, didn't
+have all the capabilities to work with data at the type level, resulting in some rather
+complicated code to read and write. A recent approach to type check tensors in Haskell has
+been shown in a library written by \textcite{elkin_haskell_2018}, which uses the updated
+Dependent Type System of Haskell to code and enforce type shapes.
 
-Abstract Interpretation is a framework for static analysis. The main
-idea of Abstract Interpretation is to overapproximate the result of
-computing a piece of code. Any piece of code can be run in an Abstract
-Interpreter, an interpreter build from the semantics defined by Abstract
-Interpretation, in a finite amount of time. To warranty that the
-Abstract Interpreter runs in a finite amount of time, Abstract
-Interpretation defines a series of rules that force to overapproximate
-the result of executing operations by the program. Abstract
-Interpretation is especially useful for Static Value Analysis as the
-rules to derive the semantics of an Abstract Interpreter from the formal
-semantics of the language are very well studied, formalised and explicit
-\autocite{cousot_abstract_1977}.
+Abstract Interpretation is a framework for static analysis. The main idea of Abstract
+Interpretation is to overapproximate the result of computing a piece of code. Any piece of
+code can be run in an Abstract Interpreter, an interpreter build from the semantics
+defined by Abstract Interpretation, in a finite amount of time. To warranty that the
+Abstract Interpreter runs in a finite amount of time, Abstract Interpretation defines a
+series of rules to follow in order to overapproximate the result of executing operations by the
+program. Abstract Interpretation is especially useful for Static Value Analysis as the
+rules to derive the semantics of an Abstract Interpreter from the formal semantics of the
+language are very well studied, formalised and explicit \autocite{cousot_abstract_1977}.
 
-Writing an Abstract Interpreter for Python requires the formal semantics
-of Python as a starting point. Unfortunately, Python does not have any
-official formal semantics defined. Some attempts to define a formal
-semantics for Python have been done
+Writing an Abstract Interpreter for Python requires the formal semantics of Python as a
+starting point. Unfortunately, Python does not have any official formal semantics defined.
+Some attempts to define formal semantics for Python have been done
 \autocites{politz_python_2013}{fromherz_static_2018}{guth_formal_2013}{ranson_semantics_2008}
-but none of them takes into account type annotations.
+but none of them takes into account type annotations, which we hope to integrate into the
+Static Value Analysis.
 
-\textbf{Problem:} Building an Abstract Interpreter for Python to
-Statically Value-Analyse tensor operations.
+\textbf{Problem:} Building an Abstract Interpreter for Python to Statically Value-Analyse
+tensor operations.
 
 %{\inlinetodo{Should I add some research questions?}}
 
-\subsubsection{Assumptions and Scope}
+\subsubsection*{Assumptions and Scope}
+
+In this section, we will explore some of the assumptions and scope of the Abstract
+Interpreter to be build in the rest of the document.
 
 Very little can be asserted from a piece of code in a programming language like Python
 without making any assumptions about the environment. For example, consider the following
@@ -172,7 +166,7 @@ piece of code:
   # runme.py
   a = int('6') + 2
   print(7)
-  assert a == 8
+  assert a == 8, "int('6') + 2 != 8. Wut?"
 \end{pythoncode*}
 
 One may be tempted to say that the code above never fails, but one would be mistaken.  It
@@ -186,59 +180,53 @@ calls \texttt{runme.py}:
 
 \begin{pythoncode}
   runme = open('runme.py').read()
-  fakeinit = """
+  fakerun = """
   def int(val):
     return 3.0
   def print(val):
     global a
     a = val
-  """
+  """ + runme
+  exec(fakerun)
 \end{pythoncode}
 
 From now on, we will assume that any piece of code written in Python will be called from
 the interpreter directly without changing the behaviour of any built-in function or
 variable (this includes the behaviour of variables and functions from non-built-in
-libraries as NumPy), i.e.~we assume that the code will be run from a blank state with no
-global variables defined.
+libraries like NumPy), i.e.~we assume that the code will be run from a blank state with no
+global variables (re)defined.
 
 As a developer, I can say that I like when I see a piece of code flagged wrong and IT IS
 WRONG and not a false alarm, a false positive. It is very annoying to have a tool flag
 every sentence you write as wrong even though the code works just fine. We will assume
 from here onwards that we want the Tensor Analysis to flag only errors that are going to
-happen if the code is run, i.e.~we want only true positives not maybe positives (as a lack
-of a better word).
+happen if the code is run, i.e.~we want only true positives not false positives.
 
 Although TensorFlow \autocite{abadi_tensorflow_2016}, PyTorch
 \autocite{paszke2017pytorch} and other libraries would benefit from the development of a
-tool targeted to check them, we chose to check NumPy's tensor operations. NumPy is the
-standard library for computing with tensors and it is used as back-end on most tensor
-projects.
+tool targeted to check them, we chose to focus on checking NumPy's tensor operations.
+NumPy is the standard library for computing with tensors and it is used as back-end on
+most tensor projects.
 
 Implementing an Abstract Interpreter, or any Static Analysis, for a language like Python
 is a considerable undertaking, mainly because of the breadth of characteristics a mature
-Programming Language like Python has. Thus, we will centre on just a couple of Python core
-characteristics and will leave others for future work. The characteristics explored in the
-current document are:
+Programming Language like Python has. Thus, we will centre just on a couple of Python core
+characteristics and will leave others for future work. The characteristics explored in
+this current document are:
 
 \begin{itemize}
 \tightlist
-\item
-  Built-in primitive variables: \pycode|int|, \pycode|float|, \pycode|bool|, \pycode|None|,
-  \pycode|list|, \pycode|tuple|
-\item
-  Primitive functions: \pycode|int|, \pycode|print|, \pycode|input|,
+\item Built-in primitive variables: \pycode|int|, \pycode|float|, \pycode|bool|,
+  \pycode|None|, \pycode|list|, \pycode|tuple|.
+\item Primitive functions: \pycode|int|, \pycode|print|, \pycode|input|,
   \ldots{}
-\item
-  Boolean and numeric operations: \pycode|+|, \pycode|-|, \pycode|*|, \pycode|/|,
+\item Boolean and numeric operations: \pycode|+|, \pycode|-|, \pycode|*|, \pycode|/|,
   \pycode|\%|, \pycode|**|, \pycode+<<+, \pycode|>>|, \pycode|//|, \pycode+<+,
-  \pycode|<=|, \pycode+>+ and \pycode+>=+
-\item
-  \pycode|if| and \pycode|while| statements
-\item
-  Import statement (limited only to the \pycode|numpy| library)
-\item
-  NumPy arrays and some of its methods/functions to work with NumPy arrays (including
-  \pycode|dot|, \pycode|zeros|, \pycode|shape|, and numeric operations with broadcasting)
+  \pycode|<=|, \pycode+>+ and \pycode+>=+.
+\item \pycode|if| and \pycode|while| statements.
+\item Import statement (limited only to the \pycode|numpy| library).
+\item NumPy arrays and some of its methods/functions to work with NumPy arrays (including
+  \pycode|dot|, \pycode|zeros|, \pycode|shape|, and numeric operations with broadcasting).
 \end{itemize}
 
 Consider the following piece of code:
@@ -251,27 +239,27 @@ else:
 print(i)
 \end{pythoncode}
 
-The variable \pycode|i| can be either an \pycode|int| or a \pycode|str|,
-thus the type of \pycode|i| should be \pycode|Union[int,str]|. If
-the type of a variable is a \pycode|Union| type then we need to build
-an Abstract Interpreter (actually, an Abstract Domain) aware of unions.
-Building an Abstract Interpreter aware of \pycode|Union| types is not
-considered part of this work, therefore if a variable holds more than
-one value, e.g.~it is either a \pycode|5| or \pycode|2.3|, then the
-variable's type will be \pycode|Any| and not \pycode|Union|.
-\pycode|Any| and \pycode|Union| types are defined in the \pycode|typing|
-library \autocite{pep484}, an implementation of Gradual Typing\footnote{Gradual
-  Typing is a kind of Static Type Analysis targeted to Dynamically Typed
-  Languages like Python}.
+The variable \pycode|i| can either be an \pycode|int| or a \pycode|str|, thus the type of
+\pycode|i| should be \pycode|Union[int,str]|.
 
-Gradual Typing restricts the number of valid programs to those that type
-check. A variable in Gradual Typing is of a specific type and it never
-changes, i.e.~if a variable's type is set to be \pycode+int+ then it can
-only contain \pycode+int+s. \pycode+Union+ types are meant to indicate
-that a variable may take more than one value at any point in time, which
-would mean that any variable with a \pycode+Union+ type would
-automatically become an \pycode+Any+ in this work, but that is not the
-truth. Consider the following piece of code:
+Gradual Typing restricts the number of valid programs to those that type check. A variable
+in Gradual Typing is of a specific type and it never changes, i.e.~if the type of a
+variable is set to be \pycode+int+ then it can only contain \pycode+int+s. \pycode+Union+
+types are meant to indicate that a variable may take more than one value at any point in
+time.
+
+Building an Abstract Interpreter aware of \pycode|Union| types is not considered part of
+this work because if of the added complexity it would require. Therefore if a variable
+holds more than one value, e.g.~it is either a \pycode|5| or \pycode|2.3|, then the type
+of the variable will be considered to be \pycode|Any|, not \pycode|Union|. \pycode|Any|
+and \pycode|Union| types are defined in the \pycode|typing| library \autocite{pep484}, an
+implementation of Gradual Typing\footnote{%
+  Gradual Typing is one kind of Static Type Analysis targeted to Dynamically Typed Languages
+  like Python}.
+
+It may seem like an Abstract Interpreter where variables can only carry one value at the
+time would make the analysis weaker than Gradual Typing, but it does not make it necessarily.
+Consider the following piece of code:
 
 \begin{pythoncode}
 i = 3
@@ -280,67 +268,49 @@ i += "ueor"
 print(i)  # the type of `i` is `str`
 \end{pythoncode}
 
-Under Gradual Typing, the type of \pycode+i+ is
-\pycode+Union[int,str]+, but we know that the variable \pycode+i+
-holds only one type at \textbf{all} times, i.e. \pycode+i+ never holds
-two or more values as in the previous example. An Abstract Interpreter
-would run each line sequentially, and it would never find a that the
-value of \pycode+i+ is both \pycode+int+ and \pycode+str+ at the same
-time, i.e.~the variable is never considered to be of type \pycode+Any+
-but it will have type \pycode+int+ and then type \pycode+str+ as the
-code is run. In this regard, an Abstract Interpreter can give a better
-approximation of what the types of a variable are at any point in time,
-while Gradual Typing considers all possible types a variable may have at
-any point in time.
+Under Gradual Typing, the type of \pycode+i+ is \pycode+Union[int,str]+, but we know that
+the variable \pycode+i+ holds only one type at \textbf{all} times, i.e. \pycode+i+ never
+holds two or more values as in the previous example. The Abstract Interpreter would run
+each line sequentially, and it would never find a state where the value of \pycode+i+ is
+both \pycode+int+ and \pycode+str+ at the same time, i.e.~the variable is never considered
+to be of type \pycode+Any+ but it will have type \pycode+int+ and then type \pycode+str+
+as the code is run. In this regard, an Abstract Interpreter can give a better
+approximation of what the types of a variable are at any point in time, while Gradual
+Typing considers all possible types a variable may have at any point in time.
 
-To recapitulate, the assumptions and scope of the thesis are:
+To recapitulate, the assumptions and scope of the abstract interpreter are:
 
 \begin{itemize}
 \tightlist
-\item
-  The behaviour of built-ins and imported variables and functions is
-  always the same and is determined by the Python reference manual or
-  the library's author, e.g.~\pycode+input+ is a function that returns
-  a \pycode+str+.
-\item
-  The user will only be reported errors that will happen but no errors
-  that \emph{may} happen (This means, the resulting tool is not a
-  verification tool).
-\item
-  The Static Value Analysis centres around checking operations from the
-  NumPy library.
-\item
-  Only a selected subset of Python characteristics and functions are
-  explored.
-\item
-  A variable can hold only one type of value at the time. If a variable
-  is set to hold values of different types at the same time, then its
-  value will be \pycode+Any+.
+\item The behaviour of built-ins, imported variables and functions is always the same,
+  and it is determined by the Python reference manual or the library's author,
+  e.g.~\pycode+input+ is a function that returns a \pycode+str+.
+\item The user will only be reported of errors that will happen but no errors that
+  \emph{may} happen (This means that the resulting tool is not a verification tool).
+\item The Static Value Analysis should focuse on checking operations from the NumPy library.
+\item Only a selected subset of Python characteristics and functions are explored.
+\item A variable can hold only one type of value at the time. If a variable is set to hold
+  values of different types at the same time, then its value will be \pycode+Any+.
 \end{itemize}
 
 \section{Objectives}\label{objectives}
 
 \subsection{General objective}\label{general-objective}
 
-To design and implement a strategy for statically analyse tensor shapes
-in Python to support early detection of potential bugs before execution.
+To design and implement a strategy for statically analyse tensor shapes in Python to
+support early detection of potential bugs before execution.
 
 \subsection{Specific objectives}\label{specific-objectives}
 
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
-\item
-  To design and implement an abstract interpreter for Python.
-\item
-  To design and implement a strategy that uses the abstract interpreter
-  to analyse the shapes of tensors for Python code.
-\item
-  To implement a tool that flags the bugs inferred by the abstract
-  interpreter.
-\item
-  To empirically evaluate the developed static analysis in a set of
-  representative test cases.
+\item To design and implement an abstract interpreter for Python.
+\item To design and implement a strategy that uses the abstract interpreter to analyse the
+  shapes of tensors for Python code.
+\item To implement a tool that flags the bugs inferred by the abstract interpreter.
+\item To empirically evaluate the developed static analysis in a set of representative
+  test cases.
 \end{enumerate}
 
 \section{Contributions}\label{contributions}
@@ -349,7 +319,7 @@ The contributions of this work are the following:
 
 \begin{itemize}
 \tightlist
-\item Specification of an operational semantics for a subset of Python using a methodology
+\item An specification of operational semantics for a subset of Python using a methodology
   similar to \textcite{fromherz_static_2018}. This specification includes a subset of the
   Python syntax, an AST representation of the syntax more malleable to work with, and the
   semantics of the subset of the Python Language.
@@ -361,7 +331,8 @@ The contributions of this work are the following:
   Pytropos\footnotemark{} with a plugin for (Neo)Vim to work as a linter.
 \end{itemize}
 
-\footnotetext{Homepage: \url{https://github.com/helq/pytropos}}
+\footnotetext{The source code for the interpreter can be found at
+  \url{https://github.com/helq/pytropos}}
 
 \section{Thesis Structure}\label{thesis-structure}
 
@@ -369,29 +340,22 @@ The remaining parts of this document are organised as follows:
 
 \begin{itemize}
 \tightlist
-\item
-  Chapter~\ref{background} explores some background material on
-  Dynamically typed and Statically typed languages, Tensors and why are
-  they important, the NumPy library, and Abstract Interpretation,
-\item
-  Chapter~\ref{pytropos-analysis-implementation} presents some of the
-  gory details of the implementation of the Abstract Interpreter,
-\item
-  Chapter~\ref{validation-and-discussion} focuses on the tests made to
-  ensure that the implementation follows the Abstract Interpreter, to
-  showcase the utility of Pytropos to detect errors when using NumPy
-  arrays, and to point some of the areas of improvement of the tool,
-\item
-  Chapter~\ref{related-work} presents some related work on Abstract
-  Interpretation for Python, Static Analysis of Tensor shapes and
-  related libraries Static Analysis tools, and finally,
-\item
-  Chapter~\ref{conclusions} sums up the work done and future directions
-  to it.
-\item
-  Appendix~\ref{appendix-ai-theory}
-  is divided into three parts: the definition of the syntax and
-  semantics of a subset of Python, the definition of an Abstract
-  Interpreter for Python, and finally some other ways in which
-  Statically Analyse the shape of tensors for Python,
+\item Chapter~\ref{background} explores some background material on Dynamically typed and
+  Statically typed languages, Tensors (and why are they important), the NumPy library, and
+  Abstract Interpretation;
+\item Chapter~\ref{pytropos-analysis-implementation} presents some of the gory details of
+  the implementation of the Abstract Interpreter;
+\item Chapter~\ref{validation-and-discussion} focuses on the tests made to ensure that the
+  implementation follows the Abstract Interpreter nicknamed Pytropos, with the goal of
+  showcasing the abilities of Pytropos to detect errors using NumPy arrays and to
+  point some of the areas of improvement of the tool;
+\item Chapter~\ref{related-work} presents some related work on Abstract Interpretation for
+  Python, Static Analysis of Tensor shapes and related libraries, Static Analysis tools;
+  and finally,
+\item Chapter~\ref{conclusions} sums up the work done and future directions.
+\item Additionally, an Appendix~\ref{appendix-ai-theory} to explain in detail the parts of
+  the abstract interpreter. The appendix is divided into three parts: the definition of
+  the syntax and semantics of a subset of Python, the definition of an Abstract
+  Interpreter for Python, and some other ways in which Statically Analyse the shape of
+  tensors for Python.
 \end{itemize}

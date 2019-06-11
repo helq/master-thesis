@@ -2,9 +2,9 @@
 
 A big, widely used, and mature language like Python has no lack of Static Analysis tools.
 A big, widely used, and mature area like Machine Learning has no lack of people trying to
-build tools to make writing code for it easier. In this chapter, a brief overview of the
+build tools to make writing code for them easier. In this chapter, a brief overview of the
 many Static Analysis tools developed for Python code and the several approaches taken to
-solve the problem of tensor shapes.
+solve the problem of tensor shapes are given.
 
 \section{Static Analysis in Python}
 
@@ -75,7 +75,7 @@ infer and type check code in Python. His idea was to infer variables' types befo
 executing the code and use this knowledge to speed up the execution. He acknowledged that
 the nature of Python makes type inference to be too weak. Thus, the complexity that the
 project brought did not improve performance in equal measure and his work was never added
-to Python. This work was prior to \textcite{siek_gradual_2006} Gradual Types, where the
+to Python. This work was prior to \textcite{siek_gradual_2006} with Gradual Types, where the
 developer can help the type checking algorithm to find and assert better types.
 
 All linters' goal is to aid the developer by flagging code as faulty. What means for a
@@ -83,7 +83,7 @@ piece of code to be faulty varies from tool to tool. Pep8 checks for syntactic d
 of the style guide, Pep 8\footnote{\url{https://www.python.org/dev/peps/pep-0008/}}.
 Pyflakes, Pylint and PyChecker define a variety of checks for common scenarios where a
 piece of code is known to fail, e.g.~undefined variables. MyPy, PyType and Pyre focus on
-type checking optionally type-annotated code. Nagini focuses on verifying pieces of Python
+type checking optionally, type-annotated code. Nagini focuses on verifying pieces of Python
 code using the mature Viper \autocite{muller_viper_2016} infrastructure. Pytropos
 objective is different from all the other available linters: Value Analysis.
 
@@ -112,7 +112,7 @@ flow instructions. Unfortunately, they have not yet made their implementation pu
 
 \subsection{Solutions in other languages}
 
-We may think, If a type system is not expressive enough to capture the
+We may think that if a type system is not expressive enough to capture the
 shape of tensors, then we should just start writing code in a language
 which does. We may write code in a language like Haskell or even C++,
 which have very strong and expressive type systems (it is possible in
@@ -140,14 +140,13 @@ One recent effort to type check tensor shapes in Haskell is the library
 \textcite{elkin_haskell_2018}. The library is written as a wrapper
 around the library port of TensorFlow for Haskell.
 \pycode|tensorflow-haskell-deptyped| enforces at the type level how and
-which results an operation between compatible tensors is to be performed.
+which results an operation between compatible tensors are to be performed.
 
-A different path to take is to extend an existing type checking system,
-like MyPy, and extend it with dependent types. Dependent types allow us
-to carry information from the term level to the type level, i.e.~we can
-encode information of our data (available only at runtime) into the type
-system. Over this extended type system, we could implement some
-restrictions to the operations applied to different types (this is, in
+A different path, not yet explored, is to extend an existing type checking system, like
+MyPy, and extend it with dependent types. Dependent types allow us to carry information
+from the term level to the type level, i.e.~we can encode information of our data
+(available only at runtime) into the type system. Over this extended type system, we could
+implement some restrictions to the operations applied to different types (this is, in
 fact, the strategy taken in the library tensorflow-haskell-deptyped).
 
 \subsection{Theoretical Solutions}\label{theoretical-solutions}
@@ -193,7 +192,7 @@ proposed to type check tensors found in the literature\footnote{As a
   \textcite{slepak_array-oriented_2014}: A paper that tries to formalise
   array-oriented programming languages and extend them with unit-aware
   operations. Array-oriented programming languages are languages which
-  base all their computations in arrays (like matlab), but they usually
+  base all their computations in arrays (like Matlab), but they usually
   aren't formalised. The types of arrays not only carry information
   about their shape but also of the unit they carry. The special
   keywords of this work are \enquote{array-oriented programming} and
@@ -202,6 +201,6 @@ proposed to type check tensors found in the literature\footnote{As a
   \textcite{rink_modeling_2018}: In this paper, Rink formalises a type
   system to type check the shape of tensors and defines a language to
   use with the type system. It is a custom type system which does not
-  require of dependent types. The special keyword of this work is
+  require dependent types. The special keyword of this work is
   \enquote{tensor manipulation language}.
 \end{itemize}

@@ -7,10 +7,10 @@ tested and a discussion on the results of the tests.
 \section{Validation}\label{validation}
 
 We created two types of tests: unit regression tests and property-based tests. Unit tests
-fulfil two purposes: they are a guide of what the abstract interpreter should do and they
+fulfill two purposes: they are a guide of what the abstract interpreter should do and they
 act as regression checks to prevent reintroducing bugs. Slightly more challenging to
-write are property-based tests. They allow us to compliance of Pytropos execution to
-CPython.
+write are property-based tests. They allow us to make sure that Pytropos complies to the
+specification and to CPython behaviour.
 
 Comparing against the official regression battery of tests for CPython is left for future
 work as the abstract interpreter still is not ripe enough. The abstract interpreter is
@@ -79,11 +79,11 @@ the support of built-in values. Pytropos errors come from too much
 
 \subsection{Property-based Tests}\label{property-based-tests}
 
-Property-based testing consists in writing a property that a piece of code should fulfil.
+Property-based testing consists in writing a property that a piece of code should fulfill.
 For example, a property of lists is that adding a new element to a list of size \pycode|n|
 gives back a list of size \pycode|n+1|. Property-based testing tools try to find a
 counterexample for a given property. We use property-based testing to check for compliance
-of Pytropos against Python on built-in operations.
+of built-in operations in Pytropos against CPython.
 
 There are a total of 20 property-based tests. We use Hypothesis\footnote{Hypothesis is a
   testing tool designed to strategically generate input examples in an attempt to disprove
@@ -103,7 +103,7 @@ are some of the exceptions that Hypothesis helped us find:
 
 \begin{itemize}
 \tightlist
-\item Zero-division exception on expressions like \pycode|5 \% 0| or \pycode|5 \% False|
+\item Zero-division exception on expressions like \pycode|5 % 0| or \pycode|5 % False|
 \item Value exception on expressions like \pycode|5 << -2|
 \item Excessive High-memory consumption on expressions like \pycode|5 << 10**10|
 \item Overflow exception on expressions like \pycode|10**209 + 2.0|
@@ -114,7 +114,7 @@ are some of the exceptions that Hypothesis helped us find:
 In this section, we will show some positive and negative unit tests. Through them, we will
 explain what is Pytropos capable of doing and when does it fail.
 
-\subsection*{Pytropos capabilities}
+\subsection{Pytropos capabilities}
 
 The following are some tests where Pytropos runs as expected and it is able to compute all values correctly:
 
@@ -122,21 +122,47 @@ The following are some tests where Pytropos runs as expected and it is able to c
 \tightlist
 \item Pytropos is able to join two states with primitive variables properly:
 
+\begin{minipage}{.25\textwidth}
   \begin{pythoncode*}{autogobble}
-  a = 5               a = 5               a = 5
+    a = 5
 
-  if True:            if False:           if d:
-      c = 2               c = 2               c = 2
-  else:               else:               else:
-      c = 2.0             c = 2.0             c = 2.0
+    if True:
+        c = 2
+    else:
+        c = 2.0
 
-  d += 1              d += 1              d += 1
+    d += 1
   \end{pythoncode*}
+\end{minipage}\hfill%
+\begin{minipage}{.25\textwidth}
+  \begin{pythoncode*}{autogobble}
+    a = 5
+
+    if False:
+        c = 2
+    else:
+        c = 2.0
+
+    d += 1
+  \end{pythoncode*}
+\end{minipage}\hfill%
+\begin{minipage}{.25\textwidth}
+  \begin{pythoncode*}{autogobble}
+    a = 5
+
+    if d:
+        c = 2
+    else:
+        c = 2.0
+
+    d += 1
+  \end{pythoncode*}
+\end{minipage}\\[.4em]
 
   In the first two examples, Pytropos selects correctly which branch to execute and warns
   the user of the use of an undeclared variable, \pycode|d|.  All undeclared variables are
   set by default to \pycode|Undefined|. If an undeclared variable is used, it is set to
-  $\top$.
+  $\Top{Val}$.
 
   In the third example, Pytropos warns the user of the undeclared use of the variable
   \pycode|d| and chooses to execute both branches separately with a copy each of the state
@@ -145,11 +171,36 @@ The following are some tests where Pytropos runs as expected and it is able to c
 
   The final states for the examples are:
 
-  \begin{verbatim}
-    a -> 5      a -> 5      a -> 5
-    c -> 2      c -> 2.0    c -> Top
-    d -> Top    d -> Top    d -> Top
-  \end{verbatim}
+\begin{minipage}{.25\textwidth}
+  \[\begin{array}{rl}
+      \texttt{'a'} \mapsto& 5 \\
+      \texttt{'c'} \mapsto& 2 \\
+      \texttt{'d'} \mapsto& \Top{Val} \\
+      \_ \mapsto& \undefm \\
+  \end{array}\]
+\end{minipage}\hfill%
+\begin{minipage}{.25\textwidth}
+  \[\begin{array}{rl}
+      \texttt{'a'} \mapsto& 5 \\
+      \texttt{'c'} \mapsto& 2.0 \\
+      \texttt{'d'} \mapsto& \Top{Val} \\
+      \_ \mapsto& \undefm \\
+  \end{array}\]
+\end{minipage}\hfill%
+\begin{minipage}{.25\textwidth}
+  \[\begin{array}{rl}
+      \texttt{'a'} \mapsto& 5 \\
+      \texttt{'c'} \mapsto& \Top{PrimVal} \\
+      \texttt{'d'} \mapsto& \Top{Val} \\
+      \_ \mapsto& \undefm \\
+  \end{array}\]
+\end{minipage}\\[.4em]
+
+%  \begin{verbatim}
+%    a -> 5      a -> 5      a -> 5
+%    c -> 2      c -> 2.0    c -> Top
+%    d -> Top    d -> Top    d -> Top
+%  \end{verbatim}
 
 \item Pytropos can join two states with non-primitive values, e.g. lists.
 
@@ -169,13 +220,14 @@ The following are some tests where Pytropos runs as expected and it is able to c
   \end{pythoncode*}
 
   Operating with a variable imported from a library is the same as to work with an
-  undefined variable. The imported variable \pycode|either| is set to $\top$.
+  undefined variable. The imported variable \pycode|either| is set to $\Top{Val}$.
 
   The type annotation on \pycode|either: int = either| tells Pytropos that \pycode|either|
   is an \pycode|int| value. The result of computing the expression \pycode|either > 20| is
-  $\top_{\text{Bool}}$ not a $\top$. Even though $\top_{\text{Bool}}$ is more precise than
-  $\top$ ($\top_{\text{Bool}} < \top$), it is not precise enough. Both branches must be
-  executed and joined.
+  $\Top{Bool}$ not a $\Top{Val}$. Even though $\Top{Bool}$ is more precise than
+  $\Top{Val}$ ($\Top{Bool} < \Top{Val}$), it is not precise enough to tell us which
+  branch will be executed ($\Top{Bool}$ tells us that the variable may either be
+  \pycode|True| or \pycode|False|). Thus, both branches must be executed and joined.
 
   \pycode|a| contains two elements after running \pycode|a.append(2)|: a reference to
   itself and the integer 2.  And \pycode|a| contains two elements after running
@@ -184,36 +236,88 @@ The following are some tests where Pytropos runs as expected and it is able to c
 
   The final state of the program is:
 
-  \begin{verbatim}
-    H := {
-      'either' -> 0
-      'a' -> 1
-    }
-    G := {
-      0 -> Top_int
-      1 -> (List,
-            1,
-            {
-              'size' -> 1
-              ('index', 0) -> 1
-              ('index', 1) -> 2
-            }
-      )
-      2 -> 2
-    }
-  \end{verbatim}
+\begin{minipage}{0.45\textwidth}
+  \[\Glo(i) = \left\{
+    \begin{array}{ll}
+      0 & \text{if } i = \texttt{'either'} \\
+      1 & \text{if } i = \texttt{'a'} \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+  \[l(i) = \left\{
+    \begin{array}{ll}
+      2 & \text{if } i = \texttt{'size'} \\
+      1 & \text{if } i = (\texttt{'index'}, 0) \\
+      3 & \text{if } i = (\texttt{'index'}, 1) \\
+      \undefm      & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill%
+\begin{minipage}{0.45\textwidth}
+  \[\Hea(n) = \left\{
+    \begin{array}{lcl}
+      \Top{Int} & \text{if } n = 0 \\
+      (\texttt{List}, 1, l) & \text{if } n = 1 \\
+      2 & \text{if } n = 2 \\
+      2 & \text{if } n = 3 \\
+      \undefm & \text{otherwise} \\
+    \end{array}
+  \right.\]
+\end{minipage}\hfill\\[0.4em]
+
+%  \begin{verbatim}
+%    G := {
+%      'either' -> 0
+%      'a' -> 1
+%    }
+%    H := {
+%      0 -> Top_int
+%      1 -> (List,
+%            1,
+%            {
+%              'size' -> 2
+%              ('index', 0) -> 1
+%              ('index', 1) -> 3
+%            }
+%      )
+%      2 -> 2
+%      2 -> 2
+%    }
+%  \end{verbatim}
 
 \item Pytropos can apply the widen operator after trying to run a piece of code a couple
   of times.
 
-  \begin{pythoncode*}{autogobble}
-      i = 0             i = 0           i = 0
-      j = 0             j = 0           j = 0
+\begin{minipage}{.25\textwidth}
+    \begin{pythoncode*}{autogobble}
+      i = 0
+      j = 0
 
-      while i < 10:     while True:     while i < n:
-          j += i            j += i          j += i
-          i += 1            i += 1          i += 1
-  \end{pythoncode*}
+      while i < 10:
+          j += i
+          i += 1
+    \end{pythoncode*}
+\end{minipage}\hfill%
+\begin{minipage}{.25\textwidth}
+    \begin{pythoncode*}{autogobble}
+      i = 0
+      j = 0
+
+      while True:
+          j += i
+          i += 1
+    \end{pythoncode*}
+\end{minipage}\hfill%
+\begin{minipage}{.25\textwidth}
+    \begin{pythoncode*}{autogobble}
+      i = 0
+      j = 0
+
+      while i < n:
+          j += i
+          i += 1
+    \end{pythoncode*}
+\end{minipage}\\[.4em]
 
   Anytime Pytropos is asked to execute a loop, it tries to run the loop like any other
   interpreter, i.e. Pytropos will run the body of the loop until the condition becomes
@@ -223,12 +327,12 @@ The following are some tests where Pytropos runs as expected and it is able to c
 
   To prevent Pytropos from running forever any loop is stopped after a set number of
   iterations and it assumed that the truth value cannot be determined.  If it is not
-  possible to determine the truth value of the condition, Pytropos will the loop on a copy
+  possible to determine the truth value of the condition, Pytropos will loop once on a copy
   state and it will apply the widen operation on the two states. Abstract Interpretation
   warranties that the repeated application of the widen operation on an increasing
-  sequence (loop application) will eventually stop and find a fixpoint. The second and
+  sequence (loop application) will eventually stop and find a fix-point. The second and
   third example arrive at the same state, \pycode|i| and \pycode|j| have the value
-  $\top_{\text{Int}}$, albeit after different executions are made. In the second example,
+  $\Top{Int}$, albeit after different executions are made. In the second example,
   Pytropos executes the loop until it reaches the maximum number of executions allowed,
   then it executes the body of the loop in a copy of the state and applies the widening
   operator on the two states. In the third example, no execution prior to applying the
@@ -263,7 +367,7 @@ The following are some tests where Pytropos runs as expected and it is able to c
   \end{pythoncode*}
 
   This test case shows how Pytropos is able to calculate the correct shape for both:
-  values that have a determined shape like lists of numbers, and $\top$ values which could
+  values that have a determined shape like lists of numbers, and $\Top{Val}$ values which could
   have any shape.
 
 \item Pytropos detects correctly when an operation between two tensors is incorrect, and
@@ -277,7 +381,7 @@ The following are some tests where Pytropos runs as expected and it is able to c
      c = (np.zeros(  (2, 2, 4)) - 3                   ).shape  # must be (2, 2, 4)
      d = (np.zeros(  (7, 1, 8)) / [7]                 ).shape  # must be (7, 1, 8)
      e = (np.zeros(  (2, 2, 4)) * [7,3]               ).shape  # broadcasting error
-     f = (        ([2],[3],[6]) \% np.ndarray( (5,1,1))).shape  # must be (5, 3, 1)
+     f = (        ([2],[3],[6]) % np.ndarray( (5,1,1))).shape  # must be (5, 3, 1)
   \end{pythoncode*}
 
   Notice that Pytropos computes the shape of non-arrays like \pycode|3| or \pycode|[7,3]|
@@ -312,7 +416,7 @@ The following are some tests where Pytropos runs as expected and it is able to c
 
 \end{itemize}
 
-\subsection*{Pytropos failures}
+\subsection{Pytropos failures}
 
 The following are all the tests where Pytropos does not work as intended. It either fails to compute the values correctly or fails to run the code.
 
@@ -338,17 +442,29 @@ The following are all the tests where Pytropos does not work as intended. It eit
   In the \pycode|else| branch two lists are created, one for each variable. The state that
   better captures the join of both states is:
 
-  \begin{verbatim}
-    a -> Top_list
-    b -> Top_list
-  \end{verbatim}
+  \[\begin{array}{rl}
+      \texttt{'a'} \mapsto& \Top{List} \\
+      \texttt{'b'} \mapsto& \Top{List} \\
+      \_ \mapsto& \undefm \\
+  \end{array}\]
+
+%  \begin{verbatim}
+%    a -> Top_list
+%    b -> Top_list
+%  \end{verbatim}
 
   But Pytropos calculates the slightly more general case:
 
-  \begin{verbatim}
-    a -> Top
-    b -> Top
-  \end{verbatim}
+  \[\begin{array}{rl}
+      \texttt{'a'} \mapsto& \Top{Val} \\
+      \texttt{'b'} \mapsto& \Top{Val} \\
+      \_ \mapsto& \undefm \\
+  \end{array}\]
+
+%  \begin{verbatim}
+%    a -> Top
+%    b -> Top
+%  \end{verbatim}
 
 \item Pytropos is not yet able to apply the widening operator on two states with
   non-primitive values.
@@ -369,7 +485,7 @@ The following are all the tests where Pytropos does not work as intended. It eit
   In the example, Pytropos runs the loop until it reaches the iteration limit. In which
   point, it runs the loop one more time in a state copy and applies the widening operator
   on the states. Pytropos fails to run any further as the widening operator has not yet
-  been implemented.
+  been implemented for lists.
 
 \item Pytropos is in active development, thus it lacks support to many primitives.
 
@@ -394,12 +510,12 @@ The following are all the tests where Pytropos does not work as intended. It eit
 Any time Pytropos detects an error in the interpretation, Pytropos logs the error in a
 structure to be later printed out to the user.
 
-Writing a plugin to integrate Pytropos to any IDE is simple as Pytropos writes into console
-in a standard format. Pytropos outputs all warnings in the format:
+Writing a plugin to integrate Pytropos to any IDE is straightforward. Pytropos outputs
+into console all errors in a standard format. Pytropos outputs all warnings in the format:
 
-\begin{verbatim}
+\begin{minted}[frame=single, framesep=2mm]{text}
 file:col:line: ERRORCODE: Warning message
-\end{verbatim}
+\end{minted}
 
 A plugin in vimscript was written for Pytropos to use Pytropos as a linter for the text
 editor (Neo)Vim. As can be seen in Figure~\ref{pytroposlinter}, the developer can get
@@ -418,8 +534,8 @@ The required steps to use Pytropos as a linter in (Neo)Vim are:
 \item Install Pytropos and make sure it can be run from console.
 \item Install the plugin Neomake. Homepage: \url{https://github.com/neomake/neomake}.
 \item Tell Neomake how to interpret the Pytropos output by adding the following lines to
-  the configuration file \verb|vimrc|:
-  \begin{minted}[gobble=4]{vim}
+  the configuration file \verb|.vimrc|:
+  \begin{minted}[gobble=4, frame=single, framesep=2mm]{vim}
     function! PostProcessingPytropos(entry)
         " Pytropos uses 0-indexed columns, and Neovim uses 1-indexed
         let a:entry.col += 1
@@ -436,7 +552,7 @@ The required steps to use Pytropos as a linter in (Neo)Vim are:
     endfunction
 
     let g:neomake_python_pytropos_maker = {
-       \ 'exe': 'pytropos', " Change if Pytropos is called differently on your machine
+       \ 'exe': 'pytropos', "Change if Pytropos is called differently on your machine
        \ 'args': [],
        \ 'errorformat':
          \ '%f:%l:%c: %m',
@@ -449,10 +565,10 @@ The required steps to use Pytropos as a linter in (Neo)Vim are:
   \end{minted}
 \end{itemize}
 
-\subsection*{Summary}
+\subsection{Summary}
 
-Pytropos is still at a very early stage of development. Its repertoire of Python
-characteristics is still small: no support for \pycode|for| statement, custom classes and
+Pytropos is still at a very early stage of development. The repertoire of Python
+characteristics implemented in it is still small: no support for \pycode|for| statement, custom classes and
 objects, exception handling and the lack of built-in definitions. Nonetheless, Pytropos
 can check for errors on operations between tensors and can be extended to work with more
 libraries.

@@ -1,4 +1,6 @@
-\chapter{Conclusions}\label{conclusions}
+\chapter{Conclusions and Future Work}\label{conclusions}
+
+\section{Conclusions}
 
 In this work, we have presented the definition and implementation of an Abstract
 Interpreter for Python focused on the analysis of tensor shapes.
@@ -22,18 +24,18 @@ In brief, the work done includes:
 
 \begin{itemize}
 \tightlist
-\item A specification of a subset of Python 3.6 (Syntax and small-step semantics)
-\item An Abstract Domain for Python Values
-\item An Abstract Domain for Python program states
-\item The semantics of an Abstract Interpreter for Python
+\item A specification of a subset of Python 3.6 (Syntax and small-step semantics).
+\item An Abstract Domain for Python Values.
+\item An Abstract Domain for Python program states.
+\item The semantics of an Abstract Interpreter for Python.
 \item The implementation of the Abstract Interpreter, Pytropos\footnote{Available at:
-    \url{https://github.com/helq/pytropos}}
+    \url{https://github.com/helq/pytropos}}.
 \item An application for the Abstract Interpreter to statically analyse the shapes of
-  tensors and tensor operations
+  tensors and tensor operations.
 \item A series of tests showcasing the abilities of the Abstract Interpreter and its
-  failures
+  failures.
 \item A way for developers to annotate code to improve the accuracy of the Abstract
-  Interpreter
+  Interpreter.
 \end{itemize}
 
 The presented Python formalisation is easily extendible to calculate the value of a
@@ -51,47 +53,46 @@ was shown how to get from the concrete semantics (small-step semantics) to the a
 semantics.
 
 Testing showed that the Pytropos, the implementation of the Abstract Interpreter, is able
-to actually check many common shape mismatches. The biggest problem of the implementation
+to check many common shape mismatches. The biggest problem of the implementation
 is on the lack of support for built-in functions and values.
 
-When the Abstract Interpreter cannot compute the correct tensor shape, the user helps
+When the Abstract Interpreter cannot compute the correct tensor shape, the user may help
 the Abstract Interpreter with Type Annotations. If the user gives a type annotation that
-does not improve the precision of the value, the interpreter will warn the user of his
-mistake.
+does not improve the precision of the computed value, the interpreter will warn the user
+of his mistake.
 
 \section{Future Work}\label{future-work}
 
-Python is a huge and rich language. The amount of Python characteristics exceeds that of
-what a single human can implement in the span of a master thesis.
+Python is a huge and rich language. The amount of characteristics that Python has exceeds
+by far what a single human can implement in the span of a master thesis.
 
-Much work left to do to try to match the power of Pytropos to make it usable for the
-regular developer. We propose the following roadmap to continue building the Abstract
-Interpreter:
+Much work is left to improve Pytropos so that it can be used by the regular developer. We
+propose the following roadmap to continue building the Abstract Interpreter:
+
+%\inlinetodo{Defining an abstract interpreter for sets}
 
 \begin{itemize}
 \tightlist
 \item Extend Pytropos to include Exception handling. A similar approach to that of
   \textcite{fromherz_static_2018} could be a good starting point.
-\item Improve how copying stores and \textbf{join}ing them latter is done. The join
-  operation between stores is very, very costly. It requires walking through both
-  graphs/stores at the same time. That is extremely expensive when only a variable has
-  changed. This associated cost could be reduced if only \enquote{diff}s of stores were
-  used.  One way to do this is by using immutable structures for all values in the
-  implementation. Using immutable structures would require the implementation of a heap
-  and garbage collector as the current implementation uses leaves the variable management
-  to CPython.
+\item Improve how copying and \textbf{join}ing stores (states of the program) are done.
+  The join operation between stores is very, very costly. Walking throught the graphs
+  becomes prohibitely expensive as the program to analyse grows in number of \pycode|if|
+  and \pycode|while| sentences. This associated cost could be reduced if only
+  \enquote{diff}s of stores were used. One way to do this is by using immutable
+  structures for all values in the implementation. Using immutable structures would
+  require the explicit implementation of the heap and garbage collector.
 \item Extend Pytropos to handle breaking control statements (\pycode|continue|,
   \pycode|break| and \pycode|return|). \textcite{fromherz_static_2018} also present a way
   to handle breaking control statement in Python.
 \item Extend the global scope to handle local and nonlocal scopes. The scope rules of
   Python are mildly complex with four different variable scopes: global, local, nonlocal,
   and class. Something to take into account is the ability of CPython to statically
-  analyse the use of local and non-local variables before interpreting the code (at
-  \pycode|compile|-ation time)
-\item Extend the possible values to allow user-defined functions and objects.  Once the
+  analyse the use of local and non-local variables before interpreting the code.
+\item Extend \(\mathbf{Val}^\sharp\) with user-defined functions and objects. Once the
   interpreter handles user-defined functions properly, extending the interpreter to work
-  with user-defined objects is not a big problem. The biggest difficulty is the inherit
-  MRO behind the complex multi-classing system of Python.
+  with user-defined objects is not a big problem. The biggest difficulty with
+  objects is implementing the MRO rules in charge of how to inheritance work in Python.
 \end{itemize}
 
 % \inlinetodo{add idea that Pytropos could be run inside an IDE just as paper: Sulir Poruban
@@ -106,7 +107,7 @@ Interpreter:
 
 Besides what is left to do to make Pytropos more powerful, there are some tasks related to
 the formality of the work. This work presented some concrete and abstract semantics for
-Python but there was never a proof of its correctness. We consider the following to be the
+Python but there was never a proof of their correctness. We consider the following to be the
 problems to solve to prove the formalisation correct:
 
 \begin{itemize}
