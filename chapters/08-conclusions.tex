@@ -76,8 +76,8 @@ propose the following roadmap to continue building the Abstract Interpreter:
 \item Extend Pytropos to include Exception handling. A similar approach to that of
   \textcite{fromherz_static_2018} could be a good starting point.
 \item Improve how copying and \textbf{join}ing stores (states of the program) are done.
-  The join operation between stores is very, very costly. Walking throught the graphs
-  becomes prohibitely expensive as the program to analyse grows in number of \pycode|if|
+  The join operation between stores is very, very costly. Walking through the graphs
+  becomes prohibitively expensive as the program to analyse grows in number of \pycode|if|
   and \pycode|while| sentences. This associated cost could be reduced if only
   \enquote{diff}s of stores were used. One way to do this is by using immutable
   structures for all values in the implementation. Using immutable structures would
@@ -85,7 +85,7 @@ propose the following roadmap to continue building the Abstract Interpreter:
 \item Extend Pytropos to handle breaking control statements (\pycode|continue|,
   \pycode|break| and \pycode|return|). \textcite{fromherz_static_2018} also present a way
   to handle breaking control statement in Python.
-\item Extend the global scope to handle local and nonlocal scopes. The scope rules of
+\item Extend the global scope to handle local and non-local scopes. The scope rules of
   Python are mildly complex with four different variable scopes: global, local, nonlocal,
   and class. Something to take into account is the ability of CPython to statically
   analyse the use of local and non-local variables before interpreting the code.

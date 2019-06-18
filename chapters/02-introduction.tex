@@ -199,14 +199,14 @@ global variables (re)defined.
 As a developer, I can say that I like when I see a piece of code flagged wrong and IT IS
 WRONG and not a false alarm, a false positive. It is very annoying to have a tool flag
 every sentence you write as wrong even though the code works just fine. We will assume
-from here onwards that we want the Tensor Analysis to flag only errors that are going to
+from here onward that we want the Tensor Analysis to flag only errors that are going to
 happen if the code is run, i.e.~we want only true positives not false positives.
 
 Although TensorFlow \autocite{abadi_tensorflow_2016}, PyTorch
 \autocite{paszke2017pytorch} and other libraries would benefit from the development of a
-tool targeted to check them, we chose to focus on checking NumPy's tensor operations.
-NumPy is the standard library for computing with tensors and it is used as back-end on
-most tensor projects.
+tool targeted to check them, we chose to focus on checking tensor operations from the
+library NumPy. NumPy is the standard library for computing with tensors and it is used as
+back-end on most tensor projects.
 
 Implementing an Abstract Interpreter, or any Static Analysis, for a language like Python
 is a considerable undertaking, mainly because of the breadth of characteristics a mature
@@ -287,7 +287,7 @@ To recapitulate, the assumptions and scope of the abstract interpreter are:
   e.g.~\pycode+input+ is a function that returns a \pycode+str+.
 \item The user will only be reported of errors that will happen but no errors that
   \emph{may} happen (This means that the resulting tool is not a verification tool).
-\item The Static Value Analysis should focuse on checking operations from the NumPy library.
+\item The Static Value Analysis should focus on checking operations from the NumPy library.
 \item Only a selected subset of Python characteristics and functions are explored.
 \item A variable can hold only one type of value at the time. If a variable is set to hold
   values of different types at the same time, then its value will be \pycode+Any+.

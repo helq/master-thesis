@@ -728,7 +728,7 @@ abstract operation \(+\) between two (interval) integer numbers is defined as:
 
 \[[a, b] +^{\sharp} [c, d] := [a+c, b+d]\]
 
-The semantics of interval arithmetics are well studied and can be easily implemented from
+The semantics of interval arithmetic are well studied and can be easily implemented from
 theory \autocite{hayes_interval_2003}.
 
 % The abstract semantics work on the State Abstract Domain, where as the concrete semantics
@@ -765,12 +765,12 @@ statement. Consider the following piece of C++ (\pycode|a| and
 \begin{minted}[linenos, numbersep=5pt, frame=single, framesep=2mm, mathescape]{cpp}
 // {'a': $[2,4]$, 'b': $\top$}
 if (a < 3) {
-  // Appling backward assignment: $a<3$
+  // Applying backward assignment: $a<3$
   // {'a': $2$, 'b': $\top$}
   b = a;
   // {'a': $2$, 'b': $2$}
 } else {
-  // Appling backward assignment: $a \ge 3$
+  // Applying backward assignment: $a \ge 3$
   // {'a': $[3,4]$, 'b': $\top$}
   b = a - 2;
   // {'a': $[3,4]$, 'b': $[1,2]$}
@@ -786,4 +786,4 @@ Another characteristic that will not be used in this work is relational Abstract
 A relational Abstract Domain keeps some of the relationships between variables which means
 that their overapproximations are tighter than those of non-relational overapproximations.
 We will only use non-relational Abstract Domains. For a detailed explanation on relational
-and non-relational Abstract Domais see \textcite{mine_weakly_2004}.
+and non-relational Abstract Domains see \textcite{mine_weakly_2004}.

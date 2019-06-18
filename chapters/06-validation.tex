@@ -7,7 +7,7 @@ tested and a discussion on the results of the tests.
 \section{Validation}\label{validation}
 
 We created two types of tests: unit regression tests and property-based tests. Unit tests
-fulfill two purposes: they are a guide of what the abstract interpreter should do and they
+fulfil two purposes: they are a guide of what the abstract interpreter should do and they
 act as regression checks to prevent reintroducing bugs. Slightly more challenging to
 write are property-based tests. They allow us to make sure that Pytropos complies to the
 specification and to CPython behaviour.
@@ -66,7 +66,7 @@ able if implemented the whole semantics described in Appendix~\ref{appendix-ai-t
      \pycode|list|s and \pycode|tuple|s &  74 & 11 &  9 & 1 & 1 & 81.8\% \tabularnewline
      NumPy array operations             & 315 & 25 & 20 & 3 & 2 & 80\% \tabularnewline
      Type annotations                   &  26 &  4 &  1 & 0 & 3 & 25\% \tabularnewline
-     Miscelaneous                       &  32 &  7 &  5 & 0 & 2 & 71.4\% \tabularnewline
+     Miscellaneous                       &  32 &  7 &  5 & 0 & 2 & 71.4\% \tabularnewline
   \bottomrule
 \end{longtable}
 
@@ -75,11 +75,11 @@ i.e. Pytropos conforms to our definition of the Abstract Interpreter catching al
 errors and calculating correctly the values of the variables. The tests that Pytropos does
 not pass are due to subtle semantic rules that have not yet been implemented or a lack in
 the support of built-in values. Pytropos errors come from too much
-\textbf{over}approxitation and never as a result of an \textbf{under}approximation.
+\textbf{over}approximation and never as a result of an \textbf{under}approximation.
 
 \subsection{Property-based Tests}\label{property-based-tests}
 
-Property-based testing consists in writing a property that a piece of code should fulfill.
+Property-based testing consists in writing a property that a piece of code should fulfil.
 For example, a property of lists is that adding a new element to a list of size \pycode|n|
 gives back a list of size \pycode|n+1|. Property-based testing tools try to find a
 counterexample for a given property. We use property-based testing to check for compliance

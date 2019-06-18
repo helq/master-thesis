@@ -46,8 +46,8 @@ they also show how their semantics are able to handle similarly complex examples
 
 \subsection{(Reduced) Syntax}\label{reduced-syntax}
 
-Our simplified version of Python's Syntax can be seen in Figure~\ref{syntaxPythonAppen}.
-Modified from AST's syntax below from Figure~\ref{syntaxPython2App}.
+Our simplified version of Python syntax can be seen in Figure~\ref{syntaxPythonAppen}.
+The AST representation of the Python syntax can be seeing in Figure~\ref{syntaxPython2App}.
 
 % {\inlinetodo{Translate into LaTeX equations}}
 
@@ -126,8 +126,8 @@ The syntax from Figure~\ref{syntaxPythonAppen} is a subset of the Python 3.6 syn
 }. Note that CPython does not directly interpret code written in this syntax. The usual
 steps of lexing and parsing into a more explicit representation are necessary for a
 program to be executed by CPython. We will define the semantics of the language over the
-parser's syntax, see Figure~\ref{syntaxPython2App} and not over the aforementioned syntax. The reasoning behind this change
-is due to the parser's syntax readiness to be analysed opposed to the original syntax.
+parser syntax, see Figure~\ref{syntaxPython2App} and not over the aforementioned syntax. The reasoning behind this change
+is due to the parser syntax readiness to be analysed opposed to the original syntax.
 
 \begin{figure}
 \[\begin{array}{rclr}
@@ -299,10 +299,10 @@ For us, there are two types of Python values:
   type, an address to where it is located, and a \enquote{dictionary} pointing to other
   values.
 \item Functions: \(\textbf{\texttt{<prim-callable>}}\) and
-  \(\mathbf{Addr} \times \textbf{\texttt{<prim-callable>}}\). Primitive callables, or
-  functions, are specific semantics rules defined directly by us. Sometimes a function may
-  be attached to an object, in which case, the object will be passed as the parameter
-  \pycode|self| to the function.
+  \(\mathbf{Addr} \times \textbf{\texttt{<prim-callable>}}\). Primitive \enquote{callable}
+  objects, or functions, are specific semantics rules defined directly by us. Sometimes a
+  function may be attached to an object, in which case, the object will be passed as the
+  parameter \pycode|self| to the function.
 \end{itemize}
 
 Lists, Tuples, built-in Modules, and built-in Classes derive from \(\mathbf{Object}\).
@@ -372,7 +372,7 @@ added or removed from it.  Now, consider the value at the index 2 of the list
 stored in a list is not an intrinsic property of the list.
 
 A \(\mathbf{Key}\) can be a tuple \(\left(\textsf{string} \times \mathbf{Val}\right)\).
-There are only two \enquote{tupled} keys in the current specification, either
+There are only two kinds of \enquote{tupled} keys in the current specification, either
 \pycode|('index', val)| or \pycode|('attr', val)|. A key of the form
 \pycode|('attr', val)| indicates us that \pycode|val| (hopefully an \(\mathbf{Iden}\)) is
 an attribute of the object. \pycode|('index', val)| is used for lists.
@@ -475,8 +475,8 @@ and the result of executing an expression is:
 \begin{quote}
 \textbf{Notation}: A brief note on the semantics presented below. Opposed to how
 the semantics were presented in Chapter~\ref{ai-for-python}, we present the semantics in
-here in raw/plain text form due to the high time they require to write proprely in
-\LaTeX{} math. We apologise in advance to the readers who may have wished on polished, mathy
+here in raw/plain text form due to the high time they require to write properly in
+\LaTeX{} maths. We apologise in advance to the readers who may have wished on polished, mathy
 looking equations. Please accept this cake as an apology {\notoemojifont 🍰}.
 \end{quote}
 
@@ -516,7 +516,7 @@ E[Attribute(e, attr)](G, H) :=
  in match v in
       case v: PrimVal →
         -- primitive, similar how get_prim_op is coded
-        get_prim_attr(type(v), atr)(G1, H1, v)
+        get_prim_attr(type(v), attr)(G1, H1, v)
 
       case (t, addr, o): Object →
         -- ALL values in the current definition are builtin
@@ -1145,7 +1145,7 @@ Notice how our previous two Abstract Domains do not require us to define widenin
 narrowing operators because none of them has an infinite ascending chain of values, i.e.
 there do not exist \(v_i\) for all \(i \in \mathbb{N}\) such that \(v_i \le v_{i+1}\).
 
-For \(\text{Int}\) and \(\text{Float}\) there a pletora of Abstract Domains to chose from.
+For \(\text{Int}\) and \(\text{Float}\) there a plethora of Abstract Domains to chose from.
 For an in depth analysis on many of the available Abstract Domains for numbers
 see~\textcite{mine_weakly_2004}. We are going to use here the simplest Abstract Domain for
 number systems there is: Constant Propagation \autocite{kildall_unified_1973}.
@@ -1416,7 +1416,7 @@ Notice that a \(\mathbf{Val}^\sharp\) requires a Heap to work! Just as
 %\end{verbatim}
 
 \begin{quote}
-  \textbf{Notation}: Once more, we are abusing notation for convinience. \([]\) represents
+  \textbf{Notation}: Once more, we are abusing notation for convenience. \([]\) represents
   a function which codomain is only \(\undefm\), and
   \([0 \mapsto 5, 1 \mapsto \text{None}]\) represents a function which output to the in
   puts \(0\) and \(1\) is \(5\) and \(\text{None}\), respectively.
@@ -1810,7 +1810,7 @@ E#[Name(id, ctx)](G#, H#) :=
 E#[BinOp(op, a, b)](G#, H#) :=
   let (G1#, H1#, v1) := E#[a](G#, H#)
       (G2#, H2#, v2) := E#[b](G1#, H1#)
-      -- TODO: careful with the two notations you are using to make sure a var is Val#
+      -- Notice the use of two different notations to make sure a var is Val#
       --        kind(v) = Val#  vs  isvalue#(v)
    in if kind(v1) ≠ Val#  or  kind(v1) ≠ Val#
       -- Bad parsing! `E[e](G, H)` for e in {a,b} are supposed to return Val#
